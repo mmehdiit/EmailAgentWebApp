@@ -14,8 +14,19 @@
 
 <div *ngIf="open" class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
   <div class="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-lg border bg-background shadow-xl">
-    <div class="border-b px-6 py-4">
+    <div class="flex items-center justify-between border-b px-6 py-4">
       <h2 class="text-lg font-semibold">Test Forwarding Rules</h2>
+      <button
+        type="button"
+        (click)="open = false"
+        class="inline-flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+        aria-label="Close test forwarding rules dialog"
+      >
+        <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" aria-hidden="true">
+          <path d="m18 6-12 12" />
+          <path d="m6 6 12 12" />
+        </svg>
+      </button>
     </div>
 
     <div class="space-y-4 p-6">
