@@ -1,0 +1,71 @@
+<section class="auth-shell">
+  <div class="auth-wrap">
+    <a routerLink="/" class="back-link">
+      <span aria-hidden="true">←</span>
+      Back to Home
+    </a>
+
+    <div class="auth-card">
+      <header class="auth-header">
+        <img src="assets/logo.jpeg" alt="Al-Ittihad Al-Watani" class="auth-logo" />
+        <p class="brand-name">AI Email Agent</p>
+        <h1>Welcome Back</h1>
+        <p class="subtitle">Sign in to manage your email forwarding rules</p>
+      </header>
+
+      <div
+        *ngIf="feedback"
+        class="feedback"
+        [class.error]="feedback.type === 'error'"
+        [class.success]="feedback.type === 'success'"
+      >
+        <strong>{{ feedback.title }}</strong>
+        <span>{{ feedback.description }}</span>
+      </div>
+
+      <form [formGroup]="form" (ngSubmit)="onSubmit()" class="auth-form">
+        <div class="field">
+          <label for="email">Email</label>
+          <div class="input-shell">
+            <span class="input-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24">
+                <path d="M4 6h16v12H4z" />
+                <path d="m4 7 8 6 8-6" />
+              </svg>
+            </span>
+            <input id="email" type="email" formControlName="email" placeholder="your@email.com" />
+          </div>
+          <p class="error-text" *ngIf="hasError('email', 'required')">Email is required.</p>
+          <p class="error-text" *ngIf="hasError('email', 'email')">Invalid email address.</p>
+          <p class="error-text" *ngIf="hasError('email', 'maxlength')">Email too long.</p>
+        </div>
+
+        <div class="field">
+          <label for="password">Password</label>
+          <div class="input-shell">
+            <span class="input-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24">
+                <path d="M7 11V8a5 5 0 1 1 10 0v3" />
+                <path d="M5 11h14v9H5z" />
+              </svg>
+            </span>
+            <input id="password" type="password" formControlName="password" placeholder="••••••••" />
+          </div>
+          <p class="error-text" *ngIf="hasError('password', 'required')">Password is required.</p>
+          <p class="error-text" *ngIf="hasError('password', 'minlength')">
+            Password must be at least 6 characters.
+          </p>
+          <p class="error-text" *ngIf="hasError('password', 'maxlength')">Password too long.</p>
+        </div>
+
+        <button type="submit" class="submit-button" [disabled]="loading">
+          {{ loading ? 'Please wait...' : 'Sign In' }}
+        </button>
+
+        <button type="button" class="secondary-button" (click)="fakeLogin()" [disabled]="loading">
+          Fake Login For Testing
+        </button>
+      </form>
+    </div>
+  </div>
+</section>

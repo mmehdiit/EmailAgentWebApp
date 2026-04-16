@@ -1,0 +1,67 @@
+<div *ngIf="isAdmin" class="rounded-lg border bg-card text-card-foreground shadow-sm">
+  <div class="border-b px-6 py-5">
+    <h3 class="flex items-center gap-2 text-lg font-semibold">
+      <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" aria-hidden="true">
+        <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+        <circle cx="9" cy="7" r="4" />
+        <path d="M19 8v6" />
+        <path d="M22 11h-6" />
+      </svg>
+      Create New User
+    </h3>
+    <p class="mt-1 text-sm text-muted-foreground">
+      Add new users to the system. Only administrators can create users.
+    </p>
+  </div>
+
+  <div class="px-6 py-5">
+    <form class="space-y-4" (ngSubmit)="createUser()">
+      <div class="space-y-2">
+        <label class="text-sm">Email</label>
+        <input
+          [(ngModel)]="email"
+          name="email"
+          type="email"
+          placeholder="user@example.com"
+          class="h-10 w-full rounded-md border border-input bg-background px-3"
+        />
+      </div>
+
+      <div class="space-y-2">
+        <label class="text-sm">Password</label>
+        <input
+          [(ngModel)]="password"
+          name="password"
+          type="password"
+          placeholder="Minimum 6 characters"
+          class="h-10 w-full rounded-md border border-input bg-background px-3"
+        />
+      </div>
+
+      <div class="space-y-2">
+        <label class="text-sm">Role</label>
+        <select
+          [(ngModel)]="role"
+          name="role"
+          class="h-10 w-full rounded-md border border-input bg-background px-3"
+        >
+          <option *ngFor="let option of roleOptions" [value]="option.value">
+            {{ option.label }}
+          </option>
+        </select>
+      </div>
+
+      <div *ngIf="errorMessage" class="rounded-md border border-destructive/30 bg-destructive/5 px-3 py-2 text-sm text-destructive">
+        {{ errorMessage }}
+      </div>
+
+      <div *ngIf="message" class="rounded-md border border-success/30 bg-success/5 px-3 py-2 text-sm text-success">
+        {{ message }}
+      </div>
+
+      <button type="submit" class="w-full rounded-md bg-primary px-4 py-2 text-sm text-primary-foreground" [disabled]="loading">
+        {{ loading ? 'Creating...' : 'Create User' }}
+      </button>
+    </form>
+  </div>
+</div>

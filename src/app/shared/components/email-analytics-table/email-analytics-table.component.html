@@ -1,0 +1,610 @@
+<div
+  class="rounded-lg border bg-card p-4 text-card-foreground shadow-sm sm:p-5"
+>
+  <div
+    class="mb-4 flex flex-col items-start justify-between gap-3 sm:flex-row sm:items-center"
+  >
+    <div class="flex items-center gap-2">
+      <svg
+        class="h-4 w-4 text-primary"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        stroke-width="2"
+        aria-hidden="true"
+      >
+        <path d="M3 3v18h18" />
+        <path d="M7 16V8" />
+        <path d="M12 16v-4" />
+        <path d="M17 16v-7" />
+      </svg>
+      <h3 class="text-base font-semibold text-foreground sm:text-lg">
+        Email Activity Log
+      </h3>
+    </div>
+
+    <div class="flex flex-wrap items-center gap-2">
+      <button
+        type="button"
+        (click)="loadLogs()"
+        [disabled]="loading"
+        class="inline-flex items-center gap-1.5 rounded-md border border-input bg-background px-3 py-2 text-xs sm:text-sm"
+      >
+        <svg
+          class="h-3 w-3"
+          [ngClass]="loading ? 'animate-spin' : ''"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          aria-hidden="true"
+        >
+          <path d="M21 2v6h-6" />
+          <path d="M3 12a9 9 0 0 1 15-6.7L21 8" />
+          <path d="M3 22v-6h6" />
+          <path d="M21 12a9 9 0 0 1-15 6.7L3 16" />
+        </svg>
+        Refresh
+      </button>
+
+      <button
+        *ngIf="hasLogsWithoutReceivedAt()"
+        type="button"
+        (click)="backfillReceivedDates()"
+        [disabled]="isBackfilling"
+        class="inline-flex items-center gap-1.5 rounded-md border border-input bg-background px-3 py-2 text-xs sm:text-sm"
+      >
+        <svg
+          class="h-3 w-3"
+          [ngClass]="isBackfilling ? 'animate-spin' : ''"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          aria-hidden="true"
+        >
+          <circle cx="12" cy="12" r="10" />
+          <polyline points="12 6 12 12 16 14" />
+        </svg>
+        Backfill Dates
+      </button>
+
+      <button
+        *ngIf="stats().failed > 0"
+        type="button"
+        (click)="retryFailedEmails()"
+        [disabled]="isRetrying"
+        class="inline-flex items-center gap-1.5 rounded-md border border-destructive px-3 py-2 text-xs text-destructive sm:text-sm"
+      >
+        Retry Failed ({{ stats().failed }})
+      </button>
+
+      <button
+        type="button"
+        (click)="openClearDialog = true"
+        [disabled]="isClearing || logs().length === 0"
+        class="inline-flex items-center gap-1.5 rounded-md bg-destructive px-3 py-2 text-xs text-destructive-foreground sm:text-sm"
+      >
+        Clear Logs
+      </button>
+
+      <button
+        type="button"
+        (click)="exportCsv()"
+        [disabled]="isExporting || filteredLogs().length === 0"
+        class="inline-flex items-center gap-1.5 rounded-md bg-primary px-3 py-2 text-xs text-primary-foreground sm:text-sm"
+      >
+        <svg
+          class="h-3 w-3"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          aria-hidden="true"
+        >
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+          <path d="M7 10l5 5 5-5" />
+          <path d="M12 15V3" />
+        </svg>
+        Export CSV
+      </button>
+    </div>
+  </div>
+
+  <div
+    class="mb-4 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center"
+  >
+    <select
+      [(ngModel)]="datePreset"
+      (change)="applyPreset()"
+      class="h-8 rounded-md border border-input bg-background px-3 text-xs sm:text-sm"
+    >
+      <option value="7">Last 7 days</option>
+      <option value="14">Last 14 days</option>
+      <option value="30">Last 30 days</option>
+      <option value="90">Last 90 days</option>
+    </select>
+
+    <select
+      [(ngModel)]="statusFilter"
+      (change)="applyFilters()"
+      class="h-8 rounded-md border border-input bg-background px-3 text-xs sm:text-sm"
+    >
+      <option value="all">All Statuses</option>
+      <option value="forwarded">Forwarded</option>
+      <option value="replied">Replied</option>
+      <option value="no_match">No Match</option>
+      <option value="failed">Failed</option>
+      <option value="success">Success</option>
+      <option value="skipped">Skipped</option>
+    </select>
+
+    <select
+      [(ngModel)]="ruleFilter"
+      (change)="applyFilters()"
+      class="h-8 rounded-md border border-input bg-background px-3 text-xs sm:text-sm"
+    >
+      <option value="all">All Rules</option>
+      <option value="no_rule">No Rule</option>
+      <option *ngFor="let name of uniqueRuleNames()" [value]="name">
+        {{ name }}
+      </option>
+    </select>
+
+    <app-keyword-input
+      [(keywords)]="subjectSearch"
+      (keywordsChange)="applyFilters()"
+      placeholder="Subject filter…"
+    ></app-keyword-input>
+  </div>
+
+  <div *ngIf="analytics" class="mb-4 grid grid-cols-4 gap-2 sm:grid-cols-8">
+    <div class="rounded-lg bg-muted/50 p-2.5 text-center">
+      <div class="text-lg font-bold text-foreground">
+        {{ analytics.summary.total }}
+      </div>
+      <div class="text-[10px] text-muted-foreground sm:text-xs">Total</div>
+    </div>
+
+    <div class="rounded-lg bg-primary/10 p-2.5 text-center">
+      <div class="text-lg font-bold text-primary">
+        {{ analytics.summary.forwarded }}
+      </div>
+      <div class="text-[10px] text-muted-foreground sm:text-xs">Forwarded</div>
+    </div>
+
+    <div class="rounded-lg bg-success/10 p-2.5 text-center">
+      <div class="text-lg font-bold text-success">
+        {{ analytics.summary.replied }}
+      </div>
+      <div class="text-[10px] text-muted-foreground sm:text-xs">Replied</div>
+    </div>
+
+    <div class="rounded-lg bg-warning/10 p-2.5 text-center">
+      <div class="text-lg font-bold text-warning">
+        {{ analytics.summary.pending }}
+      </div>
+      <div class="text-[10px] text-muted-foreground sm:text-xs">Pending</div>
+    </div>
+
+    <div class="rounded-lg bg-muted/50 p-2.5 text-center">
+      <div class="text-lg font-bold text-muted-foreground">
+        {{ analytics.summary.noMatch }}
+      </div>
+      <div class="text-[10px] text-muted-foreground sm:text-xs">No Match</div>
+    </div>
+
+    <div class="rounded-lg bg-destructive/10 p-2.5 text-center">
+      <div class="text-lg font-bold text-destructive">
+        {{ analytics.summary.failed }}
+      </div>
+      <div class="text-[10px] text-muted-foreground sm:text-xs">Failed</div>
+    </div>
+
+    <div class="rounded-lg bg-purple-500/10 p-2.5 text-center">
+      <div class="text-lg font-bold text-purple-600">
+        {{ analytics.summary.aiClassified }}
+      </div>
+      <div class="text-[10px] text-muted-foreground sm:text-xs">AI</div>
+    </div>
+
+    <div class="rounded-lg bg-accent/10 p-2.5 text-center">
+      <div class="text-sm font-bold text-accent-foreground">
+        {{ analytics.summary.avgResponseTime }}
+      </div>
+      <div class="text-[10px] text-muted-foreground sm:text-xs">
+        Avg Response
+      </div>
+    </div>
+  </div>
+
+  <div *ngIf="loading" class="py-8 text-center text-muted-foreground">
+    <svg
+      class="mx-auto mb-2 h-6 w-6 animate-spin"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      stroke-width="2"
+      aria-hidden="true"
+    >
+      <path d="M21 2v6h-6" />
+      <path d="M3 12a9 9 0 0 1 15-6.7L21 8" />
+      <path d="M3 22v-6h6" />
+      <path d="M21 12a9 9 0 0 1-15 6.7L3 16" />
+    </svg>
+    <p class="text-sm">Loading logs...</p>
+  </div>
+
+  <div
+    *ngIf="!loading && filteredLogs().length === 0"
+    class="py-8 text-center text-muted-foreground"
+  >
+    <svg
+      class="mx-auto mb-2 h-10 w-10 opacity-50"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      stroke-width="2"
+      aria-hidden="true"
+    >
+      <path d="M3 3v18h18" />
+      <path d="M7 16V8" />
+      <path d="M12 16v-4" />
+      <path d="M17 16v-7" />
+    </svg>
+    <p class="text-sm">No logs found for the selected filter</p>
+  </div>
+
+  <div *ngIf="!loading && filteredLogs().length > 0" class="overflow-x-auto">
+    <table class="w-full text-xs sm:text-sm">
+      <thead>
+        <tr class="border-b border-border">
+          <th
+            class="w-[40px] px-2 py-2 text-left font-medium text-muted-foreground"
+          >
+            #
+          </th>
+          <th class="px-2 py-2 text-left font-medium text-muted-foreground">
+            Date
+          </th>
+          <th class="px-2 py-2 text-left font-medium text-muted-foreground">
+            From
+          </th>
+          <th
+            class="hidden px-2 py-2 text-left font-medium text-muted-foreground md:table-cell"
+          >
+            Subject
+          </th>
+          <th class="px-2 py-2 text-left font-medium text-muted-foreground">
+            Status
+          </th>
+          <th
+            class="hidden px-2 py-2 text-left font-medium text-muted-foreground sm:table-cell"
+          >
+            Rule
+          </th>
+          <th
+            class="hidden px-2 py-2 text-left font-medium text-muted-foreground lg:table-cell"
+          >
+            Forwarded To
+          </th>
+          <th
+            class="hidden px-2 py-2 text-left font-medium text-muted-foreground sm:table-cell"
+          >
+            Reply
+          </th>
+          <th
+            class="hidden px-2 py-2 text-left font-medium text-muted-foreground sm:table-cell"
+          >
+            Source
+          </th>
+          <th
+            class="hidden px-2 py-2 text-left font-medium text-muted-foreground sm:table-cell"
+          >
+            Response
+          </th>
+          <th class="px-2 py-2 text-left font-medium text-muted-foreground">
+            AI
+          </th>
+          <th
+            class="hidden px-2 py-2 text-left font-medium text-muted-foreground md:table-cell"
+          >
+            Action
+          </th>
+        </tr>
+      </thead>
+
+      <tbody>
+        <tr
+          *ngFor="let log of filteredLogs(); let i = index"
+          class="border-b border-border/50 transition-colors hover:bg-muted/30"
+        >
+          <td class="whitespace-nowrap px-2 py-2 text-muted-foreground">
+            {{ i + 1 }}
+          </td>
+
+          <td class="whitespace-nowrap px-2 py-2">{{ log.date }}</td>
+
+          <td class="max-w-[150px] truncate px-2 py-2" [title]="log.from">
+            {{ log.from }}
+          </td>
+
+          <td
+            class="hidden max-w-[220px] truncate px-2 py-2 md:table-cell"
+            [title]="log.subject"
+          >
+            {{ log.subject }}
+          </td>
+
+          <td class="px-2 py-2">
+            <span
+              class="inline-flex h-5 items-center rounded-md border px-2 text-[10px]"
+              [ngClass]="statusClasses(log)"
+            >
+              {{ log.replyDetected ? "replied" : log.status }}
+            </span>
+          </td>
+
+          <td class="hidden px-2 py-2 sm:table-cell">
+            <span
+              *ngIf="log.ruleName; else noRule"
+              class="inline-flex h-5 items-center rounded-md border px-2 text-[10px]"
+            >
+              {{ log.ruleName }}
+            </span>
+            <ng-template #noRule>-</ng-template>
+          </td>
+
+          <td
+            class="hidden max-w-[160px] truncate px-2 py-2 lg:table-cell"
+            [title]="log.forwardedTo || ''"
+          >
+            {{ log.forwardedTo || "-" }}
+          </td>
+
+          <td class="hidden px-2 py-2 sm:table-cell">
+            <span
+              *ngIf="log.replyDetected; else noReply"
+              class="inline-flex h-5 items-center rounded-md border border-success/30 bg-success/10 px-2 text-[10px] text-success"
+            >
+              ✓ Yes
+            </span>
+            <ng-template #noReply>
+              <span class="text-muted-foreground">No</span>
+            </ng-template>
+          </td>
+
+          <td class="hidden px-2 py-2 sm:table-cell">
+            <span
+              *ngIf="log.replyDetected && log.replySource; else noReplySource"
+              class="inline-flex h-5 items-center rounded-md border px-2 text-[10px]"
+            >
+              {{ getReplySourceLabel(log.replySource) }}
+            </span>
+            <ng-template #noReplySource>
+              <span class="text-muted-foreground">-</span>
+            </ng-template>
+          </td>
+
+          <td class="hidden px-2 py-2 sm:table-cell">
+            <span
+              *ngIf="log.replyDetected && log.repliedAt; else noResponseTime"
+              class="text-xs font-medium text-success"
+            >
+              {{ calculateResponseTime(log.processedAt, log.repliedAt) }}
+            </span>
+            <ng-template #noResponseTime>
+              <span class="text-muted-foreground">-</span>
+            </ng-template>
+          </td>
+
+          <td class="px-2 py-2">
+            <span
+              *ngIf="log.aiClassified; else noAi"
+              class="inline-flex h-5 items-center gap-1 rounded-md border border-purple-500/30 bg-purple-500/10 px-2 text-[10px] text-purple-600"
+            >
+              <svg
+                class="h-2.5 w-2.5"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                aria-hidden="true"
+              >
+                <path d="M12 18V5" />
+                <path d="M9 8a3 3 0 1 1 6 0c0 3-3 2-3 5" />
+                <path d="M10 22h4" />
+              </svg>
+              {{
+                log.aiConfidence
+                  ? (log.aiConfidence * 100 | number : "1.0-0") + "%"
+                  : "AI"
+              }}
+            </span>
+            <ng-template #noAi>-</ng-template>
+          </td>
+
+          <td class="hidden px-2 py-2 md:table-cell">
+            <div class="flex flex-wrap items-center gap-1">
+              <button
+                *ngIf="log.outlookMessageId"
+                type="button"
+                (click)="viewEmail(log)"
+                class="inline-flex h-6 items-center gap-1 rounded px-2 text-[10px] hover:bg-muted"
+              >
+                View
+              </button>
+
+              <button
+                *ngIf="log.status === 'forwarded' && !log.replyDetected"
+                type="button"
+                (click)="markAsReplied(log.id)"
+                class="inline-flex h-6 items-center gap-1 rounded px-2 text-[10px] hover:bg-muted"
+              >
+                Mark Replied
+              </button>
+
+              <div
+                *ngIf="
+                  (log.status === 'no_match' || log.status === 'failed') &&
+                  log.outlookMessageId
+                "
+                class="relative"
+              >
+                <button
+                  type="button"
+                  (click)="toggleAssignPopover(log.id)"
+                  [disabled]="isAssigning === log.id"
+                  class="inline-flex h-6 items-center gap-1 rounded px-2 text-[10px] hover:bg-muted"
+                >
+                  Assign
+                </button>
+
+                <div
+                  *ngIf="assignPopoverOpen === log.id"
+                  class="absolute right-0 top-full z-50 mt-1 w-44 rounded-md border bg-popover p-1 shadow-md"
+                >
+                  <p class="px-2 py-1 text-[10px] text-muted-foreground">
+                    Assign to rule:
+                  </p>
+
+                  <button
+                    *ngFor="let rule of rules()"
+                    type="button"
+                    (click)="assignToRule(log, rule.id)"
+                    class="block w-full rounded px-2 py-1 text-left text-xs hover:bg-muted"
+                  >
+                    {{ rule.name }}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<div
+  *ngIf="openClearDialog"
+  class="fixed inset-0 z-50 flex items-center justify-center bg-black/40"
+>
+  <div
+    class="mx-4 w-full max-w-sm rounded-lg border bg-background p-6 shadow-lg"
+  >
+    <h4 class="mb-2 text-base font-semibold">Clear all email logs?</h4>
+    <p class="mb-4 text-sm text-muted-foreground">
+      This will permanently delete all {{ logs().length }} email logs and
+      extracted documents. This action cannot be undone.
+    </p>
+
+    <div class="flex justify-end gap-2">
+      <button
+        type="button"
+        (click)="openClearDialog = false"
+        class="rounded-md border px-4 py-2 text-sm"
+      >
+        Cancel
+      </button>
+
+      <button
+        type="button"
+        (click)="clearLogs()"
+        class="rounded-md bg-destructive px-4 py-2 text-sm text-destructive-foreground"
+      >
+        Clear All Logs
+      </button>
+    </div>
+  </div>
+</div>
+
+<div
+  *ngIf="emailDialogOpen"
+  class="fixed inset-0 z-50 flex items-center justify-center bg-black/40"
+>
+  <div
+    class="mx-4 max-h-[80vh] w-full max-w-3xl overflow-y-auto rounded-lg border bg-background p-5 shadow-lg"
+  >
+    <div class="mb-4 flex items-center justify-between">
+      <h4 class="text-sm font-semibold">
+        {{ emailContent?.subject || "Loading…" }}
+      </h4>
+      <button
+        type="button"
+        (click)="emailDialogOpen = false"
+        class="text-muted-foreground hover:text-foreground"
+      >
+        ✕
+      </button>
+    </div>
+
+    <div
+      *ngIf="loadingEmail"
+      class="flex items-center justify-center gap-2 py-12 text-muted-foreground"
+    >
+      <svg
+        class="h-6 w-6 animate-spin"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        stroke-width="2"
+        aria-hidden="true"
+      >
+        <path d="M21 2v6h-6" />
+        <path d="M3 12a9 9 0 0 1 15-6.7L21 8" />
+        <path d="M3 22v-6h6" />
+        <path d="M21 12a9 9 0 0 1-15 6.7L3 16" />
+      </svg>
+      Fetching email from Outlook…
+    </div>
+
+    <div *ngIf="!loadingEmail && emailContent" class="space-y-4">
+      <div class="grid gap-2 rounded-lg border bg-muted/20 p-4 text-sm">
+        <div>
+          <span class="font-medium">From:</span> {{ emailContent.from || "-" }}
+        </div>
+        <div>
+          <span class="font-medium">To:</span> {{ emailContent.to || "-" }}
+        </div>
+        <div>
+          <span class="font-medium">CC:</span> {{ emailContent.cc || "-" }}
+        </div>
+        <div>
+          <span class="font-medium">Received:</span>
+          {{ emailContent.receivedAt || "-" }}
+        </div>
+      </div>
+
+      <div
+        *ngIf="emailContent.bodyHtml; else plainEmailBody"
+        class="rounded-lg border bg-background p-4"
+        [innerHTML]="emailContent.bodyHtml"
+      ></div>
+
+      <ng-template #plainEmailBody>
+        <div
+          class="whitespace-pre-wrap rounded-lg border bg-background p-4 text-sm"
+        >
+          {{ emailContent.bodyText || "No email content available." }}
+        </div>
+      </ng-template>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,1158 @@
+<section
+  *ngIf="!loading && overview; else loadingState"
+  class="min-h-screen bg-gradient-to-br from-background via-background/95 to-primary/5"
+>
+  <div class="sticky top-0 z-50 border-b bg-card/95 shadow-sm backdrop-blur-md">
+    <div class="container mx-auto px-4 py-3.5 sm:px-6">
+      <div class="flex items-center justify-between">
+        <a routerLink="/" class="group flex items-center gap-3 sm:gap-4">
+          <img
+            src="assets/logo.jpeg"
+            alt="Al-Ittihad Al-Watani"
+            class="h-12 w-auto sm:h-14"
+          />
+          <div>
+            <span class="text-base font-bold text-primary sm:text-lg"
+              >AI Email Agent</span
+            >
+            <p class="text-[10px] text-muted-foreground sm:text-xs">
+              Smart Email Routing
+            </p>
+          </div>
+        </a>
+
+        <div class="flex items-center gap-2 sm:gap-3">
+          <span
+            *ngIf="outlookConnected"
+            class="hidden items-center gap-2 rounded-md border border-success/30 bg-success/10 px-3 py-1.5 text-xs font-semibold text-success shadow-sm md:inline-flex"
+          >
+            <span class="h-2 w-2 animate-pulse rounded-full bg-success"></span>
+            <span class="max-w-[150px] truncate">{{ outlookEmail }}</span>
+          </span>
+
+          <button
+            type="button"
+            class="inline-flex h-9 items-center gap-2 rounded-lg px-3 transition-all hover:bg-muted/80 sm:px-4"
+          >
+            <svg
+              class="h-4 w-4"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              aria-hidden="true"
+            >
+              <path
+                d="M12.22 2h-.44a2 2 0 0 0-1.98 1.57l-.24 1.32a8 8 0 0 0-1.3.75l-1.26-.42a2 2 0 0 0-2.36.84l-.22.38a2 2 0 0 0 .36 2.48l1.02.9a8 8 0 0 0 0 1.5l-1.02.9a2 2 0 0 0-.36 2.48l.22.38a2 2 0 0 0 2.36.84l1.26-.42c.4.3.84.55 1.3.75l.24 1.32A2 2 0 0 0 11.78 22h.44a2 2 0 0 0 1.98-1.57l.24-1.32c.46-.2.9-.45 1.3-.75l1.26.42a2 2 0 0 0 2.36-.84l.22-.38a2 2 0 0 0-.36-2.48l-1.02-.9a8 8 0 0 0 0-1.5l1.02-.9a2 2 0 0 0 .36-2.48l-.22-.38a2 2 0 0 0-2.36-.84l-1.26.42a8 8 0 0 0-1.3-.75l-.24-1.32A2 2 0 0 0 12.22 2z"
+              />
+              <circle cx="12" cy="12" r="3" />
+            </svg>
+            <span class="hidden text-sm font-medium sm:inline">Settings</span>
+          </button>
+
+          <button
+            type="button"
+            (click)="signOut()"
+            class="inline-flex h-9 items-center gap-2 rounded-lg px-3 transition-all hover:bg-destructive/10 hover:text-destructive sm:px-4"
+          >
+            <svg
+              class="h-4 w-4"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              aria-hidden="true"
+            >
+              <path d="m16 17 5-5-5-5" />
+              <path d="M21 12H9" />
+              <path d="M13 22H5a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h8" />
+            </svg>
+            <span class="hidden text-sm font-medium sm:inline">Logout</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="container mx-auto px-4 py-4 sm:px-6 sm:py-6 lg:py-8">
+    <div class="space-y-6 sm:space-y-8">
+      <div class="relative">
+        <div
+          class="absolute inset-0 -z-10 bg-gradient-to-r from-primary/5 via-purple-500/5 to-blue-500/5 blur-3xl"
+        ></div>
+        <nav
+          class="mx-auto grid w-full max-w-7xl gap-1.5 rounded-xl border border-border/50 bg-card/80 p-1.5 shadow-lg backdrop-blur-sm"
+          [ngClass]="isAdmin ? 'grid-cols-5' : 'grid-cols-4'"
+        >
+          <button
+            type="button"
+            (click)="setTab('overview')"
+            class="flex flex-col items-center justify-center gap-1.5 rounded-lg px-2 py-2.5 text-xs font-medium transition-all hover:bg-muted/50 sm:flex-row sm:gap-2 sm:px-4 sm:py-3 sm:text-sm"
+            [ngClass]="
+              activeTab === 'overview'
+                ? 'bg-gradient-to-br from-primary to-primary/80 text-primary-foreground shadow-lg'
+                : 'text-foreground'
+            "
+          >
+            <svg
+              class="h-4 w-4 sm:h-[18px] sm:w-[18px]"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              aria-hidden="true"
+            >
+              <path d="M13 2 3 14h7l-1 8 10-12h-7z" />
+            </svg>
+            <span>Overview</span>
+          </button>
+          <button
+            type="button"
+            (click)="setTab('rules')"
+            class="flex flex-col items-center justify-center gap-1.5 rounded-lg px-2 py-2.5 text-xs font-medium transition-all hover:bg-muted/50 sm:flex-row sm:gap-2 sm:px-4 sm:py-3 sm:text-sm"
+            [ngClass]="
+              activeTab === 'rules'
+                ? 'bg-gradient-to-br from-primary to-primary/80 text-primary-foreground shadow-lg'
+                : 'text-foreground'
+            "
+          >
+            <svg
+              class="h-4 w-4 sm:h-[18px] sm:w-[18px]"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              aria-hidden="true"
+            >
+              <path
+                d="M12.22 2h-.44a2 2 0 0 0-1.98 1.57l-.24 1.32a8 8 0 0 0-1.3.75l-1.26-.42a2 2 0 0 0-2.36.84l-.22.38a2 2 0 0 0 .36 2.48l1.02.9a8 8 0 0 0 0 1.5l-1.02.9a2 2 0 0 0-.36 2.48l.22.38a2 2 0 0 0 2.36.84l1.26-.42c.4.3.84.55 1.3.75l.24 1.32A2 2 0 0 0 11.78 22h.44a2 2 0 0 0 1.98-1.57l.24-1.32c.46-.2.9-.45 1.3-.75l1.26.42a2 2 0 0 0 2.36-.84l.22-.38a2 2 0 0 0-.36-2.48l-1.02-.9a8 8 0 0 0 0-1.5l1.02-.9a2 2 0 0 0 .36-2.48l-.22-.38a2 2 0 0 0-2.36-.84l-1.26.42a8 8 0 0 0-1.3-.75l-.24-1.32A2 2 0 0 0 12.22 2z"
+              />
+              <circle cx="12" cy="12" r="3" />
+            </svg>
+            <span>Rules</span>
+          </button>
+          <button
+            type="button"
+            (click)="setTab('analytics')"
+            class="flex flex-col items-center justify-center gap-1.5 rounded-lg px-2 py-2.5 text-xs font-medium transition-all hover:bg-muted/50 sm:flex-row sm:gap-2 sm:px-4 sm:py-3 sm:text-sm"
+            [ngClass]="
+              activeTab === 'analytics'
+                ? 'bg-gradient-to-br from-primary to-primary/80 text-primary-foreground shadow-lg'
+                : 'text-foreground'
+            "
+          >
+            <svg
+              class="h-4 w-4 sm:h-[18px] sm:w-[18px]"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              aria-hidden="true"
+            >
+              <path d="M3 3v18h18" />
+              <path d="M18 17V9" />
+              <path d="M13 17V5" />
+              <path d="M8 17v-3" />
+            </svg>
+            <span>Analytics</span>
+          </button>
+          <button
+            type="button"
+            (click)="setTab('emails')"
+            class="flex flex-col items-center justify-center gap-1.5 rounded-lg px-2 py-2.5 text-xs font-medium transition-all hover:bg-muted/50 sm:flex-row sm:gap-2 sm:px-4 sm:py-3 sm:text-sm"
+            [ngClass]="
+              activeTab === 'emails'
+                ? 'bg-gradient-to-br from-primary to-primary/80 text-primary-foreground shadow-lg'
+                : 'text-foreground'
+            "
+          >
+            <svg
+              class="h-4 w-4 sm:h-[18px] sm:w-[18px]"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              aria-hidden="true"
+            >
+              <path d="M22 12h-4l-3 9L9 3l-3 9H2" />
+            </svg>
+            <span>Emails</span>
+          </button>
+          <button
+            *ngIf="isAdmin"
+            type="button"
+            (click)="setTab('users')"
+            class="flex flex-col items-center justify-center gap-1.5 rounded-lg px-2 py-2.5 text-xs font-medium transition-all hover:bg-muted/50 sm:flex-row sm:gap-2 sm:px-4 sm:py-3 sm:text-sm"
+            [ngClass]="
+              activeTab === 'users'
+                ? 'bg-gradient-to-br from-primary to-primary/80 text-primary-foreground shadow-lg'
+                : 'text-foreground'
+            "
+          >
+            <svg
+              class="h-4 w-4 sm:h-[18px] sm:w-[18px]"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              aria-hidden="true"
+            >
+              <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+              <circle cx="9" cy="7" r="4" />
+              <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
+              <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+            </svg>
+            <span>Users</span>
+          </button>
+        </nav>
+      </div>
+
+      <section *ngIf="activeTab === 'overview'" class="space-y-6 sm:space-y-8">
+        <div class="grid grid-cols-2 gap-4 sm:gap-5 lg:grid-cols-4">
+          <article
+            class="group relative overflow-hidden rounded-lg border border-primary/30 bg-gradient-to-br from-card via-card to-primary/10 p-5 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl sm:p-6"
+          >
+            <div
+              class="absolute inset-0 bg-gradient-to-br from-primary/0 to-primary/5 opacity-0 transition-opacity group-hover:opacity-100"
+            ></div>
+            <div class="relative">
+              <div class="mb-3 flex items-center justify-between">
+                <div
+                  class="text-xs font-semibold uppercase tracking-wide text-muted-foreground sm:text-sm"
+                >
+                  Total Rules
+                </div>
+                <div
+                  class="rounded-xl bg-primary/10 p-2.5 transition-colors group-hover:bg-primary/20"
+                >
+                  <svg
+                    class="h-5 w-5 text-primary"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    aria-hidden="true"
+                  >
+                    <path
+                      d="M12.22 2h-.44a2 2 0 0 0-1.98 1.57l-.24 1.32a8 8 0 0 0-1.3.75l-1.26-.42a2 2 0 0 0-2.36.84l-.22.38a2 2 0 0 0 .36 2.48l1.02.9a8 8 0 0 0 0 1.5l-1.02.9a2 2 0 0 0-.36 2.48l.22.38a2 2 0 0 0 2.36.84l1.26-.42c.4.3.84.55 1.3.75l.24 1.32A2 2 0 0 0 11.78 22h.44a2 2 0 0 0 1.98-1.57l.24-1.32c.46-.2.9-.45 1.3-.75l1.26.42a2 2 0 0 0 2.36-.84l.22-.38a2 2 0 0 0-.36-2.48l-1.02-.9a8 8 0 0 0 0-1.5l1.02-.9a2 2 0 0 0 .36-2.48l-.22-.38a2 2 0 0 0-2.36-.84l-1.26.42a8 8 0 0 0-1.3-.75l-.24-1.32A2 2 0 0 0 12.22 2z"
+                    />
+                    <circle cx="12" cy="12" r="3" />
+                  </svg>
+                </div>
+              </div>
+              <div
+                class="mb-1 text-3xl font-bold text-foreground transition-transform group-hover:scale-105 sm:text-4xl"
+              >
+                {{ rules.length }}
+              </div>
+              <p class="text-xs font-medium text-muted-foreground sm:text-sm">
+                Active forwarding rules
+              </p>
+            </div>
+          </article>
+
+          <article
+            class="group relative overflow-hidden rounded-lg border border-blue-500/30 bg-gradient-to-br from-card via-card to-blue-500/10 p-5 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl sm:p-6"
+          >
+            <div
+              class="absolute inset-0 bg-gradient-to-br from-blue-500/0 to-blue-500/5 opacity-0 transition-opacity group-hover:opacity-100"
+            ></div>
+            <div class="relative">
+              <div class="mb-3 flex items-center justify-between">
+                <div
+                  class="text-xs font-semibold uppercase tracking-wide text-muted-foreground sm:text-sm"
+                >
+                  Processed
+                </div>
+                <div
+                  class="rounded-xl bg-blue-500/10 p-2.5 transition-colors group-hover:bg-blue-500/20"
+                >
+                  <svg
+                    class="h-5 w-5 text-blue-500"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    aria-hidden="true"
+                  >
+                    <path d="M22 12h-4l-3 9L9 3l-3 9H2" />
+                  </svg>
+                </div>
+              </div>
+              <div
+                class="mb-1 text-3xl font-bold text-foreground transition-transform group-hover:scale-105 sm:text-4xl"
+              >
+                {{ overview.stats.totalProcessed }}
+              </div>
+              <p class="text-xs font-medium text-muted-foreground sm:text-sm">
+                Total emails handled
+              </p>
+            </div>
+          </article>
+
+          <article
+            class="group relative overflow-hidden rounded-lg border border-purple-500/30 bg-gradient-to-br from-card via-card to-purple-500/10 p-5 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl sm:p-6"
+          >
+            <div
+              class="absolute inset-0 bg-gradient-to-br from-purple-500/0 to-purple-500/5 opacity-0 transition-opacity group-hover:opacity-100"
+            ></div>
+            <div class="relative">
+              <div class="mb-3 flex items-center justify-between">
+                <div
+                  class="text-xs font-semibold uppercase tracking-wide text-muted-foreground sm:text-sm"
+                >
+                  Today
+                </div>
+                <div
+                  class="rounded-xl bg-purple-500/10 p-2.5 transition-colors group-hover:bg-purple-500/20"
+                >
+                  <svg
+                    class="h-5 w-5 text-purple-500"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    aria-hidden="true"
+                  >
+                    <path d="M3 12h18" />
+                    <path d="M12 3v18" />
+                  </svg>
+                </div>
+              </div>
+              <div
+                class="mb-1 text-3xl font-bold text-foreground transition-transform group-hover:scale-105 sm:text-4xl"
+              >
+                {{ overview.stats.forwardedToday }}
+              </div>
+              <p class="text-xs font-medium text-muted-foreground sm:text-sm">
+                Forwarded today
+              </p>
+            </div>
+          </article>
+
+          <article
+            class="group relative overflow-hidden rounded-lg border border-success/30 bg-gradient-to-br from-card via-card to-success/10 p-5 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl sm:p-6"
+          >
+            <div
+              class="absolute inset-0 bg-gradient-to-br from-success/0 to-success/5 opacity-0 transition-opacity group-hover:opacity-100"
+            ></div>
+            <div class="relative">
+              <div class="mb-3 flex items-center justify-between">
+                <div
+                  class="text-xs font-semibold uppercase tracking-wide text-muted-foreground sm:text-sm"
+                >
+                  Success
+                </div>
+                <div
+                  class="rounded-xl bg-success/10 p-2.5 transition-colors group-hover:bg-success/20"
+                >
+                  <svg
+                    class="h-5 w-5 text-success"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    aria-hidden="true"
+                  >
+                    <path d="M3 3v18h18" />
+                    <path d="M18 17V9" />
+                    <path d="M13 17V5" />
+                    <path d="M8 17v-3" />
+                  </svg>
+                </div>
+              </div>
+              <div
+                class="mb-1 text-3xl font-bold text-success transition-transform group-hover:scale-105 sm:text-4xl"
+              >
+                {{ overview.stats.successRate }}%
+              </div>
+              <p class="text-xs font-medium text-muted-foreground sm:text-sm">
+                Success rate
+              </p>
+            </div>
+          </article>
+        </div>
+
+        <article
+          *ngIf="outlookConnected; else connectOutlookCard"
+          class="rounded-lg border-2 border-success/40 bg-gradient-to-br from-success/10 via-card to-success/5 p-6 shadow-xl backdrop-blur-sm sm:p-7"
+        >
+          <div
+            class="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center sm:gap-6"
+          >
+            <div class="flex items-center gap-4">
+              <div
+                class="shrink-0 rounded-2xl bg-success/20 p-3 shadow-lg sm:p-4"
+              >
+                <svg
+                  class="h-6 w-6 text-success sm:h-7 sm:w-7"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  aria-hidden="true"
+                >
+                  <path d="M22 12h-4l-3 9L9 3l-3 9H2" />
+                </svg>
+              </div>
+              <div class="min-w-0">
+                <h3
+                  class="mb-1.5 flex flex-wrap items-center gap-2 text-base font-bold text-foreground sm:text-lg"
+                >
+                  Outlook Connected
+                  <span
+                    class="inline-flex items-center gap-2 rounded-md border border-primary/40 bg-primary/15 px-3 py-1 text-xs font-semibold shadow-sm"
+                  >
+                    <svg
+                      class="h-3.5 w-3.5"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      aria-hidden="true"
+                    >
+                      <path d="M21 2v6h-6" />
+                      <path d="M3 12a9 9 0 0 1 15-6.7L21 8" />
+                      <path d="M3 22v-6h6" />
+                      <path d="M21 12a9 9 0 0 1-15 6.7L3 16" />
+                    </svg>
+                    <span class="font-mono">{{
+                      formatCountdown(countdown)
+                    }}</span>
+                  </span>
+                </h3>
+                <p class="text-sm text-muted-foreground">
+                  <span
+                    class="block truncate font-semibold text-foreground sm:inline"
+                    >{{ outlookEmail }}</span
+                  >
+                  <span class="mx-2 hidden sm:inline">•</span>
+                  <span class="block sm:inline"
+                    >Auto-processing every 5 minutes</span
+                  >
+                </p>
+              </div>
+            </div>
+
+            <div class="flex w-full gap-3 sm:w-auto">
+              <button
+                type="button"
+                (click)="processNow()"
+                [disabled]="isProcessing"
+                class="inline-flex h-10 flex-1 items-center justify-center gap-2 rounded-lg bg-primary px-5 text-sm font-semibold text-primary-foreground shadow-lg transition-all hover:shadow-xl sm:flex-initial"
+              >
+                <svg
+                  class="h-4 w-4"
+                  [ngClass]="isProcessing ? 'animate-spin' : ''"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  aria-hidden="true"
+                >
+                  <path d="M21 2v6h-6" />
+                  <path d="M3 12a9 9 0 0 1 15-6.7L21 8" />
+                  <path d="M3 22v-6h6" />
+                  <path d="M21 12a9 9 0 0 1-15 6.7L3 16" />
+                </svg>
+                <span>{{
+                  isProcessing ? "Processing..." : "Process Now"
+                }}</span>
+              </button>
+              <button
+                type="button"
+                (click)="disconnectOutlook()"
+                class="h-10 rounded-lg border border-success/40 px-5 text-sm font-semibold transition-all hover:border-success/60 hover:bg-success/15"
+              >
+                Disconnect
+              </button>
+            </div>
+          </div>
+        </article>
+
+        <ng-template #connectOutlookCard>
+          <article
+            class="rounded-lg border-2 border-warning/40 bg-gradient-to-br from-warning/10 via-card to-warning/5 p-6 shadow-xl backdrop-blur-sm sm:p-8"
+          >
+            <div
+              class="flex flex-col items-center justify-between gap-5 md:flex-row sm:gap-8"
+            >
+              <div
+                class="flex items-center gap-4 text-center sm:gap-5 md:text-left"
+              >
+                <div
+                  class="shrink-0 rounded-2xl bg-warning/20 p-4 shadow-lg sm:p-5"
+                >
+                  <svg
+                    class="h-7 w-7 text-warning sm:h-8 sm:w-8"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    aria-hidden="true"
+                  >
+                    <path d="M22 12h-4l-3 9L9 3l-3 9H2" />
+                  </svg>
+                </div>
+                <div>
+                  <h3 class="mb-2 text-lg font-bold text-foreground sm:text-xl">
+                    Connect Your Outlook
+                  </h3>
+                  <p
+                    class="max-w-md text-sm text-muted-foreground sm:text-base"
+                  >
+                    Authenticate with Microsoft to start processing and
+                    forwarding emails automatically
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                (click)="connectOutlook()"
+                [disabled]="isConnecting"
+                class="inline-flex h-12 w-full items-center justify-center gap-2.5 rounded-lg bg-primary px-8 font-bold text-primary-foreground shadow-xl transition-all hover:shadow-2xl md:w-auto"
+              >
+                <svg
+                  class="h-5 w-5"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  aria-hidden="true"
+                >
+                  <path d="M22 12h-4l-3 9L9 3l-3 9H2" />
+                </svg>
+                <span>{{
+                  isConnecting ? "Connecting..." : "Connect Outlook"
+                }}</span>
+              </button>
+            </div>
+          </article>
+        </ng-template>
+
+        <article
+          *ngIf="connectionMessage"
+          class="rounded-lg border bg-card p-4 text-card-foreground shadow-sm sm:p-5"
+        >
+          <h3 class="mb-2 text-base font-semibold text-foreground sm:text-lg">
+            Status
+          </h3>
+          <p class="text-sm text-muted-foreground">{{ connectionMessage }}</p>
+        </article>
+
+        <div class="grid gap-4 sm:gap-6 md:grid-cols-2">
+          <article
+            class="rounded-lg border bg-card p-4 text-card-foreground shadow-sm sm:p-5"
+          >
+            <div class="mb-3 flex items-center justify-between">
+              <h3
+                class="flex items-center gap-2 text-base font-semibold text-foreground sm:text-lg"
+              >
+                <svg
+                  class="h-4 w-4 text-primary"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  aria-hidden="true"
+                >
+                  <path d="M3 3v18h18" />
+                  <path d="M8 14v-4" />
+                  <path d="M12 14V8" />
+                  <path d="M16 14v-2" />
+                </svg>
+                Recent Activity
+              </h3>
+              <button type="button" class="h-8 rounded-md px-2 hover:bg-muted">
+                <svg
+                  class="h-3.5 w-3.5"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  aria-hidden="true"
+                >
+                  <path d="M21 2v6h-6" />
+                  <path d="M3 12a9 9 0 0 1 15-6.7L21 8" />
+                  <path d="M3 22v-6h6" />
+                  <path d="M21 12a9 9 0 0 1-15 6.7L3 16" />
+                </svg>
+              </button>
+            </div>
+            <div class="mb-3 h-px bg-border"></div>
+
+            <div
+              *ngIf="overview.recentLogs.length > 0; else noActivity"
+              class="max-h-[250px] space-y-2 overflow-y-auto sm:max-h-[300px]"
+            >
+              <div
+                *ngFor="let log of overview.recentLogs | slice : 0 : 5"
+                class="flex items-start gap-2 rounded-lg bg-muted/50 p-2.5 transition-colors hover:bg-muted"
+              >
+                <div
+                  class="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full"
+                  [ngClass]="{
+                    'bg-success': log.status === 'replied',
+                    'bg-primary': log.status === 'forwarded',
+                    'bg-muted-foreground': log.status === 'no_match',
+                    'bg-destructive': log.status === 'failed'
+                  }"
+                ></div>
+                <div class="min-w-0 flex-1">
+                  <p
+                    class="truncate text-xs font-medium text-foreground sm:text-sm"
+                  >
+                    {{ log.emailSubject }}
+                  </p>
+                  <p
+                    class="truncate text-[10px] text-muted-foreground sm:text-xs"
+                  >
+                    From: {{ log.emailFrom }}
+                  </p>
+                </div>
+                <div class="flex shrink-0 items-center gap-1">
+                  <span
+                    *ngIf="log.aiClassified"
+                    class="inline-flex h-5 items-center rounded-md border border-purple-500/30 bg-purple-500/10 px-2 text-[10px] text-purple-600 sm:text-xs"
+                    >AI</span
+                  >
+                  <span
+                    class="inline-flex h-5 items-center rounded-md px-2 text-[10px] capitalize sm:text-xs"
+                    [ngClass]="
+                      log.status === 'forwarded'
+                        ? 'bg-primary text-primary-foreground'
+                        : log.status === 'replied'
+                        ? 'border border-success/30 bg-success/10 text-success'
+                        : 'bg-muted text-muted-foreground'
+                    "
+                  >
+                    {{ log.status }}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <ng-template #noActivity>
+              <div class="py-6 text-center text-muted-foreground sm:py-8">
+                <svg
+                  class="mx-auto mb-2 h-8 w-8 opacity-50 sm:h-10 sm:w-10"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  aria-hidden="true"
+                >
+                  <path d="M3 3v18h18" />
+                  <path d="M8 14v-4" />
+                  <path d="M12 14V8" />
+                  <path d="M16 14v-2" />
+                </svg>
+                <p class="text-xs sm:text-sm">No activity yet</p>
+              </div>
+            </ng-template>
+          </article>
+
+          <article
+            class="rounded-lg border bg-card p-4 text-card-foreground shadow-sm sm:p-5"
+          >
+            <h3
+              class="mb-3 flex items-center gap-2 text-base font-semibold text-foreground sm:text-lg"
+            >
+              <svg
+                class="h-4 w-4 text-primary"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                aria-hidden="true"
+              >
+                <path d="M3 3v18h18" />
+                <path d="M18 17V9" />
+                <path d="M13 17V5" />
+                <path d="M8 17v-3" />
+              </svg>
+              Top Rules
+            </h3>
+            <div class="mb-3 h-px bg-border"></div>
+
+            <div *ngIf="rules.length > 0; else noRules" class="space-y-2">
+              <div
+                *ngFor="let rule of rules | slice : 0 : 5"
+                class="flex items-center justify-between rounded-lg bg-muted/50 p-2.5 transition-colors hover:bg-muted"
+              >
+                <div class="flex min-w-0 flex-1 items-center gap-2">
+                  <div class="shrink-0 rounded-lg bg-primary/10 p-1.5">
+                    <svg
+                      class="h-3 w-3 text-primary"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      aria-hidden="true"
+                    >
+                      <path
+                        d="M12.22 2h-.44a2 2 0 0 0-1.98 1.57l-.24 1.32a8 8 0 0 0-1.3.75l-1.26-.42a2 2 0 0 0-2.36.84l-.22.38a2 2 0 0 0 .36 2.48l1.02.9a8 8 0 0 0 0 1.5l-1.02.9a2 2 0 0 0-.36 2.48l.22.38a2 2 0 0 0 2.36.84l1.26-.42c.4.3.84.55 1.3.75l.24 1.32A2 2 0 0 0 11.78 22h.44a2 2 0 0 0 1.98-1.57l.24-1.32c.46-.2.9-.45 1.3-.75l1.26.42a2 2 0 0 0 2.36-.84l.22-.38a2 2 0 0 0-.36-2.48l-1.02-.9a8 8 0 0 0 0-1.5l1.02-.9a2 2 0 0 0 .36-2.48l-.22-.38a2 2 0 0 0-2.36-.84l-1.26.42a8 8 0 0 0-1.3-.75l-.24-1.32A2 2 0 0 0 12.22 2z"
+                      />
+                      <circle cx="12" cy="12" r="3" />
+                    </svg>
+                  </div>
+                  <div class="min-w-0">
+                    <p
+                      class="truncate text-xs font-medium text-foreground sm:text-sm"
+                    >
+                      {{ rule.name }}
+                    </p>
+                    <p
+                      class="truncate text-[10px] text-muted-foreground sm:text-xs"
+                    >
+                      {{ rule.keywords.slice(0, 2).join(", ") }}
+                    </p>
+                  </div>
+                </div>
+                <span
+                  class="inline-flex h-5 items-center rounded-md px-2 text-[10px] sm:text-xs"
+                  [ngClass]="
+                    rule.active
+                      ? 'bg-primary text-primary-foreground'
+                      : 'bg-muted text-muted-foreground'
+                  "
+                >
+                  {{ rule.active ? "Active" : "Inactive" }}
+                </span>
+              </div>
+            </div>
+
+            <ng-template #noRules>
+              <div class="py-6 text-center text-muted-foreground sm:py-8">
+                <svg
+                  class="mx-auto mb-2 h-8 w-8 opacity-50 sm:h-10 sm:w-10"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  aria-hidden="true"
+                >
+                  <path
+                    d="M12.22 2h-.44a2 2 0 0 0-1.98 1.57l-.24 1.32a8 8 0 0 0-1.3.75l-1.26-.42a2 2 0 0 0-2.36.84l-.22.38a2 2 0 0 0 .36 2.48l1.02.9a8 8 0 0 0 0 1.5l-1.02.9a2 2 0 0 0-.36 2.48l.22.38a2 2 0 0 0 2.36.84l1.26-.42c.4.3.84.55 1.3.75l.24 1.32A2 2 0 0 0 11.78 22h.44a2 2 0 0 0 1.98-1.57l.24-1.32c.46-.2.9-.45 1.3-.75l1.26.42a2 2 0 0 0 2.36-.84l.22-.38a2 2 0 0 0-.36-2.48l-1.02-.9a8 8 0 0 0 0-1.5l1.02-.9a2 2 0 0 0 .36-2.48l-.22-.38a2 2 0 0 0-2.36-.84l-1.26.42a8 8 0 0 0-1.3-.75l-.24-1.32A2 2 0 0 0 12.22 2z"
+                  />
+                  <circle cx="12" cy="12" r="3" />
+                </svg>
+                <p class="text-xs sm:text-sm">No rules yet</p>
+              </div>
+            </ng-template>
+          </article>
+        </div>
+      </section>
+
+      <section *ngIf="activeTab === 'rules'" class="space-y-4 sm:space-y-6">
+        <div
+          class="mb-4 flex flex-col items-start justify-between gap-3 sm:mb-6 sm:flex-row sm:items-center sm:gap-4"
+        >
+          <h2 class="text-xl font-bold text-foreground sm:text-2xl lg:text-3xl">
+            Forwarding Rules
+          </h2>
+          <div class="flex w-full gap-2 sm:w-auto">
+            <app-rule-tester [rules]="rules" />
+            <button
+              type="button"
+              (click)="toggleRuleForm()"
+              class="inline-flex flex-1 items-center justify-center gap-1.5 rounded-md bg-primary px-4 py-2 text-sm text-primary-foreground shadow-sm sm:flex-initial"
+            >
+              <svg
+                class="h-3.5 w-3.5"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                aria-hidden="true"
+              >
+                <path d="M5 12h14" />
+                <path d="M12 5v14" />
+              </svg>
+              <span class="text-sm">{{
+                showAddRule ? "Close" : "Add Rule"
+              }}</span>
+            </button>
+          </div>
+        </div>
+
+        <div
+          *ngIf="showAddRule"
+          class="mb-4 rounded-lg border-2 border-primary/30 bg-card p-4 shadow-lg sm:mb-6 sm:p-5"
+        >
+          <h3
+            class="mb-3 text-base font-semibold text-foreground sm:mb-4 sm:text-lg"
+          >
+            {{ editingRuleId ? "Edit Rule" : "Create New Rule" }}
+          </h3>
+          <div class="space-y-3 sm:space-y-4">
+            <div class="grid gap-3 sm:grid-cols-2 sm:gap-4">
+              <div>
+                <label class="text-xs sm:text-sm">Rule Name</label>
+                <input
+                  [(ngModel)]="newRule.name"
+                  placeholder="e.g., Customer Support"
+                  class="mt-1 h-9 w-full rounded-md border border-input bg-background px-3 text-sm"
+                />
+              </div>
+              <div>
+                <div class="mb-1 flex items-center justify-between">
+                  <label class="text-xs sm:text-sm">Forward To</label>
+                  <div class="flex items-center gap-2">
+                    <label class="text-[10px] text-muted-foreground"
+                      >Rotation</label
+                    >
+                    <input
+                      [(ngModel)]="newRule.rotationEnabled"
+                      type="checkbox"
+                      class="scale-75 sm:scale-100 h-4 w-4"
+                    />
+                    <ng-container *ngIf="newRule.rotationEnabled">
+                      <label class="ml-2 text-[10px] text-muted-foreground"
+                        >Smart Thread</label
+                      >
+                      <input
+                        [(ngModel)]="newRule.smartThreadEnabled"
+                        type="checkbox"
+                        class="scale-75 sm:scale-100 h-4 w-4"
+                      />
+                    </ng-container>
+                  </div>
+                </div>
+
+                <input
+                  *ngIf="!newRule.rotationEnabled"
+                  [(ngModel)]="newRule.recipient"
+                  type="email"
+                  placeholder="recipient@email.com"
+                  class="mt-1 h-9 w-full rounded-md border border-input bg-background px-3 text-sm"
+                />
+
+                <div
+                  *ngIf="newRule.rotationEnabled"
+                  class="rounded-lg border border-blue-500/20 bg-blue-500/5 p-3"
+                >
+                  <app-recipient-manager
+                    [recipients]="newRule.recipients"
+                    (recipientsChange)="newRule.recipients = $event"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div>
+              <label class="text-xs sm:text-sm">Keywords (optional)</label>
+              <app-keyword-input
+                [keywords]="newRule.keywords"
+                (keywordsChange)="newRule.keywords = $event"
+                placeholder="Type keyword and press Enter"
+              />
+              <p class="mt-1 text-[10px] text-muted-foreground sm:text-xs">
+                Match emails containing any of these keywords in subject or body
+              </p>
+            </div>
+
+            <div>
+              <label class="text-xs sm:text-sm"
+                >Exclude Keywords (optional)</label
+              >
+              <app-keyword-input
+                [keywords]="newRule.negativeKeywords"
+                (keywordsChange)="newRule.negativeKeywords = $event"
+                placeholder="Type keyword and press Enter"
+                variant="destructive"
+              />
+              <p class="mt-1 text-[10px] text-muted-foreground sm:text-xs">
+                Skip this rule if email contains any of these words
+              </p>
+            </div>
+
+            <div>
+              <label class="text-xs sm:text-sm">Sender Filter (optional)</label>
+              <input
+                [(ngModel)]="newRule.senderPattern"
+                placeholder="e.g., *@domain.com"
+                class="mt-1 h-9 w-full rounded-md border border-input bg-background px-3 text-sm"
+              />
+              <p class="mt-1 text-[10px] text-muted-foreground sm:text-xs">
+                Match specific email, domain (&#64;example.com), or pattern
+                (*&#64;company.net)
+              </p>
+            </div>
+
+            <div>
+              <label class="text-xs sm:text-sm"
+                >Subject Filter (optional)</label
+              >
+              <app-keyword-input
+                [keywords]="parseSubjectPatternKeywords(newRule.subjectPattern)"
+                (keywordsChange)="newRule.subjectPattern = $event.join(', ')"
+                placeholder="Type keyword and press Enter"
+              />
+              <p class="mt-1 text-[10px] text-muted-foreground sm:text-xs">
+                Match emails containing any of these subject keywords
+              </p>
+            </div>
+
+            <div>
+              <label class="text-xs sm:text-sm"
+                >Additional Conditions (Optional)</label
+              >
+              <textarea
+                [(ngModel)]="newRule.conditions"
+                placeholder="Extra routing instructions..."
+                class="mt-1 min-h-[60px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+              ></textarea>
+            </div>
+
+            <div>
+              <label class="text-xs sm:text-sm"
+                >Priority (Higher = First)</label
+              >
+              <input
+                [(ngModel)]="newRule.priority"
+                type="number"
+                min="0"
+                class="mt-1 h-9 w-full rounded-md border border-input bg-background px-3 text-sm"
+              />
+            </div>
+
+            <div
+              class="rounded-lg border border-purple-500/20 bg-gradient-to-br from-purple-500/5 to-blue-500/5 p-3 sm:p-4"
+            >
+              <div class="mb-3 flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                  <svg
+                    class="h-4 w-4 text-purple-500"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    aria-hidden="true"
+                  >
+                    <path d="M12 18V5" />
+                    <path d="M9 8a3 3 0 1 1 6 0c0 3-3 2-3 5" />
+                    <path d="M10 22h4" />
+                  </svg>
+                  <label class="text-xs font-medium sm:text-sm"
+                    >AI-Powered Matching</label
+                  >
+                </div>
+                <input
+                  [(ngModel)]="newRule.aiEnabled"
+                  type="checkbox"
+                  class="h-4 w-4"
+                />
+              </div>
+              <p class="text-[10px] text-muted-foreground sm:text-xs">
+                When exact keywords don't match, AI will analyze email
+                semantically to find the best rule
+              </p>
+              <div *ngIf="newRule.aiEnabled" class="mt-3">
+                <label class="text-xs sm:text-sm">AI Context (Optional)</label>
+                <textarea
+                  [(ngModel)]="newRule.aiContext"
+                  placeholder="Help AI understand this rule better..."
+                  class="mt-1 min-h-[60px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                ></textarea>
+              </div>
+            </div>
+
+            <div
+              class="rounded-lg border border-green-500/20 bg-gradient-to-br from-green-500/5 to-teal-500/5 p-3 sm:p-4"
+            >
+              <div class="mb-2 flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                  <svg
+                    class="h-4 w-4 text-green-600"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    aria-hidden="true"
+                  >
+                    <path d="M4 20h16" />
+                    <path d="M8 16V4h8v12" />
+                    <path d="m8 12 4-4 4 4" />
+                  </svg>
+                  <label class="text-xs font-medium sm:text-sm"
+                    >Extract Attachments</label
+                  >
+                </div>
+                <input
+                  [(ngModel)]="newRule.extractAttachments"
+                  type="checkbox"
+                  class="h-4 w-4"
+                />
+              </div>
+              <p class="text-[10px] text-muted-foreground sm:text-xs">
+                Use AI to extract data from PDF attachments such as reports,
+                estimates, and invoices
+              </p>
+            </div>
+
+            <div class="flex gap-2 pt-2">
+              <button
+                type="button"
+                (click)="saveRule()"
+                class="flex-1 rounded-md bg-primary px-4 py-2 text-sm text-primary-foreground sm:flex-initial"
+              >
+                {{ editingRuleId ? "Update Rule" : "Save Rule" }}
+              </button>
+              <button
+                type="button"
+                (click)="cancelEdit()"
+                class="flex-1 rounded-md border border-input bg-background px-4 py-2 text-sm sm:flex-initial"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div
+          *ngIf="rules.length === 0"
+          class="rounded-lg border bg-card p-8 text-center text-card-foreground shadow-sm sm:p-12"
+        >
+          <svg
+            class="mx-auto mb-3 h-10 w-10 text-muted-foreground opacity-50 sm:h-12 sm:w-12"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            aria-hidden="true"
+          >
+            <path d="M12 20h9" />
+            <path d="M16.5 3.5a2.121 2.121 0 1 1 3 3L7 19l-4 1 1-4Z" />
+          </svg>
+          <p class="mb-1 text-sm text-muted-foreground sm:text-base">
+            No forwarding rules yet
+          </p>
+          <p class="text-xs text-muted-foreground sm:text-sm">
+            Click "Add Rule" above to create your first forwarding rule
+          </p>
+        </div>
+
+        <div *ngIf="rules.length > 0" class="space-y-3">
+          <div
+            class="flex items-center gap-2 px-1 text-xs text-muted-foreground sm:text-sm"
+          >
+            <svg
+              class="h-3.5 w-3.5"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              aria-hidden="true"
+            >
+              <circle cx="9" cy="12" r="1" />
+              <circle cx="9" cy="5" r="1" />
+              <circle cx="9" cy="19" r="1" />
+              <circle cx="15" cy="12" r="1" />
+              <circle cx="15" cy="5" r="1" />
+              <circle cx="15" cy="19" r="1" />
+            </svg>
+            <span>Drag to reorder (top = highest priority)</span>
+          </div>
+
+          <app-sortable-rule-item
+            *ngFor="let rule of rules; let i = index"
+            [rule]="rule"
+            [index]="i"
+            [total]="rules.length"
+            (edit)="editRule($event)"
+            (toggleActive)="toggleRuleActive($event)"
+            (delete)="deleteRule($event)"
+            (moveUp)="moveRuleUp($event)"
+            (moveDown)="moveRuleDown($event)"
+            (dragStarted)="handleRuleDragStarted($event)"
+            (dropped)="handleRuleDropped($event)"
+          />
+        </div>
+      </section>
+
+      <section *ngIf="activeTab === 'analytics'" class="space-y-4 sm:space-y-6">
+        <app-email-analytics-table />
+
+        <div class="grid gap-4 sm:gap-6 lg:grid-cols-2">
+          <app-reply-analytics />
+          <app-rule-performance />
+        </div>
+      </section>
+
+      <section *ngIf="activeTab === 'emails'" class="space-y-4 sm:space-y-6">
+        <app-unread-emails />
+      </section>
+
+      <section *ngIf="activeTab === 'users'" class="space-y-4 sm:space-y-6">
+        <app-user-management [isAdmin]="isAdmin" />
+      </section>
+    </div>
+  </div>
+</section>
+
+<ng-template #loadingState>
+  <section
+    class="grid min-h-screen place-items-center bg-gradient-to-br from-background via-background/95 to-primary/5 p-6"
+  >
+    <div class="rounded-lg border bg-card p-7 shadow-sm">
+      <h1 class="m-0 text-xl font-semibold text-foreground">
+        Loading dashboard...
+      </h1>
+    </div>
+  </section>
+</ng-template>

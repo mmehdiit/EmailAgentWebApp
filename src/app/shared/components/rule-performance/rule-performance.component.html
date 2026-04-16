@@ -1,0 +1,89 @@
+<div class="rounded-lg border bg-card p-4 text-card-foreground shadow-sm sm:p-5">
+  <div class="mb-4 flex items-center gap-2">
+    <svg class="h-4 w-4 text-primary" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" aria-hidden="true">
+      <path d="M3 3v18h18" />
+      <path d="M18 17V9" />
+      <path d="M13 17V5" />
+      <path d="M8 17v-3" />
+    </svg>
+    <h3 class="text-base font-semibold text-foreground sm:text-lg">Rule Performance</h3>
+    <span class="ml-auto inline-flex items-center gap-1 rounded-md border px-2 py-1 text-xs">
+      <svg class="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" aria-hidden="true">
+        <path d="m22 7-8.5 8.5-5-5L2 17" />
+        <path d="M16 7h6v6" />
+      </svg>
+      Live
+    </span>
+  </div>
+
+  <div *ngIf="loading" class="text-xs text-muted-foreground sm:text-sm">Loading performance data...</div>
+
+  <div *ngIf="!loading && stats.length === 0" class="py-8 text-center text-muted-foreground">
+    <svg class="mx-auto mb-3 h-12 w-12 opacity-50" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" aria-hidden="true">
+      <path d="M3 3v18h18" />
+      <path d="M18 17V9" />
+      <path d="M13 17V5" />
+      <path d="M8 17v-3" />
+    </svg>
+    <p class="text-xs sm:text-sm">No rule matches yet. Process emails to see metrics.</p>
+  </div>
+
+  <div *ngIf="!loading && stats.length > 0" class="max-h-[500px] space-y-3 overflow-y-auto sm:max-h-[600px]">
+    <div *ngFor="let stat of stats" class="rounded-lg border border-border bg-card p-3 transition-all hover:shadow-md sm:p-4">
+      <div class="mb-2 flex items-start justify-between gap-2">
+        <div class="min-w-0 flex-1">
+          <h4 class="mb-1 truncate text-xs font-semibold text-foreground sm:text-sm">{{ stat.ruleName }}</h4>
+          <div class="flex items-center gap-2 text-xs text-muted-foreground sm:gap-4 sm:text-sm">
+            <span>{{ stat.totalMatched }} {{ stat.totalMatched === 1 ? 'match' : 'matches' }}</span>
+            <span *ngIf="stat.lastMatched" class="flex items-center gap-1 text-[10px] sm:text-xs">
+              <svg class="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" aria-hidden="true">
+                <circle cx="12" cy="12" r="10" />
+                <path d="M12 6v6l4 2" />
+              </svg>
+              {{ stat.lastMatched | date:'MMM d, y' }}
+            </span>
+          </div>
+        </div>
+
+        <span class="shrink-0 rounded-md px-2 py-1 text-[10px] sm:text-xs" [ngClass]="badgeClasses(stat)">
+          {{ stat.successRate }}% Success
+        </span>
+      </div>
+
+      <div class="mb-3 space-y-2">
+        <div class="flex items-center justify-between text-[10px] sm:text-xs">
+          <span class="text-muted-foreground">Forward Rate</span>
+          <span class="font-medium">{{ stat.successRate }}%</span>
+        </div>
+        <div class="h-2 overflow-hidden rounded-full bg-muted">
+          <div class="h-full bg-primary transition-all" [style.width.%]="stat.successRate"></div>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-2 gap-2 text-xs sm:gap-3 sm:text-sm">
+        <div class="flex items-center gap-1.5 rounded-md bg-success/10 p-2">
+          <svg class="h-4 w-4 shrink-0 text-success" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" aria-hidden="true">
+            <path d="m9 12 2 2 4-4" />
+            <path d="M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+          </svg>
+          <div>
+            <div class="text-xs font-semibold text-success sm:text-sm">{{ stat.forwarded }}</div>
+            <div class="text-[10px] text-muted-foreground sm:text-xs">Forwarded</div>
+          </div>
+        </div>
+
+        <div *ngIf="stat.failed > 0" class="flex items-center gap-1.5 rounded-md bg-destructive/10 p-2">
+          <svg class="h-4 w-4 shrink-0 text-destructive" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" aria-hidden="true">
+            <circle cx="12" cy="12" r="10" />
+            <path d="m15 9-6 6" />
+            <path d="m9 9 6 6" />
+          </svg>
+          <div>
+            <div class="text-xs font-semibold text-destructive sm:text-sm">{{ stat.failed }}</div>
+            <div class="text-[10px] text-muted-foreground sm:text-xs">Failed</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

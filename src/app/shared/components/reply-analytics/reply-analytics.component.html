@@ -1,0 +1,91 @@
+<div class="rounded-lg border bg-card p-4 text-card-foreground shadow-sm sm:p-5">
+  <div class="mb-4 flex items-center justify-between">
+    <div class="flex items-center gap-2">
+      <svg class="h-4 w-4 text-primary" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" aria-hidden="true">
+        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+      </svg>
+      <h3 class="text-base font-semibold text-foreground sm:text-lg">Reply Analytics</h3>
+    </div>
+
+    <button type="button" (click)="checkReplies()" [disabled]="checking" class="inline-flex items-center gap-1.5 rounded-md border border-input bg-background px-3 py-2 text-xs sm:text-sm">
+      <svg class="h-3 w-3" [ngClass]="checking ? 'animate-spin' : ''" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" aria-hidden="true">
+        <path d="M21 2v6h-6" />
+        <path d="M3 12a9 9 0 0 1 15-6.7L21 8" />
+        <path d="M3 22v-6h6" />
+        <path d="M21 12a9 9 0 0 1-15 6.7L3 16" />
+      </svg>
+      {{ checking ? 'Checking...' : 'Check Replies' }}
+    </button>
+  </div>
+
+  <div *ngIf="loading" class="text-xs text-muted-foreground sm:text-sm">Loading reply data...</div>
+
+  <div *ngIf="!loading && stats && stats.totalForwarded === 0" class="py-6 text-center text-muted-foreground">
+    <svg class="mx-auto mb-2 h-10 w-10 opacity-50" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" aria-hidden="true">
+      <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+    </svg>
+    <p class="text-xs sm:text-sm">No forwarded emails yet.</p>
+  </div>
+
+  <div *ngIf="!loading && stats && stats.totalForwarded > 0" class="space-y-4">
+    <div class="grid grid-cols-2 gap-3 sm:grid-cols-4">
+      <div class="rounded-lg bg-muted/50 p-3 text-center">
+        <div class="text-xl font-bold text-foreground sm:text-2xl">{{ stats.totalForwarded }}</div>
+        <div class="text-[10px] text-muted-foreground sm:text-xs">Total Forwarded</div>
+      </div>
+      <div class="rounded-lg bg-success/10 p-3 text-center">
+        <div class="text-xl font-bold text-success sm:text-2xl">{{ stats.replied }}</div>
+        <div class="text-[10px] text-muted-foreground sm:text-xs">Replied</div>
+      </div>
+      <div class="rounded-lg bg-warning/10 p-3 text-center">
+        <div class="text-xl font-bold text-warning sm:text-2xl">{{ stats.pending }}</div>
+        <div class="text-[10px] text-muted-foreground sm:text-xs">Pending</div>
+      </div>
+      <div class="rounded-lg bg-primary/10 p-3 text-center">
+        <div class="text-xl font-bold text-primary sm:text-2xl">{{ stats.replyRate }}%</div>
+        <div class="text-[10px] text-muted-foreground sm:text-xs">Reply Rate</div>
+      </div>
+    </div>
+
+    <div class="space-y-2">
+      <div class="flex justify-between text-xs sm:text-sm">
+        <span class="text-muted-foreground">Reply Progress</span>
+        <span class="font-medium">{{ stats.replied }} / {{ stats.totalForwarded }}</span>
+      </div>
+      <div class="h-2 overflow-hidden rounded-full bg-muted">
+        <div class="h-full bg-primary transition-all" [style.width.%]="stats.replyRate"></div>
+      </div>
+    </div>
+
+    <div *ngIf="stats.avgResponseTimeHours !== null" class="flex items-center gap-2 rounded-lg bg-muted/30 p-3">
+      <svg class="h-4 w-4 text-muted-foreground" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" aria-hidden="true">
+        <circle cx="12" cy="12" r="10" />
+        <path d="M12 6v6l4 2" />
+      </svg>
+      <div>
+        <div class="text-sm font-medium">
+          {{ stats.avgResponseTimeHours < 1 ? ((stats.avgResponseTimeHours * 60) | number:'1.0-0') + ' minutes' : stats.avgResponseTimeHours + ' hours' }}
+        </div>
+        <div class="text-xs text-muted-foreground">Average Response Time</div>
+      </div>
+    </div>
+
+    <div class="flex flex-wrap gap-2">
+      <span class="inline-flex items-center gap-1 rounded-md border px-2 py-1 text-xs">
+        <svg class="h-3 w-3 text-success" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" aria-hidden="true">
+          <path d="m9 12 2 2 4-4" />
+          <path d="M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+        </svg>
+        {{ stats.replied }} Handled
+      </span>
+      <span *ngIf="stats.pending > 0" class="inline-flex items-center gap-1 rounded-md border px-2 py-1 text-xs">
+        <svg class="h-3 w-3 text-warning" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" aria-hidden="true">
+          <circle cx="12" cy="12" r="10" />
+          <path d="M12 8v4" />
+          <path d="M12 16h.01" />
+        </svg>
+        {{ stats.pending }} Awaiting Reply
+      </span>
+    </div>
+  </div>
+</div>

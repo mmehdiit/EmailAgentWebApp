@@ -1,0 +1,186 @@
+<button
+  type="button"
+  (click)="open = true"
+  class="inline-flex items-center gap-2 rounded-md border border-input bg-background px-4 py-2 text-sm"
+>
+  <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" aria-hidden="true">
+    <path d="M10 2v7.31" />
+    <path d="M14 9.3V1.99" />
+    <path d="M8.5 2h7" />
+    <path d="M14 9.3a6.5 6.5 0 1 1-4 0" />
+  </svg>
+  Test Rules
+</button>
+
+<div *ngIf="open" class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+  <div class="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-lg border bg-background shadow-xl">
+    <div class="border-b px-6 py-4">
+      <h2 class="text-lg font-semibold">Test Forwarding Rules</h2>
+    </div>
+
+    <div class="space-y-4 p-6">
+      <div class="space-y-4 rounded-lg border bg-card p-4 text-card-foreground shadow-sm">
+        <h3 class="text-sm font-semibold">Test Email Details</h3>
+
+        <div>
+          <label class="text-sm">From Email</label>
+          <input
+            [(ngModel)]="testEmail.from"
+            placeholder="sender@example.com"
+            class="mt-1 h-10 w-full rounded-md border border-input bg-background px-3"
+          />
+        </div>
+
+        <div>
+          <label class="text-sm">Subject</label>
+          <input
+            [(ngModel)]="testEmail.subject"
+            placeholder="Email subject line"
+            class="mt-1 h-10 w-full rounded-md border border-input bg-background px-3"
+          />
+        </div>
+
+        <div>
+          <label class="text-sm">Body Preview</label>
+          <textarea
+            [(ngModel)]="testEmail.body"
+            placeholder="Email body content..."
+            rows="4"
+            class="mt-1 w-full rounded-md border border-input bg-background px-3 py-2"
+          ></textarea>
+        </div>
+
+        <div class="flex gap-2">
+          <button
+            type="button"
+            (click)="runTest()"
+            [disabled]="(!testEmail.subject && !testEmail.body) || isLoading"
+            class="inline-flex items-center rounded-md bg-primary px-4 py-2 text-sm text-primary-foreground disabled:opacity-50"
+          >
+            <span *ngIf="!isLoading">Run Test</span>
+            <span *ngIf="isLoading" class="inline-flex items-center">
+              <span class="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-transparent border-t-white"></span>
+              Testing...
+            </span>
+          </button>
+          <button
+            type="button"
+            (click)="clearTest()"
+            class="rounded-md border border-input bg-background px-4 py-2 text-sm"
+          >
+            Clear
+          </button>
+        </div>
+      </div>
+
+      <div *ngIf="aiResult" class="space-y-3 rounded-lg border-2 border-accent/50 bg-accent/5 p-4">
+        <div class="flex items-center gap-2">
+          <svg class="h-5 w-5 text-accent" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" aria-hidden="true">
+            <path d="M12 18V5" />
+            <path d="M9 8a3 3 0 1 1 6 0c0 3-3 2-3 5" />
+            <path d="M10 22h4" />
+          </svg>
+          <h3 class="text-sm font-semibold">AI Classification Result</h3>
+        </div>
+
+        <div *ngIf="aiResult.matched_rule_id; else noAiMatch" class="space-y-2">
+          <div class="flex items-center gap-2">
+            <span class="rounded-md bg-accent px-2 py-1 text-xs text-accent-foreground">
+              Matched: {{ aiResult.matched_rule_name }}
+            </span>
+            <span class="rounded-md border px-2 py-1 text-xs">
+              Confidence: {{ (aiResult.confidence * 100) | number:'1.0-0' }}%
+            </span>
+          </div>
+          <p class="text-sm text-muted-foreground">
+            <strong>Reasoning:</strong> {{ aiResult.reasoning }}
+          </p>
+        </div>
+
+        <ng-template #noAiMatch>
+          <p class="text-sm text-muted-foreground">{{ aiResult.reasoning || 'No AI match found' }}</p>
+        </ng-template>
+      </div>
+
+      <div *ngIf="testResults" class="space-y-3 rounded-lg border bg-card p-4 text-card-foreground shadow-sm">
+        <h3 class="text-sm font-semibold">Test Results</h3>
+
+        <p *ngIf="testResults.length === 0" class="text-sm text-muted-foreground">
+          No rules configured yet. Add some rules first.
+        </p>
+
+        <div *ngIf="testResults.length > 0" class="space-y-3">
+          <p class="mb-2 text-xs text-muted-foreground">
+            Rules are evaluated in priority order (highest first). Only the first matching rule forwards the email.
+          </p>
+
+          <div
+            *ngFor="let result of testResults; let i = index"
+            class="rounded-lg border-2 p-3"
+            [ngClass]="resultClasses(result, i)"
+          >
+            <div class="flex items-start justify-between gap-2">
+              <div class="flex-1">
+                <div class="mb-2 flex flex-wrap items-center gap-2">
+                  <svg *ngIf="isAiPrimaryMatch(result, i)" class="h-4 w-4 text-accent" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path d="M12 18V5" /><path d="M9 8a3 3 0 1 1 6 0c0 3-3 2-3 5" /><path d="M10 22h4" /></svg>
+                  <svg *ngIf="isExactPrimaryMatch(result, i)" class="h-4 w-4 text-success" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path d="m9 12 2 2 4-4" /><path d="M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" /></svg>
+                  <svg *ngIf="!result.matched || hasPriorMatch(i)" class="h-4 w-4 text-muted-foreground" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><circle cx="12" cy="12" r="10" /><path d="m15 9-6 6" /><path d="m9 9 6 6" /></svg>
+                  <span class="text-sm font-semibold">{{ result.rule.name }}</span>
+                  <span class="rounded-md border px-2 py-0.5 text-xs">Priority: {{ result.rule.priority }}</span>
+                  <span class="rounded-md px-2 py-0.5 text-xs" [ngClass]="result.rule.active ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'">
+                    {{ result.rule.active ? 'Active' : 'Inactive' }}
+                  </span>
+                  <span *ngIf="result.rule.aiEnabled" class="rounded-md border border-accent px-2 py-0.5 text-xs text-accent">
+                    AI
+                  </span>
+                </div>
+
+                <div *ngIf="isPrimaryMatch(result, i)" class="space-y-1 text-sm">
+                  <p [ngClass]="result.matchType === 'ai' ? 'font-semibold text-accent' : 'font-semibold text-success'">
+                    Would forward to: {{ result.rule.recipient }}
+                    <span *ngIf="result.matchType === 'ai'"> (AI Match)</span>
+                  </p>
+                  <p *ngIf="result.rule.senderPattern && testEmail.from && result.matchType === 'exact'" class="text-xs text-muted-foreground">
+                    Matched sender pattern: {{ result.rule.senderPattern }}
+                  </p>
+                  <p *ngIf="result.rule.subjectPattern && testEmail.subject && result.matchType === 'exact'" class="text-xs text-muted-foreground">
+                    Matched subject pattern: {{ result.rule.subjectPattern }}
+                  </p>
+                  <div *ngIf="result.matchedKeywords.length > 0 && result.matchType === 'exact'" class="flex flex-wrap items-center gap-2">
+                    <span class="text-muted-foreground">Matched keywords:</span>
+                    <span *ngFor="let keyword of result.matchedKeywords" class="rounded-md border border-success px-2 py-0.5 text-xs text-success">
+                      {{ keyword }}
+                    </span>
+                  </div>
+                </div>
+
+                <p *ngIf="isSkippedMatch(result, i)" class="text-sm text-warning">
+                  Matched but skipped (higher priority rule matched first)
+                </p>
+
+                <p *ngIf="result.skippedByFollowUp" class="text-sm text-warning">
+                  Skipped - follow-up intent detected in body
+                </p>
+
+                <p *ngIf="result.excludedByNegative" class="text-sm text-destructive">
+                  Excluded by negative keyword
+                </p>
+
+                <p *ngIf="!result.matched && !result.skippedByFollowUp && !result.excludedByNegative" class="text-sm text-muted-foreground">
+                  No matching keywords, subject, or sender pattern
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="border-t pt-3">
+          <p class="text-xs text-muted-foreground">
+            {{ forwardedRuleCount() }} rule would forward this email
+            <span *ngIf="aiResult?.matched_rule_id"> (via AI classification)</span>
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

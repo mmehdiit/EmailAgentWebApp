@@ -1,0 +1,78 @@
+<div *ngIf="open && recipient" class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+  <div class="w-full max-w-md rounded-lg border bg-background shadow-xl">
+    <div class="border-b px-6 py-4">
+      <h3 class="flex items-center gap-2 text-lg font-semibold">
+        <svg class="h-5 w-5 text-primary" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" aria-hidden="true">
+          <path d="M4 21c4-7 12-7 16 0" />
+          <path d="M12 3v8" />
+          <path d="M8 7c0 2 1.8 4 4 4s4-2 4-4" />
+        </svg>
+        Vacation Settings
+      </h3>
+      <p class="mt-1 text-sm text-muted-foreground">
+        Set vacation status for {{ recipient.display_name || recipient.email }}
+      </p>
+    </div>
+
+    <div class="space-y-6 px-6 py-4">
+      <div class="flex items-center justify-between">
+        <div class="space-y-0.5">
+          <label class="text-sm font-medium">Currently on vacation</label>
+          <p class="text-xs text-muted-foreground">Skip this recipient in rotation immediately</p>
+        </div>
+        <input [(ngModel)]="isOnVacation" type="checkbox" class="h-4 w-4" />
+      </div>
+
+      <div class="border-t pt-4">
+        <label class="mb-3 block text-sm font-medium">Scheduled Vacation (optional)</label>
+        <p class="mb-3 text-xs text-muted-foreground">Automatically skip during these dates</p>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div class="space-y-1.5">
+            <label class="text-xs text-muted-foreground">Start</label>
+            <input
+              [(ngModel)]="vacationStart"
+              type="date"
+              class="h-9 w-full rounded-md border border-input bg-background px-3 text-xs"
+            />
+          </div>
+
+          <div class="space-y-1.5">
+            <label class="text-xs text-muted-foreground">End</label>
+            <input
+              [(ngModel)]="vacationEnd"
+              type="date"
+              class="h-9 w-full rounded-md border border-input bg-background px-3 text-xs"
+            />
+          </div>
+        </div>
+
+        <button
+          *ngIf="vacationStart || vacationEnd"
+          type="button"
+          (click)="clearDates()"
+          class="mt-2 h-7 text-xs text-muted-foreground hover:text-foreground"
+        >
+          Clear dates
+        </button>
+      </div>
+    </div>
+
+    <div class="flex justify-end gap-2 border-t px-6 py-4">
+      <button
+        type="button"
+        (click)="close()"
+        class="rounded-md border border-input bg-background px-4 py-2 text-sm"
+      >
+        Cancel
+      </button>
+      <button
+        type="button"
+        (click)="handleSave()"
+        class="rounded-md bg-primary px-4 py-2 text-sm text-primary-foreground"
+      >
+        Save
+      </button>
+    </div>
+  </div>
+</div>

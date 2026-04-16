@@ -1,0 +1,163 @@
+<div class="relative flex min-h-screen items-center justify-center overflow-hidden bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 p-4">
+  <div class="pointer-events-none absolute inset-0 overflow-hidden">
+    <div class="absolute left-[10%] top-[15%] text-primary/20">
+      <svg class="h-16 w-16 animate-float-slow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2">
+        <path d="M4 4h16v16H4z" />
+        <path d="m4 6 8 6 8-6" />
+      </svg>
+    </div>
+    <div class="absolute right-[15%] top-[25%] text-primary/15">
+      <svg class="h-12 w-12 animate-float-delay" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2">
+        <path d="M22 2 11 13" />
+        <path d="m22 2-7 20-4-9-9-4Z" />
+      </svg>
+    </div>
+    <div class="absolute bottom-[30%] left-[8%] text-primary/10">
+      <svg class="h-20 w-20 animate-float-medium" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2">
+        <path d="M4 4h16v16H4z" />
+        <path d="m4 6 8 6 8-6" />
+      </svg>
+    </div>
+    <div class="absolute bottom-[20%] right-[10%] text-primary/20">
+      <svg class="h-14 w-14 animate-float-delay-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2">
+        <path d="m9 12 2 2 4-4" />
+        <path d="M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+      </svg>
+    </div>
+    <div class="absolute left-1/4 top-1/4 h-64 w-64 rounded-full bg-primary/20 blur-[100px]"></div>
+    <div class="absolute bottom-1/4 right-1/4 h-48 w-48 rounded-full bg-primary/15 blur-[80px]"></div>
+  </div>
+
+  <div class="relative z-10 w-full max-w-md">
+    <div class="overflow-hidden rounded-lg border-0 bg-white/95 shadow-2xl shadow-black/20 backdrop-blur-xl">
+      <div class="h-1.5 bg-gradient-to-r from-primary via-primary/80 to-primary"></div>
+
+      <div class="p-8 text-center">
+        <div *ngIf="status === 'loading'" class="py-4">
+          <div class="relative mx-auto mb-6 h-20 w-20">
+            <div class="absolute inset-0 rounded-full border-4 border-primary/20"></div>
+            <div class="absolute inset-0 animate-spin rounded-full border-4 border-transparent border-t-primary"></div>
+            <svg class="absolute inset-0 m-auto h-8 w-8 text-primary" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2">
+              <path d="M4 4h16v16H4z" />
+              <path d="m4 6 8 6 8-6" />
+            </svg>
+          </div>
+          <h1 class="mb-2 text-2xl font-bold text-slate-800">Loading</h1>
+          <p class="text-slate-500">Fetching email information...</p>
+        </div>
+
+        <div *ngIf="status === 'preview' || status === 'confirming'" class="py-4">
+          <div class="relative mx-auto mb-6 h-20 w-20">
+            <div class="absolute inset-0 rounded-full bg-primary/20"></div>
+            <svg class="absolute inset-0 m-auto h-12 w-12 text-primary" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2">
+              <path d="M4 4h16v16H4z" />
+              <path d="m4 6 8 6 8-6" />
+            </svg>
+          </div>
+          <h1 class="mb-2 text-2xl font-bold text-slate-800">Confirm Reply</h1>
+          <p class="mb-6 text-slate-500">{{ message }}</p>
+          <button
+            type="button"
+            (click)="handleConfirm()"
+            [disabled]="status === 'confirming'"
+            class="inline-flex rounded-xl bg-emerald-600 px-8 py-3 text-base text-white hover:bg-emerald-700"
+          >
+            <span *ngIf="status !== 'confirming'" class="inline-flex items-center">
+              <svg class="mr-2 h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2">
+                <path d="m9 12 2 2 4-4" />
+                <path d="M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+              </svg>
+              Confirm Reply
+            </span>
+            <span *ngIf="status === 'confirming'" class="inline-flex items-center">
+              <span class="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-transparent border-t-white"></span>
+              Confirming...
+            </span>
+          </button>
+        </div>
+
+        <div *ngIf="status === 'success'" class="py-4">
+          <div class="relative mx-auto mb-6 h-20 w-20">
+            <div class="absolute inset-0 rounded-full bg-emerald-500/20"></div>
+            <svg class="absolute inset-0 m-auto h-12 w-12 text-emerald-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2">
+              <path d="m9 12 2 2 4-4" />
+              <path d="M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+            </svg>
+          </div>
+          <h1 class="mb-2 text-2xl font-bold text-emerald-600">Reply Recorded!</h1>
+          <p class="text-slate-500">{{ message }}</p>
+          <div class="mt-6 flex items-center justify-center gap-3 text-sm text-slate-400">
+            <div class="flex items-center gap-2 rounded-full bg-slate-100 px-3 py-1.5">
+              <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2">
+                <path d="M4 4h16v16H4z" />
+                <path d="m4 6 8 6 8-6" />
+              </svg>
+              <span>Received</span>
+            </div>
+            <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2">
+              <path d="M5 12h14" />
+              <path d="m12 5 7 7-7 7" />
+            </svg>
+            <div class="flex items-center gap-2 rounded-full bg-emerald-100 px-3 py-1.5 text-emerald-600">
+              <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2">
+                <path d="m9 12 2 2 4-4" />
+                <path d="M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+              </svg>
+              <span>Replied</span>
+            </div>
+          </div>
+        </div>
+
+        <div *ngIf="status === 'already_replied'" class="py-4">
+          <div class="relative mx-auto mb-6 h-20 w-20">
+            <div class="absolute inset-0 rounded-full bg-primary/20"></div>
+            <svg class="absolute inset-0 m-auto h-12 w-12 text-primary" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2">
+              <path d="m9 12 2 2 4-4" />
+              <path d="M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+            </svg>
+          </div>
+          <h1 class="mb-2 text-2xl font-bold text-slate-800">Already Replied</h1>
+          <p class="text-slate-500">{{ message }}</p>
+        </div>
+
+        <div *ngIf="status === 'error'" class="py-4">
+          <div class="relative mx-auto mb-6 h-20 w-20">
+            <div class="absolute inset-0 rounded-full bg-red-500/20"></div>
+            <svg class="absolute inset-0 m-auto h-12 w-12 text-red-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2">
+              <circle cx="12" cy="12" r="10" />
+              <path d="m15 9-6 6" />
+              <path d="m9 9 6 6" />
+            </svg>
+          </div>
+          <h1 class="mb-2 text-2xl font-bold text-red-600">Error</h1>
+          <p class="text-slate-500">{{ message }}</p>
+        </div>
+
+        <div
+          *ngIf="emailSubject && status !== 'loading'"
+          class="mt-6 rounded-xl border border-slate-200 bg-slate-50 p-4"
+        >
+          <div class="flex items-start gap-3">
+            <div class="rounded-lg bg-primary/10 p-2">
+              <svg class="h-5 w-5 text-primary" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2">
+                <path d="M4 4h16v16H4z" />
+                <path d="m4 6 8 6 8-6" />
+              </svg>
+            </div>
+            <div class="flex-1 text-left">
+              <p class="mb-1 text-xs font-medium uppercase tracking-wide text-slate-400">Email Subject</p>
+              <p class="line-clamp-2 text-sm font-medium text-slate-700">{{ emailSubject }}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="border-t border-slate-200 bg-slate-50 px-8 py-4">
+        <div class="flex items-center justify-center gap-2">
+          <img src="assets/tecram-logo.png" alt="Tecram" class="h-6 object-contain" />
+          <span class="text-sm text-slate-500">AI Email Agent</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

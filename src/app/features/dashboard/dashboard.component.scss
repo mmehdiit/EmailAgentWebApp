@@ -1,0 +1,120 @@
+// ─────────────────────────────────────────────────────────────────────────────
+// dashboard.component.scss
+//
+// Supplements Tailwind utility classes with:
+//  1. Tab-enter animation (replaces Framer Motion's opacity/y transition)
+//  2. Stat-number pop animation (replaces React's `key={...}` remount trick)
+//  3. Spin utility alias (Tailwind ships animate-spin, kept for explicitness)
+//  4. Disabled-state polish on primary buttons
+// ─────────────────────────────────────────────────────────────────────────────
+
+// ── 1. Tab section entrance ───────────────────────────────────────────────────
+// Applied via class="dashboard-tab-enter" on every <section *ngIf="activeTab === '...'">
+// Mirrors: initial={{ opacity: 0, y: 20 }} → animate={{ opacity: 1, y: 0 }}
+//          transition={{ duration: 0.4, ease: "easeOut" }}
+
+@keyframes tab-enter {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.dashboard-tab-enter {
+  animation: tab-enter 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+// ── 2. Stat-number update pop ─────────────────────────────────────────────────
+// React re-mounts the number span via key={`processed-${stats.totalProcessed}`},
+// which causes a brief scale-up on every value change.
+// In Angular we add this class to the number element and trigger it via
+// a host-binding or by toggling it in the TS whenever the value changes.
+// The template already has class="stat-number" on each number element.
+
+@keyframes stat-pop {
+  0% {
+    transform: scale(1.15);
+  }
+  60% {
+    transform: scale(0.97);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.stat-number.stat-pop {
+  animation: stat-pop 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+// ── 3. Utility: explicit spin alias ──────────────────────────────────────────
+// Tailwind already provides `animate-spin` but Angular's [ngClass] binding
+// uses the class name directly — kept here as documentation and fallback.
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.animate-spin {
+  animation: spin 1s linear infinite;
+}
+
+// ── 4. Disabled-state polish ──────────────────────────────────────────────────
+// Tailwind's disabled: variant is JIT-only and may not compile in all setups.
+// These selectors cover both [disabled] attribute and .disabled class.
+
+button[disabled],
+button.disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+  pointer-events: none; // allow tooltip on parent but prevent click on button
+}
+
+// ── 5. Scrollbar refinement for activity feed ─────────────────────────────────
+// The max-h-[300px] overflow-y-auto container in Recent Activity benefits from
+// a slim scrollbar that matches the card aesthetic.
+
+.overflow-y-auto {
+  scrollbar-width: thin;
+  scrollbar-color: hsl(var(--border)) transparent;
+
+  &::-webkit-scrollbar {
+    width: 4px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    border-radius: 9999px;
+    background: hsl(var(--border));
+  }
+}
+
+// ── 6. Pulse dot on connected badge ──────────────────────────────────────────
+// Tailwind's `animate-pulse` uses opacity cycling.
+// The connected-status dot uses a radial scale pulse for a "live" feel,
+// matching the React version's animated dot.
+
+@keyframes status-pulse {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.4);
+    opacity: 0.6;
+  }
+}
+
+.animate-pulse {
+  animation: status-pulse 2s ease-in-out infinite;
+}

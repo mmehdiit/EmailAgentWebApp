@@ -1,0 +1,31 @@
+<div
+  class="flex min-h-[38px] flex-wrap gap-1.5 rounded-md border bg-background p-2 ring-offset-background focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2"
+>
+  <span
+    *ngFor="let keyword of keywords; let i = index"
+    class="inline-flex h-6 items-center gap-1 rounded-md border px-2 text-xs"
+    [ngClass]="{
+      'border-destructive/50 text-destructive': variant === 'destructive'
+    }"
+  >
+    {{ keyword }}
+    <button
+      type="button"
+      (click)="removeKeyword(i)"
+      class="ml-0.5 rounded-full p-0.5 hover:bg-muted"
+    >
+      <svg class="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" aria-hidden="true">
+        <path d="M18 6 6 18" />
+        <path d="m6 6 12 12" />
+      </svg>
+    </button>
+  </span>
+
+  <input
+    [(ngModel)]="inputValue"
+    (keydown)="handleKeydown($event)"
+    (blur)="handleBlur()"
+    [placeholder]="keywords.length === 0 ? placeholder : ''"
+    class="h-6 min-w-[120px] flex-1 border-0 bg-transparent p-0 text-sm shadow-none outline-none"
+  />
+</div>
