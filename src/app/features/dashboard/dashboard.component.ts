@@ -1,7 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnDestroy, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { Router, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 
 import { AuthSessionService } from '../../core/services/auth-session.service';
 import { DashboardOverview } from '../../core/models/dashboard.models';
@@ -68,6 +68,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
     private readonly analyticsDataService: AnalyticsDataService,
     private readonly dashboardDataService: DashboardDataService,
     private readonly ruleManagementService: RuleManagementService,
+    private readonly route: ActivatedRoute,
     private readonly router: Router
   ) {}
 
@@ -79,36 +80,24 @@ export class DashboardComponent implements OnInit, OnDestroy {
     }
 
     this.userEmail = session.user?.email ?? this.userEmail;
-    this.isAdmin =
-      session.user?.id === 'fake-user' || (session.user?.email?.toLowerCase().includes('admin') ?? false);
+    this.isAdmin = session.user?.role?.toLowerCase() === 'admin';
+
+    const callbackCode = this.route.snapshot.queryParamMap.get('code');
+    if (callbackCode) {
+      const callbackResult = await this.dashboardDataService.completeOutlookConnection(callbackCode);
+      this.connectionMessage = callbackResult.message;
+      await this.router.navigate(['/dashboard']);
+    }
+
     const [overview, connection] = await Promise.all([
       this.dashboardDataService.getOverview(),
       this.dashboardDataService.getConnectionStatus(),
-      this.analyticsDataService.getAnalytics()
     ]);
     this.overview = overview;
     this.outlookConnected = connection.connected;
     this.outlookEmail = connection.email;
     this.countdown = connection.nextProcessInSeconds;
-    const fallbackRules = this.overview.rules.map((rule) => ({
-      id: rule.id,
-      name: rule.name,
-      keywords: [...rule.keywords],
-      negativeKeywords: [],
-      recipient: `${rule.name.toLowerCase().replace(/\s+/g, '.')}@example.com`,
-      recipients: [],
-      conditions: '',
-      active: rule.active,
-      priority: rule.priority,
-      senderPattern: '',
-      subjectPattern: '',
-      aiEnabled: true,
-      aiContext: '',
-      extractAttachments: false,
-      rotationEnabled: false,
-      smartThreadEnabled: true
-    }));
-    this.rules = await this.ruleManagementService.listRules(fallbackRules);
+    this.rules = await this.ruleManagementService.listRules();
     this.startCountdown();
     this.loading = false;
   }
@@ -148,7 +137,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
       ? { ...this.newRule, id: this.editingRuleId }
       : { ...this.newRule };
 
-    this.rules = await this.ruleManagementService.saveRule(ruleToSave, this.rules);
+    this.rules = await this.ruleManagementService.saveRule(ruleToSave);
 
     this.resetRuleForm();
     this.showAddRule = false;
@@ -171,7 +160,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
   }
 
   protected async deleteRule(id: string): Promise<void> {
-    this.rules = await this.ruleManagementService.deleteRule(id, this.rules);
+    this.rules = await this.ruleManagementService.deleteRule(id);
   }
 
   protected handleRuleDragStarted(id: string): void {
@@ -220,14 +209,19 @@ export class DashboardComponent implements OnInit, OnDestroy {
   }
 
   protected async toggleRuleActive(id: string): Promise<void> {
-    const nextRules = this.rules.map((rule) =>
-      rule.id === id ? { ...rule, active: !rule.active } : rule
-    );
-    this.rules = await this.ruleManagementService.reorderRules(nextRules);
+    const targetRule = this.rules.find((rule) => rule.id === id);
+    if (!targetRule) {
+      return;
+    }
+
+    this.rules = await this.ruleManagementService.saveRule({
+      ...targetRule,
+      active: !targetRule.active
+    });
   }
 
   protected async signOut(): Promise<void> {
-    this.authSessionService.signOutFake();
+    this.authSessionService.logout();
     await this.router.navigate(['/auth']);
   }
 
@@ -236,10 +230,11 @@ export class DashboardComponent implements OnInit, OnDestroy {
     this.connectionMessage = '';
     try {
       const result = await this.dashboardDataService.connectOutlook();
-      this.outlookConnected = result.success;
-      this.outlookEmail = result.email;
-      this.countdown = 300;
       this.connectionMessage = result.message;
+      if (result.authUrl) {
+        window.location.href = result.authUrl;
+        return;
+      }
     } finally {
       this.isConnecting = false;
     }

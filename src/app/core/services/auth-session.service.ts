@@ -1,10 +1,10 @@
 import { Injectable } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
 
-import { AuthLoginResponse, AuthSessionResponse, AuthUser, SignInPayload } from '../models/auth.models';
+import { AuthSessionResponse, SignInPayload, AuthLoginResult } from '../models/auth.models';
 import { AuthApiService } from './auth-api.service';
 
-const STORAGE_KEY = 'email-ai-agent-auth-session';
+const TOKEN_KEY = 'email-ai-agent-auth-token';
 
 @Injectable({
   providedIn: 'root'
@@ -13,17 +13,23 @@ export class AuthSessionService {
   constructor(private readonly authApiService: AuthApiService) {}
 
   async getSession(): Promise<AuthSessionResponse> {
-    const fakeSession = this.getFakeSession();
-    if (fakeSession) {
-      return {
-        authenticated: true,
-        user: fakeSession.user
-      };
+    const token = localStorage.getItem(TOKEN_KEY);
+    if (!token) {
+      return { authenticated: false, user: null };
     }
 
     try {
-      return await firstValueFrom(this.authApiService.getSession());
+      const data = await firstValueFrom(this.authApiService.getSession());
+      return {
+        authenticated: true,
+        user: {
+          id: data.id,
+          email: data.email,
+          role: data.role
+        }
+      };
     } catch {
+      localStorage.removeItem(TOKEN_KEY);
       return {
         authenticated: false,
         user: null
@@ -31,48 +37,24 @@ export class AuthSessionService {
     }
   }
 
-  async signIn(payload: SignInPayload): Promise<AuthLoginResponse> {
+  async signIn(payload: SignInPayload): Promise<AuthLoginResult> {
     const response = await firstValueFrom(this.authApiService.signIn(payload));
-    return response;
-  }
-
-  async signInFake(email: string): Promise<AuthLoginResponse> {
-    const user: AuthUser = {
-      id: 'fake-user',
-      email,
-      name: 'Frontend Test User'
-    };
-
-    localStorage.setItem(
-      STORAGE_KEY,
-      JSON.stringify({
-        authenticated: true,
-        user
-      })
-    );
-
+    
+    // Store token
+    localStorage.setItem(TOKEN_KEY, response.token);
+    
     return {
       authenticated: true,
-      user,
-      message: 'Fake login enabled for frontend testing.'
+      user: {
+        id: response.userId,
+        email: response.email,
+        role: response.role
+      },
+      message: 'You have successfully logged in.'
     };
   }
 
-  signOutFake(): void {
-    localStorage.removeItem(STORAGE_KEY);
-  }
-
-  private getFakeSession(): AuthSessionResponse | null {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) {
-      return null;
-    }
-
-    try {
-      return JSON.parse(raw) as AuthSessionResponse;
-    } catch {
-      localStorage.removeItem(STORAGE_KEY);
-      return null;
-    }
+  logout(): void {
+    localStorage.removeItem(TOKEN_KEY);
   }
 }

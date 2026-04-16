@@ -2,81 +2,73 @@ import { Injectable } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
 
 import { UnreadEmailOverview } from '../models/dashboard.models';
+import { RuleManagementApiService } from './rule-management-api.service';
 import { UnreadEmailApiService } from './unread-email-api.service';
 
 @Injectable({
   providedIn: 'root'
 })
 export class UnreadEmailDataService {
-  constructor(private readonly unreadEmailApiService: UnreadEmailApiService) {}
+  constructor(
+    private readonly unreadEmailApiService: UnreadEmailApiService,
+    private readonly ruleManagementApiService: RuleManagementApiService
+  ) {}
 
   async getUnreadEmails(): Promise<UnreadEmailOverview> {
-    try {
-      return await firstValueFrom(this.unreadEmailApiService.getUnreadEmails());
-    } catch {
-      return {
-        rules: [
-          {
-            id: 'rule-claims',
-            name: 'Claims Processing',
-            recipientEmail: 'claims.team@example.com',
-            active: true
-          },
-          {
-            id: 'rule-support',
-            name: 'Customer Support',
-            recipientEmail: 'support@example.com',
-            active: true
-          },
-          {
-            id: 'rule-underwriting',
-            name: 'Underwriting Review',
-            recipientEmail: 'uw@example.com',
-            active: true
-          }
-        ],
-        emails: [
-          {
-            id: 'email-1',
-            subject: 'Urgent accident report attached',
-            from: 'claims@broker.com',
-            fromName: 'Broker Desk',
-            receivedAt: '2026-04-16T08:35:00Z',
-            preview: 'Please review the attached report and route this claim to the responsible team.',
-            isRead: false,
-            matchesRule: true,
-            matchedRuleName: 'Claims Processing',
-            aiClassified: true,
-            aiConfidence: 0.89
-          },
-          {
-            id: 'email-2',
-            subject: 'Policy endorsement question',
-            from: 'client@example.com',
-            fromName: 'Maya Saab',
-            receivedAt: '2026-04-16T07:40:00Z',
-            preview: 'I need help understanding the latest endorsement wording on my renewal documents.',
-            isRead: false,
-            matchesRule: true,
-            matchedRuleName: 'Customer Support',
-            aiClassified: false,
-            aiConfidence: null
-          },
-          {
-            id: 'email-3',
-            subject: 'Unclear submission package',
-            from: 'agency@partner.com',
-            fromName: 'Agency Team',
-            receivedAt: '2026-04-15T13:05:00Z',
-            preview: 'The attached files do not clearly map to an existing workflow. Please review manually.',
-            isRead: false,
-            matchesRule: false,
-            matchedRuleName: null,
-            aiClassified: false,
-            aiConfidence: null
-          }
-        ]
-      };
-    }
+    const [emails, rules] = await Promise.all([
+      firstValueFrom(this.unreadEmailApiService.getUnreadEmails()),
+      firstValueFrom(this.ruleManagementApiService.listRules())
+    ]);
+
+    const activeRules = rules
+      .filter((rule) => rule.active)
+      .map((rule) => ({
+        id: rule.id,
+        name: rule.name,
+        recipientEmail: rule.recipient_email,
+        active: rule.active
+      }));
+
+    const classifiedEmails = await Promise.all(
+      emails.map(async (email) => {
+        const classification = await firstValueFrom(
+          this.unreadEmailApiService.classifyEmail({
+            subject: email.subject,
+            body: email.body_preview,
+            sender: email.from
+          })
+        );
+
+        const hasMatch = !!classification.matched_rule_id;
+
+        return {
+          id: email.id,
+          subject: email.subject,
+          from: email.from,
+          fromName: email.from_name,
+          receivedAt: email.received_date_time,
+          preview: email.body_preview,
+          isRead: false,
+          matchesRule: hasMatch,
+          matchedRuleName: hasMatch ? classification.matched_rule_name : null,
+          aiClassified: hasMatch && classification.confidence > 0,
+          aiConfidence: hasMatch ? classification.confidence : null,
+          aiReasoning: classification.reasoning || null
+        };
+      })
+    );
+
+    return {
+      emails: classifiedEmails,
+      rules: activeRules
+    };
+  }
+
+  async markAsRead(emailId: string): Promise<void> {
+    await firstValueFrom(this.unreadEmailApiService.markAsRead(emailId));
+  }
+
+  async assignEmail(emailId: string, ruleId: string): Promise<void> {
+    await firstValueFrom(this.unreadEmailApiService.manualAssign(emailId, ruleId));
   }
 }

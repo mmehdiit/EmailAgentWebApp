@@ -89,14 +89,22 @@ export interface RuleItem {
   name: string;
 }
 
+export interface EmailClassificationResult {
+  matched_rule_id: string;
+  matched_rule_name: string;
+  confidence: number;
+  reasoning: string;
+  override_recipient_email: string;
+}
+
 export interface EmailContent {
-  subject?: string;
-  from?: string;
+  subject: string;
+  from: string;
   to?: string;
   cc?: string;
-  receivedAt?: string;
-  bodyHtml?: string;
-  bodyText?: string;
+  receivedAt: string;
+  bodyHtml: string;
+  bodyText: string;
 }
 
 export interface RulePerformanceStat {
@@ -157,4 +165,6 @@ export interface CreateUserPayload {
 export interface CreateUserResponse {
   success: boolean;
   message: string;
+  email?: string;
+  role?: string;
 }

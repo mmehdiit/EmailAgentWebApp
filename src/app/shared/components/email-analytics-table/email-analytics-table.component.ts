@@ -29,6 +29,8 @@ export class EmailAnalyticsTableComponent implements OnInit {
   protected isExporting = false;
 
   protected openClearDialog = false;
+  protected readonly canClearLogs = false;
+  protected readonly canBackfillReceivedDates = false;
 
   protected datePreset = '30';
   protected ruleFilter = 'all';
@@ -64,11 +66,7 @@ export class EmailAnalyticsTableComponent implements OnInit {
   }
 
   protected async loadRules(): Promise<void> {
-    try {
-      this.availableRules = [];
-    } catch {
-      this.availableRules = [];
-    }
+    this.availableRules = await this.analyticsDataService.listAvailableRules();
   }
 
   protected logs(): EmailAnalyticsLog[] {
@@ -169,17 +167,13 @@ export class EmailAnalyticsTableComponent implements OnInit {
   }
 
   protected async backfillReceivedDates(): Promise<void> {
-    this.isBackfilling = true;
-    try {
-      await this.loadAnalytics();
-    } finally {
-      this.isBackfilling = false;
-    }
+    return;
   }
 
   protected async retryFailedEmails(): Promise<void> {
     this.isRetrying = true;
     try {
+      await this.analyticsDataService.retryFailedEmails();
       await this.loadAnalytics();
     } finally {
       this.isRetrying = false;
@@ -187,33 +181,7 @@ export class EmailAnalyticsTableComponent implements OnInit {
   }
 
   protected async clearLogs(): Promise<void> {
-    this.isClearing = true;
-    try {
-      this.analytics = {
-        logs: [],
-        summary: {
-          total: 0,
-          forwarded: 0,
-          replied: 0,
-          pending: 0,
-          noMatch: 0,
-          failed: 0,
-          aiClassified: 0,
-          avgResponseTime: '',
-        },
-        replyStats: {
-          totalForwarded: 0,
-          replied: 0,
-          pending: 0,
-          replyRate: 0,
-          avgResponseTimeHours: 0,
-        },
-        rulePerformance: [],
-      };
-      this.openClearDialog = false;
-    } finally {
-      this.isClearing = false;
-    }
+    return;
   }
 
   protected async exportCsv(): Promise<void> {
@@ -343,25 +311,15 @@ export class EmailAnalyticsTableComponent implements OnInit {
     this.emailContent = null;
 
     try {
-      this.emailContent = {
-        subject: log.subject,
-        from: log.from,
-        receivedAt: log.receivedAt || log.date,
-        bodyHtml: '<p>Email content placeholder</p>',
-      };
+      this.emailContent = await this.analyticsDataService.getEmailContent(log.outlookMessageId);
     } finally {
       this.loadingEmail = false;
     }
   }
 
   protected async markAsReplied(logId: string): Promise<void> {
-    try {
-      const log = this.logs().find((x) => x.id === logId);
-      if (log) {
-        log.replyDetected = true;
-        log.repliedAt = new Date().toISOString();
-      }
-    } catch {}
+    await this.analyticsDataService.markAsReplied(logId);
+    await this.loadAnalytics();
   }
 
   protected toggleAssignPopover(logId: string): void {
@@ -375,13 +333,9 @@ export class EmailAnalyticsTableComponent implements OnInit {
     this.isAssigning = log.id;
 
     try {
-      const selectedRule = this.availableRules.find((r) => r.id === ruleId);
-
-      if (selectedRule) {
-        log.ruleName = selectedRule.name;
-      }
-
+      await this.analyticsDataService.assignToRule(log.outlookMessageId as string, ruleId);
       this.assignPopoverOpen = null;
+      await this.loadAnalytics();
     } finally {
       this.isAssigning = null;
     }

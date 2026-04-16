@@ -37,9 +37,15 @@ export class MarkRepliedComponent implements OnInit {
       const preview = await this.markReplyService.preview(this.token);
       this.emailSubject = preview.email_subject;
 
-      if (preview.reply_detected) {
+      if (preview.status === 'already_replied' || preview.status === 'success') {
         this.status = 'already_replied';
         this.message = 'This email was already marked as replied';
+        return;
+      }
+
+      if (preview.status !== 'pending') {
+        this.status = 'error';
+        this.message = 'Failed to load email info. The link may be invalid or expired.';
         return;
       }
 
@@ -60,8 +66,17 @@ export class MarkRepliedComponent implements OnInit {
 
     try {
       const response = await this.markReplyService.confirm(this.token);
-      this.status = response.status;
-      this.message = response.message;
+      this.emailSubject = response.email_subject;
+      this.status =
+        response.status === 'success' || response.status === 'already_replied'
+          ? response.status
+          : 'error';
+      this.message =
+        response.status === 'success'
+          ? 'Reply successfully recorded.'
+          : response.status === 'already_replied'
+            ? 'This email was already marked as replied.'
+            : 'Failed to mark email as replied. The link may be invalid or expired.';
     } catch {
       this.status = 'error';
       this.message = 'Failed to mark email as replied. Please try again.';

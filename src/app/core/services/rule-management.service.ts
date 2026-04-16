@@ -1,10 +1,9 @@
 import { Injectable } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
 
+import { Recipient } from '../../shared/components/recipient-manager/recipient-manager.component';
 import { SortableDashboardRule } from '../../shared/components/sortable-rule-item/sortable-rule-item.component';
 import { RuleManagementApiService } from './rule-management-api.service';
-
-const RULES_STORAGE_KEY = 'email-ai-agent-rules';
 
 @Injectable({
   providedIn: 'root'
@@ -12,61 +11,65 @@ const RULES_STORAGE_KEY = 'email-ai-agent-rules';
 export class RuleManagementService {
   constructor(private readonly ruleManagementApiService: RuleManagementApiService) {}
 
-  async listRules(fallbackRules: SortableDashboardRule[]): Promise<SortableDashboardRule[]> {
-    const storedRules = this.readStoredRules();
-    if (storedRules.length > 0) {
-      return storedRules;
-    }
+  async listRules(): Promise<SortableDashboardRule[]> {
+    const rules = await firstValueFrom(this.ruleManagementApiService.listRules());
 
-    try {
-      return await firstValueFrom(this.ruleManagementApiService.listRules());
-    } catch {
-      this.writeRules(fallbackRules);
-      return fallbackRules;
-    }
+    return await Promise.all(
+      rules.map(async (rule) => {
+        const recipients = rule.rotation_enabled
+          ? await firstValueFrom(this.ruleManagementApiService.listRecipients(rule.id))
+          : [];
+
+        return {
+          id: rule.id,
+          name: rule.name,
+          keywords: rule.keywords ?? [],
+          negativeKeywords: rule.negative_keywords ?? [],
+          recipient: rule.recipient_email ?? '',
+          recipients: recipients.map((recipient) => this.mapRecipient(recipient)),
+          conditions: rule.conditions ?? '',
+          active: rule.active,
+          priority: rule.priority,
+          senderPattern: rule.sender_pattern ?? '',
+          subjectPattern: rule.subject_pattern ?? '',
+          aiEnabled: rule.ai_enabled,
+          aiContext: rule.ai_context ?? '',
+          extractAttachments: rule.extract_attachments,
+          rotationEnabled: rule.rotation_enabled,
+          smartThreadEnabled: rule.smart_thread_enabled
+        };
+      })
+    );
   }
 
-  async saveRule(rule: SortableDashboardRule, currentRules: SortableDashboardRule[]): Promise<SortableDashboardRule[]> {
-    const nextRules = rule.id
-      ? currentRules.map((currentRule) => (currentRule.id === rule.id ? rule : currentRule))
-      : [{ ...rule, id: `rule-${Date.now()}` }, ...currentRules];
+  async saveRule(rule: SortableDashboardRule): Promise<SortableDashboardRule[]> {
+    const payload = this.toRulePayload(rule);
+    const savedRule = rule.id
+      ? await firstValueFrom(this.ruleManagementApiService.updateRule(rule.id, payload))
+      : await firstValueFrom(this.ruleManagementApiService.createRule(payload));
 
-    const normalizedRules = this.withRecalculatedPriorities(nextRules);
-
-    try {
-      if (rule.id) {
-        return await firstValueFrom(this.ruleManagementApiService.updateRule(rule));
-      }
-
-      return await firstValueFrom(this.ruleManagementApiService.createRule(rule));
-    } catch {
-      this.writeRules(normalizedRules);
-      return normalizedRules;
-    }
-  }
-
-  async deleteRule(ruleId: string, currentRules: SortableDashboardRule[]): Promise<SortableDashboardRule[]> {
-    const nextRules = this.withRecalculatedPriorities(
-      currentRules.filter((rule) => rule.id !== ruleId)
+    await firstValueFrom(
+      this.ruleManagementApiService.syncRecipients(savedRule.id, this.toRecipientPayload(rule.recipients))
     );
 
-    try {
-      return await firstValueFrom(this.ruleManagementApiService.deleteRule(ruleId));
-    } catch {
-      this.writeRules(nextRules);
-      return nextRules;
-    }
+    return await this.listRules();
+  }
+
+  async deleteRule(ruleId: string): Promise<SortableDashboardRule[]> {
+    await firstValueFrom(this.ruleManagementApiService.deleteRule(ruleId));
+    return await this.listRules();
   }
 
   async reorderRules(rules: SortableDashboardRule[]): Promise<SortableDashboardRule[]> {
     const normalizedRules = this.withRecalculatedPriorities(rules);
+    const orderedIds = normalizedRules
+      .slice()
+      .sort((left, right) => right.priority - left.priority)
+      .map((rule) => rule.id)
+      .filter(Boolean);
 
-    try {
-      return await firstValueFrom(this.ruleManagementApiService.reorderRules(normalizedRules));
-    } catch {
-      this.writeRules(normalizedRules);
-      return normalizedRules;
-    }
+    await firstValueFrom(this.ruleManagementApiService.reorderRules(orderedIds));
+    return await this.listRules();
   }
 
   private withRecalculatedPriorities(rules: SortableDashboardRule[]): SortableDashboardRule[] {
@@ -77,21 +80,79 @@ export class RuleManagementService {
     }));
   }
 
-  private readStoredRules(): SortableDashboardRule[] {
-    const raw = localStorage.getItem(RULES_STORAGE_KEY);
-    if (!raw) {
-      return [];
-    }
+  private toRulePayload(rule: SortableDashboardRule): {
+    name: string;
+    keywords: string[];
+    negative_keywords: string[];
+    recipient_email: string;
+    conditions: string;
+    active: boolean;
+    priority: number;
+    sender_pattern: string;
+    subject_pattern: string;
+    ai_enabled: boolean;
+    ai_context: string;
+    rotation_enabled: boolean;
+    smart_thread_enabled: boolean;
+    extract_attachments: boolean;
+  } {
+    const fallbackRecipient = rule.recipients.find((recipient) => recipient.email.trim())?.email.trim() ?? '';
 
-    try {
-      return JSON.parse(raw) as SortableDashboardRule[];
-    } catch {
-      localStorage.removeItem(RULES_STORAGE_KEY);
-      return [];
-    }
+    return {
+      name: rule.name.trim(),
+      keywords: rule.keywords,
+      negative_keywords: rule.negativeKeywords,
+      recipient_email: (rule.recipient || fallbackRecipient).trim(),
+      conditions: rule.conditions,
+      active: rule.active,
+      priority: rule.priority,
+      sender_pattern: rule.senderPattern,
+      subject_pattern: rule.subjectPattern,
+      ai_enabled: rule.aiEnabled,
+      ai_context: rule.aiContext,
+      rotation_enabled: rule.rotationEnabled,
+      smart_thread_enabled: rule.smartThreadEnabled,
+      extract_attachments: rule.extractAttachments
+    };
   }
 
-  private writeRules(rules: SortableDashboardRule[]): void {
-    localStorage.setItem(RULES_STORAGE_KEY, JSON.stringify(rules));
+  private toRecipientPayload(recipients: Recipient[]): Array<{
+    email: string;
+    display_name: string;
+    sort_order: number;
+    on_vacation: boolean;
+    vacation_start: string | null;
+    vacation_end: string | null;
+  }> {
+    return recipients
+      .filter((recipient) => recipient.email.trim())
+      .map((recipient, index) => ({
+        email: recipient.email.trim(),
+        display_name: recipient.display_name,
+        sort_order: index,
+        on_vacation: recipient.is_on_vacation,
+        vacation_start: recipient.vacation_start,
+        vacation_end: recipient.vacation_end
+      }));
+  }
+
+  private mapRecipient(recipient: {
+    id: string;
+    email: string;
+    display_name: string | null;
+    sort_order: number;
+    on_vacation: boolean;
+    vacation_start: string | null;
+    vacation_end: string | null;
+  }): Recipient {
+    return {
+      id: recipient.id,
+      email: recipient.email,
+      display_name: recipient.display_name ?? '',
+      sort_order: recipient.sort_order,
+      is_on_vacation: recipient.on_vacation,
+      vacation_start: recipient.vacation_start,
+      vacation_end: recipient.vacation_end
+    };
   }
 }

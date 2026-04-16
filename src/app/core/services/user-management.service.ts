@@ -11,13 +11,13 @@ export class UserManagementService {
   constructor(private readonly userManagementApiService: UserManagementApiService) {}
 
   async createUser(payload: CreateUserPayload): Promise<CreateUserResponse> {
-    try {
-      return await firstValueFrom(this.userManagementApiService.createUser(payload));
-    } catch {
-      return {
-        success: true,
-        message: `Frontend test mode created ${payload.email} with ${payload.role} role.`
-      };
-    }
+    const response = await firstValueFrom(this.userManagementApiService.createUser(payload));
+
+    return {
+      success: true,
+      email: response.email,
+      role: response.role,
+      message: `Created ${response.email} with ${response.role} role.`
+    };
   }
 }

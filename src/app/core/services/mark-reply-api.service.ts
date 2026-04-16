@@ -16,17 +16,15 @@ export class MarkReplyApiService {
 
   preview(token: string): Observable<MarkReplyPreviewResponse> {
     return this.http.post<MarkReplyPreviewResponse>(
-      this.apiService.buildUrl('/mark-reply/preview'),
-      { token },
-      { withCredentials: true }
+      this.apiService.buildUrl('/v1/api/reply/mark'),
+      { token, preview: true }
     );
   }
 
   confirm(token: string): Observable<MarkReplyConfirmResponse> {
     return this.http.post<MarkReplyConfirmResponse>(
-      this.apiService.buildUrl('/mark-reply/confirm'),
-      { token },
-      { withCredentials: true }
+      this.apiService.buildUrl('/v1/api/reply/mark'),
+      { token, preview: false }
     );
   }
 }

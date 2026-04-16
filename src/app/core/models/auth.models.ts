@@ -4,18 +4,31 @@ export interface SignInPayload {
 }
 
 export interface AuthUser {
-  id?: string;
-  email?: string;
-  name?: string;
+  id: string;
+  email: string;
+  role: string;
 }
 
 export interface AuthSessionResponse {
   authenticated: boolean;
-  user?: AuthUser | null;
+  user: AuthUser | null;
 }
 
 export interface AuthLoginResponse {
-  authenticated?: boolean;
-  user?: AuthUser | null;
+  token: string;
+  userId: string;
+  email: string;
+  role: string;
+}
+
+export interface AuthSessionData {
+  id: string;
+  email: string;
+  role: string;
+}
+
+export interface AuthLoginResult {
+  authenticated: boolean;
+  user: AuthUser | null;
   message?: string;
 }

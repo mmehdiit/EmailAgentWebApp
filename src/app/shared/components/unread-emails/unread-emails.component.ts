@@ -43,21 +43,29 @@ export class UnreadEmailsComponent implements OnInit {
     await this.loadUnreadEmails();
   }
 
-  protected markAsRead(emailId: string): void {
+  protected async markAsRead(emailId: string): Promise<void> {
     this.markingReadId = emailId;
-    this.emails = this.emails.filter((email) => email.id !== emailId);
-    this.markingReadId = null;
+    try {
+      await this.unreadEmailDataService.markAsRead(emailId);
+      this.emails = this.emails.filter((email) => email.id !== emailId);
+    } finally {
+      this.markingReadId = null;
+    }
   }
 
-  protected assignEmail(emailId: string): void {
+  protected async assignEmail(emailId: string): Promise<void> {
     if (!this.selectedRules[emailId]) {
       return;
     }
 
     this.assigningEmailId = emailId;
-    this.emails = this.emails.filter((email) => email.id !== emailId);
-    delete this.selectedRules[emailId];
-    this.assigningEmailId = null;
+    try {
+      await this.unreadEmailDataService.assignEmail(emailId, this.selectedRules[emailId]);
+      this.emails = this.emails.filter((email) => email.id !== emailId);
+      delete this.selectedRules[emailId];
+    } finally {
+      this.assigningEmailId = null;
+    }
   }
 
   protected formatDate(dateString: string): string {

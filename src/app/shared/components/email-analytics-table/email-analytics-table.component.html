@@ -52,7 +52,7 @@
       </button>
 
       <button
-        *ngIf="hasLogsWithoutReceivedAt()"
+        *ngIf="canBackfillReceivedDates && hasLogsWithoutReceivedAt()"
         type="button"
         (click)="backfillReceivedDates()"
         [disabled]="isBackfilling"
@@ -86,6 +86,7 @@
       </button>
 
       <button
+        *ngIf="canClearLogs"
         type="button"
         (click)="openClearDialog = true"
         [disabled]="isClearing || logs().length === 0"
@@ -501,7 +502,7 @@
 </div>
 
 <div
-  *ngIf="openClearDialog"
+  *ngIf="canClearLogs && openClearDialog"
   class="fixed inset-0 z-50 flex items-center justify-center bg-black/40"
 >
   <div

@@ -7,155 +7,108 @@ import {
   DashboardProcessResult,
   OutlookConnectResult,
 } from '../models/dashboard.models';
+import { AnalyticsDataService } from './analytics-data.service';
 import { DashboardApiService } from './dashboard-api.service';
-
-const OUTLOOK_STORAGE_KEY = 'email-ai-agent-outlook-connection';
+import { RuleManagementService } from './rule-management.service';
 
 @Injectable({
   providedIn: 'root',
 })
 export class DashboardDataService {
-  constructor(private readonly dashboardApiService: DashboardApiService) {}
+  constructor(
+    private readonly dashboardApiService: DashboardApiService,
+    private readonly analyticsDataService: AnalyticsDataService,
+    private readonly ruleManagementService: RuleManagementService
+  ) {}
 
   async getOverview(): Promise<DashboardOverview> {
-    try {
-      return await firstValueFrom(this.dashboardApiService.getOverview());
-    } catch {
-      return {
-        stats: {
-          totalProcessed: 142,
-          forwardedToday: 17,
-          successRate: 96,
-        },
-        connection: {
-          connected: false,
-          email: null,
-          nextProcessInSeconds: 300,
-        },
-        recentLogs: [
-          {
-            id: 'log-1',
-            emailFrom: 'claims@partner.com',
-            emailSubject: 'Urgent motor claim update',
-            status: 'forwarded',
-            aiClassified: true,
-            replyDetected: true,
-          },
-          {
-            id: 'log-2',
-            emailFrom: 'customer@example.com',
-            emailSubject: 'Need update on policy renewal',
-            status: 'replied',
-            aiClassified: false,
-            replyDetected: false,
-          },
-          {
-            id: 'log-3',
-            emailFrom: 'notifications@vendor.com',
-            emailSubject: 'System maintenance notice',
-            status: 'no_match',
-            aiClassified: false,
-            replyDetected: false,
-          },
-        ],
-        rules: [
-          {
-            id: 'rule-1',
-            name: 'Customer Support',
-            keywords: ['support', 'issue', 'help'],
-            active: true,
-            priority: 3,
-          },
-          {
-            id: 'rule-2',
-            name: 'Claims Processing',
-            keywords: ['claim', 'accident', 'damage'],
-            active: true,
-            priority: 2,
-          },
-          {
-            id: 'rule-3',
-            name: 'Sales Leads',
-            keywords: ['quote', 'pricing', 'proposal'],
-            active: false,
-            priority: 1,
-          },
-        ],
-      };
-    }
+    const [analytics, rules, connection] = await Promise.all([
+      this.analyticsDataService.getAnalytics(),
+      this.ruleManagementService.listRules(),
+      this.getConnectionStatus()
+    ]);
+
+    const totalProcessed = analytics.logs.length;
+    const forwardedToday = analytics.logs.filter((log) => {
+      if (!log.processedAt) {
+        return false;
+      }
+
+      const processed = new Date(log.processedAt);
+      const today = new Date();
+      return processed.toDateString() === today.toDateString() && log.status === 'forwarded';
+    }).length;
+
+    return {
+      stats: {
+        totalProcessed,
+        forwardedToday,
+        successRate: totalProcessed === 0 ? 0 : Math.round((analytics.summary.forwarded / totalProcessed) * 100)
+      },
+      connection,
+      recentLogs: analytics.logs.slice(0, 3).map((log) => ({
+        id: log.id,
+        emailFrom: log.from,
+        emailSubject: log.subject,
+        status: log.replyDetected ? 'replied' : (log.status as 'forwarded' | 'no_match' | 'failed' | 'replied'),
+        aiClassified: log.aiClassified,
+        replyDetected: log.replyDetected
+      })),
+      rules: rules.map((rule) => ({
+        id: rule.id,
+        name: rule.name,
+        keywords: rule.keywords,
+        active: rule.active,
+        priority: rule.priority
+      }))
+    };
   }
 
   async getConnectionStatus(): Promise<DashboardConnectionStatus> {
-    const fakeConnection = this.getFakeConnection();
-    if (fakeConnection) {
-      return fakeConnection;
-    }
-
-    try {
-      return await firstValueFrom(
-        this.dashboardApiService.getConnectionStatus()
-      );
-    } catch {
-      return {
-        connected: false,
-        email: null,
-        nextProcessInSeconds: 300,
-      };
-    }
+    const connection = await firstValueFrom(this.dashboardApiService.getConnectionStatus());
+    return {
+      connected: connection.connected,
+      email: connection.email ?? null,
+      nextProcessInSeconds: 300
+    };
   }
 
   async connectOutlook(): Promise<OutlookConnectResult> {
-    try {
-      return await firstValueFrom(this.dashboardApiService.connectOutlook());
-    } catch {
-      const fakeConnection: DashboardConnectionStatus = {
-        connected: true,
-        email: 'outlook.test@company.com',
-        nextProcessInSeconds: 300,
-      };
-      localStorage.setItem(OUTLOOK_STORAGE_KEY, JSON.stringify(fakeConnection));
-      return {
-        success: true,
-        email: fakeConnection.email,
-        message: `Frontend test mode connected ${fakeConnection.email}.`,
-      };
-    }
+    const redirectUri = `${window.location.origin}/dashboard`;
+    const response = await firstValueFrom(
+      this.dashboardApiService.getOutlookAuthUrl(window.location.origin, redirectUri)
+    );
+
+    return {
+      success: true,
+      email: null,
+      authUrl: response.authUrl,
+      message: 'Redirecting to Outlook for authorization.'
+    };
+  }
+
+  async completeOutlookConnection(code: string): Promise<OutlookConnectResult> {
+    const redirectUri = `${window.location.origin}/dashboard`;
+    const response = await firstValueFrom(
+      this.dashboardApiService.completeOutlookConnection({
+        code,
+        frontendOrigin: window.location.origin,
+        redirectUri
+      })
+    );
+
+    return {
+      success: response.success,
+      email: response.email,
+      message: `Connected ${response.email} to Outlook.`
+    };
   }
 
   async disconnectOutlook(): Promise<DashboardProcessResult> {
-    try {
-      return await firstValueFrom(this.dashboardApiService.disconnectOutlook());
-    } catch {
-      localStorage.removeItem(OUTLOOK_STORAGE_KEY);
-      return {
-        success: true,
-        message: 'Frontend test mode disconnected Outlook.',
-      };
-    }
+    return await firstValueFrom(this.dashboardApiService.disconnectOutlook());
   }
 
   async processEmails(): Promise<DashboardProcessResult> {
-    try {
-      return await firstValueFrom(this.dashboardApiService.processEmails());
-    } catch {
-      return {
-        success: true,
-        message: 'Frontend test mode processed the mailbox queue.',
-      };
-    }
-  }
-
-  private getFakeConnection(): DashboardConnectionStatus | null {
-    const raw = localStorage.getItem(OUTLOOK_STORAGE_KEY);
-    if (!raw) {
-      return null;
-    }
-
-    try {
-      return JSON.parse(raw) as DashboardConnectionStatus;
-    } catch {
-      localStorage.removeItem(OUTLOOK_STORAGE_KEY);
-      return null;
-    }
+    return await firstValueFrom(this.dashboardApiService.processEmails());
   }
 }

@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit } from '@angular/core';
+import { Component } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 
@@ -12,7 +12,7 @@ import { AuthSessionService } from '../../core/services/auth-session.service';
   templateUrl: './auth.component.html',
   styleUrl: './auth.component.scss'
 })
-export class AuthComponent implements OnInit {
+export class AuthComponent {
   protected loading = false;
   protected feedback: { type: 'success' | 'error'; title: string; description: string } | null = null;
 
@@ -26,13 +26,6 @@ export class AuthComponent implements OnInit {
     private readonly authSessionService: AuthSessionService,
     private readonly router: Router
   ) {}
-
-  async ngOnInit(): Promise<void> {
-    const session = await this.authSessionService.getSession();
-    if (session?.authenticated) {
-      await this.router.navigate(['/dashboard']);
-    }
-  }
 
   protected async onSubmit(): Promise<void> {
     this.feedback = null;
@@ -65,19 +58,6 @@ export class AuthComponent implements OnInit {
     } finally {
       this.loading = false;
     }
-  }
-
-  protected async fakeLogin(): Promise<void> {
-    const email = this.form.controls.email.value || 'frontend@test.local';
-    const response = await this.authSessionService.signInFake(email);
-
-    this.feedback = {
-      type: 'success',
-      title: 'Fake login enabled',
-      description: response.message ?? 'Frontend test session created.'
-    };
-
-    await this.router.navigate(['/dashboard']);
   }
 
   protected hasError(controlName: 'email' | 'password', errorName: string): boolean {

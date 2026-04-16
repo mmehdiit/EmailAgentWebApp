@@ -30,7 +30,11 @@ export class ReplyAnalyticsComponent implements OnInit {
 
   protected async checkReplies(): Promise<void> {
     this.checking = true;
-    await this.loadStats();
-    this.checking = false;
+    try {
+      await this.analyticsDataService.checkReplies();
+      await this.loadStats();
+    } finally {
+      this.checking = false;
+    }
   }
 }

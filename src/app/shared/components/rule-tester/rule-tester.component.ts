@@ -1,8 +1,11 @@
 import { CommonModule } from '@angular/common';
 import { Component, Input } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { firstValueFrom } from 'rxjs';
 
 import { Recipient } from '../recipient-manager/recipient-manager.component';
+import { EmailClassificationResult } from '../../../core/models/dashboard.models';
+import { UnreadEmailApiService } from '../../../core/services/unread-email-api.service';
 
 export interface RuleTesterRule {
   id: string;
@@ -30,13 +33,6 @@ type TestResult = {
   skippedByFollowUp?: boolean;
 };
 
-type FakeAiResult = {
-  matched_rule_id: string | null;
-  matched_rule_name: string | null;
-  confidence: number;
-  reasoning: string;
-};
-
 @Component({
   selector: 'app-rule-tester',
   standalone: true,
@@ -48,13 +44,15 @@ export class RuleTesterComponent {
 
   protected open = false;
   protected isLoading = false;
-  protected aiResult: FakeAiResult | null = null;
+  protected aiResult: EmailClassificationResult | null = null;
   protected testResults: TestResult[] | null = null;
   protected testEmail = {
     from: '',
     subject: '',
     body: ''
   };
+
+  constructor(private readonly unreadEmailApiService: UnreadEmailApiService) {}
 
   protected async runTest(): Promise<void> {
     this.isLoading = true;
@@ -64,26 +62,26 @@ export class RuleTesterComponent {
     const hasExactMatch = exactResults.some((result) => result.matched);
 
     if (!hasExactMatch && (this.testEmail.subject || this.testEmail.body)) {
-      const aiMatchedRule = [...this.rules]
-        .filter((rule) => rule.aiEnabled)
-        .sort((a, b) => b.priority - a.priority)[0];
+      const aiRules = this.rules.filter((rule) => rule.aiEnabled);
 
-      if (aiMatchedRule) {
-        this.aiResult = {
-          matched_rule_id: aiMatchedRule.id,
-          matched_rule_name: aiMatchedRule.name,
-          confidence: 0.78,
-          reasoning: 'Frontend test mode selected the highest priority AI-enabled rule as a fallback.'
-        };
+      if (aiRules.length > 0) {
+        this.aiResult = await firstValueFrom(
+          this.unreadEmailApiService.classifyEmail({
+            subject: this.testEmail.subject,
+            body: this.testEmail.body,
+            sender: this.testEmail.from
+          })
+        );
 
-        this.testResults = exactResults.map((result) => ({
-          ...result,
-          matched: result.rule.id === aiMatchedRule.id,
-          matchType: result.rule.id === aiMatchedRule.id ? 'ai' : 'none'
-        }));
-
-        this.isLoading = false;
-        return;
+        if (this.aiResult.matched_rule_id) {
+          this.testResults = exactResults.map((result) => ({
+            ...result,
+            matched: result.rule.id === this.aiResult?.matched_rule_id,
+            matchType: result.rule.id === this.aiResult?.matched_rule_id ? 'ai' : 'none'
+          }));
+          this.isLoading = false;
+          return;
+        }
       }
     }
 
