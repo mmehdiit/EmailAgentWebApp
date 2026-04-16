@@ -10,23 +10,73 @@ import {
   RulePerformanceStat
 } from '../models/dashboard.models';
 import { AnalyticsApiService } from './analytics-api.service';
-import { RuleManagementApiService } from './rule-management-api.service';
+import { RuleManagementService } from './rule-management.service';
 import { UnreadEmailApiService } from './unread-email-api.service';
 
 @Injectable({
   providedIn: 'root'
 })
 export class AnalyticsDataService {
+  private analyticsPromise: Promise<DashboardAnalytics> | null = null;
+
   constructor(
     private readonly analyticsApiService: AnalyticsApiService,
-    private readonly ruleManagementApiService: RuleManagementApiService,
+    private readonly ruleManagementService: RuleManagementService,
     private readonly unreadEmailApiService: UnreadEmailApiService
   ) {}
 
-  async getAnalytics(): Promise<DashboardAnalytics> {
+  async getAnalytics(forceRefresh = false): Promise<DashboardAnalytics> {
+    if (!forceRefresh && this.analyticsPromise) {
+      return this.analyticsPromise;
+    }
+
+    this.analyticsPromise = this.fetchAnalytics();
+    return this.analyticsPromise;
+  }
+
+  async listAvailableRules(): Promise<RuleItem[]> {
+    const rules = await this.ruleManagementService.listRules();
+    return rules
+      .filter((rule) => rule.active)
+      .map((rule) => ({ id: rule.id, name: rule.name }));
+  }
+
+  async checkReplies(): Promise<void> {
+    await firstValueFrom(this.analyticsApiService.checkReplies());
+    this.invalidateCache();
+  }
+
+  async retryFailedEmails(): Promise<void> {
+    await firstValueFrom(this.unreadEmailApiService.retryFailedEmails());
+    this.invalidateCache();
+  }
+
+  async getEmailContent(messageId: string): Promise<EmailContent> {
+    const content = await firstValueFrom(this.unreadEmailApiService.getEmailContent(messageId));
+
+    return {
+      subject: content.subject,
+      from: content.from,
+      receivedAt: content.received_date_time,
+      bodyHtml: content.html_body,
+      bodyText: content.body
+    };
+  }
+
+  async markAsReplied(emailLogId: string): Promise<void> {
+    await firstValueFrom(this.analyticsApiService.markReplyManual(emailLogId));
+    this.invalidateCache();
+  }
+
+  async assignToRule(emailId: string, ruleId: string): Promise<void> {
+    await firstValueFrom(this.unreadEmailApiService.manualAssign(emailId, ruleId));
+    this.invalidateCache();
+  }
+
+  private async fetchAnalytics(): Promise<DashboardAnalytics> {
     const [logs, rules] = await Promise.all([
       firstValueFrom(this.analyticsApiService.getLogs()),
-      firstValueFrom(this.ruleManagementApiService.listRules())
+      this.ruleManagementService.listRules()
     ]);
 
     const ruleMap = new Map(rules.map((rule) => [rule.id, rule.name]));
@@ -54,41 +104,6 @@ export class AnalyticsDataService {
       replyStats: this.buildReplyStats(mappedLogs),
       rulePerformance: this.buildRulePerformance(mappedLogs)
     };
-  }
-
-  async listAvailableRules(): Promise<RuleItem[]> {
-    const rules = await firstValueFrom(this.ruleManagementApiService.listRules());
-    return rules
-      .filter((rule) => rule.active)
-      .map((rule) => ({ id: rule.id, name: rule.name }));
-  }
-
-  async checkReplies(): Promise<void> {
-    await firstValueFrom(this.analyticsApiService.checkReplies());
-  }
-
-  async retryFailedEmails(): Promise<void> {
-    await firstValueFrom(this.unreadEmailApiService.retryFailedEmails());
-  }
-
-  async getEmailContent(messageId: string): Promise<EmailContent> {
-    const content = await firstValueFrom(this.unreadEmailApiService.getEmailContent(messageId));
-
-    return {
-      subject: content.subject,
-      from: content.from,
-      receivedAt: content.received_date_time,
-      bodyHtml: content.html_body,
-      bodyText: content.body
-    };
-  }
-
-  async markAsReplied(emailLogId: string): Promise<void> {
-    await firstValueFrom(this.analyticsApiService.markReplyManual(emailLogId));
-  }
-
-  async assignToRule(emailId: string, ruleId: string): Promise<void> {
-    await firstValueFrom(this.unreadEmailApiService.manualAssign(emailId, ruleId));
   }
 
   private buildSummary(logs: EmailAnalyticsLog[]): DashboardAnalytics['summary'] {
@@ -206,5 +221,9 @@ export class AnalyticsDataService {
     const hours = Math.floor(totalMinutes / 60);
     const minutes = totalMinutes % 60;
     return minutes === 0 ? `${hours}h` : `${hours}h ${minutes}m`;
+  }
+
+  private invalidateCache(): void {
+    this.analyticsPromise = null;
   }
 }

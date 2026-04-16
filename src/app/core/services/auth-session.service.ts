@@ -10,9 +10,49 @@ const TOKEN_KEY = 'email-ai-agent-auth-token';
   providedIn: 'root'
 })
 export class AuthSessionService {
+  private sessionPromise: Promise<AuthSessionResponse> | null = null;
+
   constructor(private readonly authApiService: AuthApiService) {}
 
   async getSession(): Promise<AuthSessionResponse> {
+    if (this.sessionPromise) {
+      return this.sessionPromise;
+    }
+
+    this.sessionPromise = this.loadSession();
+    return this.sessionPromise;
+  }
+
+  async signIn(payload: SignInPayload): Promise<AuthLoginResult> {
+    const response = await firstValueFrom(this.authApiService.signIn(payload));
+
+    localStorage.setItem(TOKEN_KEY, response.token);
+    this.sessionPromise = Promise.resolve({
+      authenticated: true,
+      user: {
+        id: response.userId,
+        email: response.email,
+        role: response.role
+      }
+    });
+
+    return {
+      authenticated: true,
+      user: {
+        id: response.userId,
+        email: response.email,
+        role: response.role
+      },
+      message: 'You have successfully logged in.'
+    };
+  }
+
+  logout(): void {
+    localStorage.removeItem(TOKEN_KEY);
+    this.sessionPromise = null;
+  }
+
+  private async loadSession(): Promise<AuthSessionResponse> {
     const token = localStorage.getItem(TOKEN_KEY);
     if (!token) {
       return { authenticated: false, user: null };
@@ -30,31 +70,11 @@ export class AuthSessionService {
       };
     } catch {
       localStorage.removeItem(TOKEN_KEY);
+      this.sessionPromise = null;
       return {
         authenticated: false,
         user: null
       };
     }
-  }
-
-  async signIn(payload: SignInPayload): Promise<AuthLoginResult> {
-    const response = await firstValueFrom(this.authApiService.signIn(payload));
-    
-    // Store token
-    localStorage.setItem(TOKEN_KEY, response.token);
-    
-    return {
-      authenticated: true,
-      user: {
-        id: response.userId,
-        email: response.email,
-        role: response.role
-      },
-      message: 'You have successfully logged in.'
-    };
-  }
-
-  logout(): void {
-    localStorage.removeItem(TOKEN_KEY);
   }
 }

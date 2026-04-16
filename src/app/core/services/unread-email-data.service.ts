@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
 
 import { UnreadEmailOverview } from '../models/dashboard.models';
-import { RuleManagementApiService } from './rule-management-api.service';
+import { RuleManagementService } from './rule-management.service';
 import { UnreadEmailApiService } from './unread-email-api.service';
 
 @Injectable({
@@ -11,13 +11,13 @@ import { UnreadEmailApiService } from './unread-email-api.service';
 export class UnreadEmailDataService {
   constructor(
     private readonly unreadEmailApiService: UnreadEmailApiService,
-    private readonly ruleManagementApiService: RuleManagementApiService
+    private readonly ruleManagementService: RuleManagementService
   ) {}
 
   async getUnreadEmails(): Promise<UnreadEmailOverview> {
     const [emails, rules] = await Promise.all([
       firstValueFrom(this.unreadEmailApiService.getUnreadEmails()),
-      firstValueFrom(this.ruleManagementApiService.listRules())
+      this.ruleManagementService.listRules()
     ]);
 
     const activeRules = rules
@@ -25,21 +25,32 @@ export class UnreadEmailDataService {
       .map((rule) => ({
         id: rule.id,
         name: rule.name,
-        recipientEmail: rule.recipient_email,
+        recipientEmail: rule.recipient,
         active: rule.active
       }));
 
     const classifiedEmails = await Promise.all(
       emails.map(async (email) => {
-        const classification = await firstValueFrom(
-          this.unreadEmailApiService.classifyEmail({
-            subject: email.subject,
-            body: email.body_preview,
-            sender: email.from
-          })
-        );
+        let classification: {
+          matched_rule_id: string;
+          matched_rule_name: string;
+          confidence: number;
+          reasoning: string;
+        } | null = null;
 
-        const hasMatch = !!classification.matched_rule_id;
+        try {
+          classification = await firstValueFrom(
+            this.unreadEmailApiService.classifyEmail({
+              subject: email.subject,
+              body: email.body_preview,
+              sender: email.from
+            })
+          );
+        } catch {
+          classification = null;
+        }
+
+        const hasMatch = !!classification?.matched_rule_id;
 
         return {
           id: email.id,
@@ -50,10 +61,10 @@ export class UnreadEmailDataService {
           preview: email.body_preview,
           isRead: false,
           matchesRule: hasMatch,
-          matchedRuleName: hasMatch ? classification.matched_rule_name : null,
-          aiClassified: hasMatch && classification.confidence > 0,
-          aiConfidence: hasMatch ? classification.confidence : null,
-          aiReasoning: classification.reasoning || null
+          matchedRuleName: hasMatch ? classification?.matched_rule_name ?? null : null,
+          aiClassified: hasMatch && (classification?.confidence ?? 0) > 0,
+          aiConfidence: hasMatch ? classification?.confidence ?? null : null,
+          aiReasoning: classification?.reasoning || null
         };
       })
     );

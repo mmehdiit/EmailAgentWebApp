@@ -15,17 +15,24 @@ export const routes: Routes = [
   },
   {
     path: 'auth',
-    component: AuthComponent,
+    loadComponent: () =>
+      import('./features/auth/auth.component').then((m) => m.AuthComponent),
     canActivate: [loginGuard],
   },
   {
     path: 'dashboard',
-    component: DashboardComponent,
+    loadComponent: () =>
+      import('./features/dashboard/dashboard.component').then(
+        (m) => m.DashboardComponent
+      ),
     canActivate: [authGuard],
   },
   {
     path: 'mark-replied',
-    component: MarkRepliedComponent,
+    loadComponent: () =>
+      import('./features/mark-replied/mark-replied.component').then(
+        (m) => m.MarkRepliedComponent
+      ),
   },
   {
     path: '**',

@@ -89,14 +89,11 @@ export class DashboardComponent implements OnInit, OnDestroy {
       await this.router.navigate(['/dashboard']);
     }
 
-    const [overview, connection] = await Promise.all([
-      this.dashboardDataService.getOverview(),
-      this.dashboardDataService.getConnectionStatus(),
-    ]);
+    const overview = await this.dashboardDataService.getOverview();
     this.overview = overview;
-    this.outlookConnected = connection.connected;
-    this.outlookEmail = connection.email;
-    this.countdown = connection.nextProcessInSeconds;
+    this.outlookConnected = overview.connection.connected;
+    this.outlookEmail = overview.connection.email;
+    this.countdown = overview.connection.nextProcessInSeconds;
     this.rules = await this.ruleManagementService.listRules();
     this.startCountdown();
     this.loading = false;

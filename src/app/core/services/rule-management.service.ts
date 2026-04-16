@@ -9,9 +9,53 @@ import { RuleManagementApiService } from './rule-management-api.service';
   providedIn: 'root'
 })
 export class RuleManagementService {
+  private rulesPromise: Promise<SortableDashboardRule[]> | null = null;
+
   constructor(private readonly ruleManagementApiService: RuleManagementApiService) {}
 
-  async listRules(): Promise<SortableDashboardRule[]> {
+  async listRules(forceRefresh = false): Promise<SortableDashboardRule[]> {
+    if (!forceRefresh && this.rulesPromise) {
+      return this.rulesPromise;
+    }
+
+    this.rulesPromise = this.fetchRules();
+    return this.rulesPromise;
+  }
+
+  async saveRule(rule: SortableDashboardRule): Promise<SortableDashboardRule[]> {
+    const payload = this.toRulePayload(rule);
+    const savedRule = rule.id
+      ? await firstValueFrom(this.ruleManagementApiService.updateRule(rule.id, payload))
+      : await firstValueFrom(this.ruleManagementApiService.createRule(payload));
+
+    await firstValueFrom(
+      this.ruleManagementApiService.syncRecipients(savedRule.id, this.toRecipientPayload(rule.recipients))
+    );
+
+    this.invalidateCache();
+    return await this.listRules(true);
+  }
+
+  async deleteRule(ruleId: string): Promise<SortableDashboardRule[]> {
+    await firstValueFrom(this.ruleManagementApiService.deleteRule(ruleId));
+    this.invalidateCache();
+    return await this.listRules(true);
+  }
+
+  async reorderRules(rules: SortableDashboardRule[]): Promise<SortableDashboardRule[]> {
+    const normalizedRules = this.withRecalculatedPriorities(rules);
+    const orderedIds = normalizedRules
+      .slice()
+      .sort((left, right) => right.priority - left.priority)
+      .map((rule) => rule.id)
+      .filter(Boolean);
+
+    await firstValueFrom(this.ruleManagementApiService.reorderRules(orderedIds));
+    this.invalidateCache();
+    return await this.listRules(true);
+  }
+
+  private async fetchRules(): Promise<SortableDashboardRule[]> {
     const rules = await firstValueFrom(this.ruleManagementApiService.listRules());
 
     return await Promise.all(
@@ -40,36 +84,6 @@ export class RuleManagementService {
         };
       })
     );
-  }
-
-  async saveRule(rule: SortableDashboardRule): Promise<SortableDashboardRule[]> {
-    const payload = this.toRulePayload(rule);
-    const savedRule = rule.id
-      ? await firstValueFrom(this.ruleManagementApiService.updateRule(rule.id, payload))
-      : await firstValueFrom(this.ruleManagementApiService.createRule(payload));
-
-    await firstValueFrom(
-      this.ruleManagementApiService.syncRecipients(savedRule.id, this.toRecipientPayload(rule.recipients))
-    );
-
-    return await this.listRules();
-  }
-
-  async deleteRule(ruleId: string): Promise<SortableDashboardRule[]> {
-    await firstValueFrom(this.ruleManagementApiService.deleteRule(ruleId));
-    return await this.listRules();
-  }
-
-  async reorderRules(rules: SortableDashboardRule[]): Promise<SortableDashboardRule[]> {
-    const normalizedRules = this.withRecalculatedPriorities(rules);
-    const orderedIds = normalizedRules
-      .slice()
-      .sort((left, right) => right.priority - left.priority)
-      .map((rule) => rule.id)
-      .filter(Boolean);
-
-    await firstValueFrom(this.ruleManagementApiService.reorderRules(orderedIds));
-    return await this.listRules();
   }
 
   private withRecalculatedPriorities(rules: SortableDashboardRule[]): SortableDashboardRule[] {
@@ -154,5 +168,9 @@ export class RuleManagementService {
       vacation_start: recipient.vacation_start,
       vacation_end: recipient.vacation_end
     };
+  }
+
+  private invalidateCache(): void {
+    this.rulesPromise = null;
   }
 }

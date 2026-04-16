@@ -19,6 +19,7 @@ export class UnreadEmailsComponent implements OnInit {
   protected rules: ActiveForwardingRule[] = [];
   protected loading = true;
   protected refreshing = false;
+  protected errorMessage = '';
   protected selectedRules: Record<string, string> = {};
   protected markingReadId: string | null = null;
   protected assigningEmailId: string | null = null;
@@ -31,11 +32,20 @@ export class UnreadEmailsComponent implements OnInit {
 
   protected async loadUnreadEmails(): Promise<void> {
     this.loading = true;
-    const data = await this.unreadEmailDataService.getUnreadEmails();
-    this.emails = data.emails;
-    this.rules = data.rules.filter((rule) => rule.active);
-    this.loading = false;
-    this.refreshing = false;
+    this.errorMessage = '';
+
+    try {
+      const data = await this.unreadEmailDataService.getUnreadEmails();
+      this.emails = data.emails;
+      this.rules = data.rules.filter((rule) => rule.active);
+    } catch {
+      this.emails = [];
+      this.rules = [];
+      this.errorMessage = 'Failed to load unread emails. Please try again.';
+    } finally {
+      this.loading = false;
+      this.refreshing = false;
+    }
   }
 
   protected async refresh(): Promise<void> {
