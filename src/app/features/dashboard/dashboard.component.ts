@@ -2,7 +2,7 @@ import { CommonModule } from '@angular/common';
 import { Component, OnDestroy, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
-import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 
 import {
   DashboardOverview,
@@ -24,6 +24,7 @@ import {
   SortableDashboardRule,
   SortableRuleItemComponent,
 } from '../../shared/components/sortable-rule-item/sortable-rule-item.component';
+import { TopNavbarComponent } from '../../shared/components/top-navbar/top-navbar.component';
 import { UnreadEmailsComponent } from '../../shared/components/unread-emails/unread-emails.component';
 import { UserManagementComponent } from '../../shared/components/user-management/user-management.component';
 
@@ -35,7 +36,6 @@ type DashboardRuleEditor = SortableDashboardRule;
   imports: [
     CommonModule,
     FormsModule,
-    RouterLink,
     KeywordInputComponent,
     RecipientManagerComponent,
     RuleTesterComponent,
@@ -43,6 +43,7 @@ type DashboardRuleEditor = SortableDashboardRule;
     ReplyAnalyticsComponent,
     RulePerformanceComponent,
     SortableRuleItemComponent,
+    TopNavbarComponent,
     UnreadEmailsComponent,
     UserManagementComponent,
   ],

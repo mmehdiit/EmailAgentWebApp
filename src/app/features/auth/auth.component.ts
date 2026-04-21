@@ -11,16 +11,26 @@ import { ToastService } from '../../core/services/toast.service';
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule, RouterLink],
   templateUrl: './auth.component.html',
-  styleUrl: './auth.component.scss'
+  styleUrl: './auth.component.scss',
 })
 export class AuthComponent {
   protected loading = false;
   protected showPassword = false;
-  protected feedback: { type: 'success' | 'error'; title: string; description: string } | null = null;
+  protected feedback: {
+    type: 'success' | 'error';
+    title: string;
+    description: string;
+  } | null = null;
 
   protected readonly form = this.formBuilder.nonNullable.group({
-    email: ['', [Validators.required, Validators.email, Validators.maxLength(255)]],
-    password: ['', [Validators.required, Validators.minLength(6), Validators.maxLength(100)]]
+    email: [
+      '',
+      [Validators.required, Validators.email, Validators.maxLength(255)],
+    ],
+    password: [
+      '',
+      [Validators.required, Validators.minLength(6), Validators.maxLength(100)],
+    ],
   });
 
   constructor(
@@ -41,26 +51,28 @@ export class AuthComponent {
     this.loading = true;
 
     try {
-      const response = await this.authSessionService.signIn(this.form.getRawValue());
+      const response = await this.authSessionService.signIn(
+        this.form.getRawValue()
+      );
 
       this.feedback = {
         type: 'success',
         title: 'Welcome back!',
-        description: response.message ?? "You've successfully logged in."
+        description: response.message ?? "You've successfully logged in.",
       };
       this.toastService.success(
         response.message ?? "You've successfully logged in.",
         'Welcome Back'
       );
 
-      await this.router.navigate(['/dashboard']);
+      await this.router.navigate(['/home']);
     } catch (error: unknown) {
       const message = this.resolveErrorMessage(error);
 
       this.feedback = {
         type: 'error',
         title: 'Login failed',
-        description: message
+        description: message,
       };
       this.toastService.error(message, 'Login Failed');
     } finally {
@@ -68,7 +80,10 @@ export class AuthComponent {
     }
   }
 
-  protected hasError(controlName: 'email' | 'password', errorName: string): boolean {
+  protected hasError(
+    controlName: 'email' | 'password',
+    errorName: string
+  ): boolean {
     const control = this.form.controls[controlName];
     return control.touched && control.hasError(errorName);
   }

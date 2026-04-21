@@ -1,0 +1,13 @@
+services:
+  email-ai-agent-web-app:
+    image: mmehdi981/email-ai-agent-web-ang:0.0.0
+    ports:
+      - "4400:80"
+    volumes:
+      - ./config:/usr/share/nginx/html/assets:ro
+    networks:
+      - nxt_network
+
+networks:
+  nxt_network:
+    external: true
