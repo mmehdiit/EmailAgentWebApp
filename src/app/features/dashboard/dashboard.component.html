@@ -967,20 +967,44 @@
                     <label class="text-[10px] text-muted-foreground"
                       >Rotation</label
                     >
-                    <input
-                      [(ngModel)]="newRule.rotationEnabled"
-                      type="checkbox"
-                      class="h-4 w-4 scale-75 sm:scale-100"
-                    />
+                    <button
+                      type="button"
+                      role="switch"
+                      [attr.aria-checked]="newRule.rotationEnabled"
+                      (click)="newRule.rotationEnabled = !newRule.rotationEnabled"
+                      class="relative inline-flex h-5 w-9 shrink-0 items-center rounded-full border transition-all focus:outline-none focus:ring-2 focus:ring-primary/30"
+                      [ngClass]="
+                        newRule.rotationEnabled
+                          ? 'border-primary bg-primary'
+                          : 'border-border bg-muted'
+                      "
+                    >
+                      <span
+                        class="inline-block h-4 w-4 rounded-full bg-background shadow-sm transition-transform"
+                        [ngClass]="newRule.rotationEnabled ? 'translate-x-4' : 'translate-x-0.5'"
+                      ></span>
+                    </button>
                     <ng-container *ngIf="newRule.rotationEnabled">
                       <label class="ml-2 text-[10px] text-muted-foreground"
                         >Smart Thread</label
                       >
-                      <input
-                        [(ngModel)]="newRule.smartThreadEnabled"
-                        type="checkbox"
-                        class="h-4 w-4 scale-75 sm:scale-100"
-                      />
+                      <button
+                        type="button"
+                        role="switch"
+                        [attr.aria-checked]="newRule.smartThreadEnabled"
+                        (click)="newRule.smartThreadEnabled = !newRule.smartThreadEnabled"
+                        class="relative inline-flex h-5 w-9 shrink-0 items-center rounded-full border transition-all focus:outline-none focus:ring-2 focus:ring-primary/30"
+                        [ngClass]="
+                          newRule.smartThreadEnabled
+                            ? 'border-primary bg-primary'
+                            : 'border-border bg-muted'
+                        "
+                      >
+                        <span
+                          class="inline-block h-4 w-4 rounded-full bg-background shadow-sm transition-transform"
+                          [ngClass]="newRule.smartThreadEnabled ? 'translate-x-4' : 'translate-x-0.5'"
+                        ></span>
+                      </button>
                     </ng-container>
                   </div>
                 </div>
@@ -1129,11 +1153,23 @@
                     >AI-Powered Matching</label
                   >
                 </div>
-                <input
-                  [(ngModel)]="newRule.aiEnabled"
-                  type="checkbox"
-                  class="h-4 w-4"
-                />
+                <button
+                  type="button"
+                  role="switch"
+                  [attr.aria-checked]="newRule.aiEnabled"
+                  (click)="newRule.aiEnabled = !newRule.aiEnabled"
+                  class="relative inline-flex h-6 w-11 shrink-0 items-center rounded-full border transition-all focus:outline-none focus:ring-2 focus:ring-primary/30"
+                  [ngClass]="
+                    newRule.aiEnabled
+                      ? 'border-primary bg-primary'
+                      : 'border-border bg-muted'
+                  "
+                >
+                  <span
+                    class="inline-block h-5 w-5 rounded-full bg-background shadow-sm transition-transform"
+                    [ngClass]="newRule.aiEnabled ? 'translate-x-5' : 'translate-x-0.5'"
+                  ></span>
+                </button>
               </div>
               <p class="text-[10px] text-muted-foreground sm:text-xs">
                 When exact keywords don't match, AI will analyze email
@@ -1181,11 +1217,23 @@
                     >Extract Attachments</label
                   >
                 </div>
-                <input
-                  [(ngModel)]="newRule.extractAttachments"
-                  type="checkbox"
-                  class="h-4 w-4"
-                />
+                <button
+                  type="button"
+                  role="switch"
+                  [attr.aria-checked]="newRule.extractAttachments"
+                  (click)="newRule.extractAttachments = !newRule.extractAttachments"
+                  class="relative inline-flex h-6 w-11 shrink-0 items-center rounded-full border transition-all focus:outline-none focus:ring-2 focus:ring-primary/30"
+                  [ngClass]="
+                    newRule.extractAttachments
+                      ? 'border-primary bg-primary'
+                      : 'border-border bg-muted'
+                  "
+                >
+                  <span
+                    class="inline-block h-5 w-5 rounded-full bg-background shadow-sm transition-transform"
+                    [ngClass]="newRule.extractAttachments ? 'translate-x-5' : 'translate-x-0.5'"
+                  ></span>
+                </button>
               </div>
               <p class="text-[10px] text-muted-foreground sm:text-xs">
                 Use AI to extract data from PDF attachments such as reports,
