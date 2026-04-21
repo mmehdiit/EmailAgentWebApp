@@ -25,24 +25,21 @@ export class AuthSessionService {
 
   async signIn(payload: SignInPayload): Promise<AuthLoginResult> {
     const response = await firstValueFrom(this.authApiService.signIn(payload));
+    const authenticatedUser = {
+      id: response.user_id,
+      email: response.email,
+      role: response.role
+    };
 
     localStorage.setItem(TOKEN_KEY, response.token);
     this.sessionPromise = Promise.resolve({
       authenticated: true,
-      user: {
-        id: response.userId,
-        email: response.email,
-        role: response.role
-      }
+      user: authenticatedUser
     });
 
     return {
       authenticated: true,
-      user: {
-        id: response.userId,
-        email: response.email,
-        role: response.role
-      },
+      user: authenticatedUser,
       message: 'You have successfully logged in.'
     };
   }

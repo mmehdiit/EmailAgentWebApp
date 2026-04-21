@@ -7,11 +7,16 @@ import {
   UnprocessedEmail
 } from '../../../core/models/dashboard.models';
 import { UnreadEmailDataService } from '../../../core/services/unread-email-data.service';
+import { ToastService } from '../../../core/services/toast.service';
+import {
+  AppSelectDropdownComponent,
+  SelectDropdownOption,
+} from '../app-select-dropdown/app-select-dropdown.component';
 
 @Component({
   selector: 'app-unread-emails',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, AppSelectDropdownComponent],
   templateUrl: './unread-emails.component.html'
 })
 export class UnreadEmailsComponent implements OnInit {
@@ -24,7 +29,10 @@ export class UnreadEmailsComponent implements OnInit {
   protected markingReadId: string | null = null;
   protected assigningEmailId: string | null = null;
 
-  constructor(private readonly unreadEmailDataService: UnreadEmailDataService) {}
+  constructor(
+    private readonly unreadEmailDataService: UnreadEmailDataService,
+    private readonly toastService: ToastService
+  ) {}
 
   async ngOnInit(): Promise<void> {
     await this.loadUnreadEmails();
@@ -58,6 +66,10 @@ export class UnreadEmailsComponent implements OnInit {
     try {
       await this.unreadEmailDataService.markAsRead(emailId);
       this.emails = this.emails.filter((email) => email.id !== emailId);
+      this.toastService.success(
+        'Email has been marked as read and removed from the list.',
+        'Marked as Read'
+      );
     } finally {
       this.markingReadId = null;
     }
@@ -65,17 +77,32 @@ export class UnreadEmailsComponent implements OnInit {
 
   protected async assignEmail(emailId: string): Promise<void> {
     if (!this.selectedRules[emailId]) {
+      this.toastService.error(
+        'Please select a rule to assign this email to.',
+        'Select a Rule'
+      );
       return;
     }
 
     this.assigningEmailId = emailId;
     try {
+      const ruleName =
+        this.rules.find((rule) => rule.id === this.selectedRules[emailId])?.name ??
+        'selected rule';
       await this.unreadEmailDataService.assignEmail(emailId, this.selectedRules[emailId]);
       this.emails = this.emails.filter((email) => email.id !== emailId);
       delete this.selectedRules[emailId];
+      this.toastService.success(
+        `Forwarded via "${ruleName}".`,
+        'Email Assigned'
+      );
     } finally {
       this.assigningEmailId = null;
     }
+  }
+
+  protected ruleOptions(): SelectDropdownOption[] {
+    return this.rules.map((rule) => ({ value: rule.id, label: rule.name }));
   }
 
   protected formatDate(dateString: string): string {

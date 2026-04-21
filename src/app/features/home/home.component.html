@@ -6,10 +6,10 @@
         <span class="text-xl font-bold text-primary">AI Email Agent</span>
       </div>
       <a
-        routerLink="/auth"
+        [routerLink]="authenticated ? '/dashboard' : '/auth'"
         class="inline-flex h-11 items-center justify-center whitespace-nowrap rounded-md border border-input bg-background px-8 text-sm font-medium ring-offset-background transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50"
       >
-        Login
+        {{ authenticated ? "Dashboard" : "Login" }}
       </a>
     </nav>
 
@@ -25,10 +25,10 @@
         right person based on your custom instructions.
       </p>
       <a
-        routerLink="/auth"
+        [routerLink]="authenticated ? '/dashboard' : '/auth'"
         class="inline-flex h-11 items-center justify-center gap-2 whitespace-nowrap rounded-md bg-primary px-8 text-sm font-medium text-primary-foreground shadow-lg ring-offset-background transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50"
       >
-        Get Started
+        {{ authenticated ? "Go to Dashboard" : "Get Started" }}
         <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" aria-hidden="true">
           <path d="M5 12h14" />
           <path d="m12 5 7 7-7 7" />

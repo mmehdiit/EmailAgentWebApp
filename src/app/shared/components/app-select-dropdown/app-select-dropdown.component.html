@@ -1,0 +1,63 @@
+<div class="relative">
+  <button
+    type="button"
+    (click)="toggle($event)"
+    class="app-select-trigger"
+    [ngClass]="buttonClass"
+    [attr.aria-expanded]="open"
+  >
+    <span class="min-w-0 truncate">
+      {{ selectedOption()?.label || placeholder }}
+    </span>
+    <svg
+      class="h-4 w-4 shrink-0 text-muted-foreground transition-transform"
+      [ngClass]="open ? 'rotate-180' : ''"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      stroke-width="2"
+      aria-hidden="true"
+    >
+      <path d="m6 9 6 6 6-6" />
+    </svg>
+  </button>
+
+  <div
+    *ngIf="open"
+    class="app-dropdown-panel absolute left-0 top-full z-50 mt-2 max-h-72 w-full min-w-[12rem] overflow-y-auto"
+    (click)="$event.stopPropagation()"
+  >
+    <button
+      *ngFor="let option of options"
+      type="button"
+      (click)="selectOption(option)"
+      class="app-dropdown-option"
+      [ngClass]="option.value === value ? 'app-dropdown-option-active' : ''"
+    >
+      <span class="min-w-0">
+        <span class="block truncate font-medium">{{ option.label }}</span>
+        <span
+          *ngIf="option.description"
+          class="block truncate text-[11px] text-muted-foreground"
+        >
+          {{ option.description }}
+        </span>
+      </span>
+      <svg
+        *ngIf="option.value === value"
+        class="h-4 w-4 shrink-0 text-primary"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        stroke-width="2"
+        aria-hidden="true"
+      >
+        <path d="m20 6-11 11-5-5" />
+      </svg>
+    </button>
+  </div>
+</div>

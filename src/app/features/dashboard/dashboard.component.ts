@@ -1,22 +1,28 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnDestroy, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 
-import { AuthSessionService } from '../../core/services/auth-session.service';
-import { DashboardOverview } from '../../core/models/dashboard.models';
+import {
+  DashboardOverview,
+  EmailAnalyticsLog,
+  EmailContent,
+} from '../../core/models/dashboard.models';
 import { AnalyticsDataService } from '../../core/services/analytics-data.service';
+import { AuthSessionService } from '../../core/services/auth-session.service';
 import { DashboardDataService } from '../../core/services/dashboard-data.service';
 import { RuleManagementService } from '../../core/services/rule-management.service';
+import { ToastService } from '../../core/services/toast.service';
 import { EmailAnalyticsTableComponent } from '../../shared/components/email-analytics-table/email-analytics-table.component';
 import { KeywordInputComponent } from '../../shared/components/keyword-input/keyword-input.component';
-import { Recipient, RecipientManagerComponent } from '../../shared/components/recipient-manager/recipient-manager.component';
+import { RecipientManagerComponent } from '../../shared/components/recipient-manager/recipient-manager.component';
 import { ReplyAnalyticsComponent } from '../../shared/components/reply-analytics/reply-analytics.component';
-import { RuleTesterComponent } from '../../shared/components/rule-tester/rule-tester.component';
 import { RulePerformanceComponent } from '../../shared/components/rule-performance/rule-performance.component';
+import { RuleTesterComponent } from '../../shared/components/rule-tester/rule-tester.component';
 import {
   SortableDashboardRule,
-  SortableRuleItemComponent
+  SortableRuleItemComponent,
 } from '../../shared/components/sortable-rule-item/sortable-rule-item.component';
 import { UnreadEmailsComponent } from '../../shared/components/unread-emails/unread-emails.component';
 import { UserManagementComponent } from '../../shared/components/user-management/user-management.component';
@@ -38,14 +44,15 @@ type DashboardRuleEditor = SortableDashboardRule;
     RulePerformanceComponent,
     SortableRuleItemComponent,
     UnreadEmailsComponent,
-    UserManagementComponent
+    UserManagementComponent,
   ],
   templateUrl: './dashboard.component.html',
-  styleUrl: './dashboard.component.scss'
+  styleUrl: './dashboard.component.scss',
 })
 export class DashboardComponent implements OnInit, OnDestroy {
   protected loading = true;
-  protected activeTab: 'overview' | 'rules' | 'analytics' | 'emails' | 'users' = 'overview';
+  protected activeTab: 'overview' | 'rules' | 'analytics' | 'emails' | 'users' =
+    'overview';
   protected countdown = 300;
   protected overview: DashboardOverview | null = null;
   protected userEmail = 'frontend@test.local';
@@ -55,6 +62,12 @@ export class DashboardComponent implements OnInit, OnDestroy {
   protected outlookEmail: string | null = null;
   protected isConnecting = false;
   protected isProcessing = false;
+  protected isRefreshingActivity = false;
+  protected emailDialogOpen = false;
+  protected loadingEmail = false;
+  protected emailContent: EmailContent | null = null;
+  protected trustedEmailBody: SafeHtml | null = null;
+  protected ruleTesterDialogOpen = false;
   protected rules: DashboardRuleEditor[] = [];
   protected showAddRule = false;
   protected editingRuleId: string | null = null;
@@ -68,8 +81,10 @@ export class DashboardComponent implements OnInit, OnDestroy {
     private readonly analyticsDataService: AnalyticsDataService,
     private readonly dashboardDataService: DashboardDataService,
     private readonly ruleManagementService: RuleManagementService,
+    private readonly toastService: ToastService,
     private readonly route: ActivatedRoute,
-    private readonly router: Router
+    private readonly router: Router,
+    private readonly sanitizer: DomSanitizer
   ) {}
 
   async ngOnInit(): Promise<void> {
@@ -84,8 +99,13 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
     const callbackCode = this.route.snapshot.queryParamMap.get('code');
     if (callbackCode) {
-      const callbackResult = await this.dashboardDataService.completeOutlookConnection(callbackCode);
+      const callbackResult =
+        await this.dashboardDataService.completeOutlookConnection(callbackCode);
       this.connectionMessage = callbackResult.message;
+      this.toastService.success(
+        callbackResult.message,
+        'Outlook Connected'
+      );
       await this.router.navigate(['/dashboard']);
     }
 
@@ -105,8 +125,46 @@ export class DashboardComponent implements OnInit, OnDestroy {
     }
   }
 
-  protected setTab(tab: 'overview' | 'rules' | 'analytics' | 'emails' | 'users'): void {
+  protected setTab(
+    tab: 'overview' | 'rules' | 'analytics' | 'emails' | 'users'
+  ): void {
     this.activeTab = tab;
+  }
+
+  protected async refreshOverview(): Promise<void> {
+    this.isRefreshingActivity = true;
+    try {
+      const overview = await this.dashboardDataService.getOverview(true);
+      this.overview = overview;
+      this.outlookConnected = overview.connection.connected;
+      this.outlookEmail = overview.connection.email;
+      this.countdown = overview.connection.nextProcessInSeconds;
+    } finally {
+      this.isRefreshingActivity = false;
+    }
+  }
+
+  protected async viewEmail(log: EmailAnalyticsLog): Promise<void> {
+    if (!log.outlookMessageId) {
+      return;
+    }
+
+    this.emailDialogOpen = true;
+    this.loadingEmail = true;
+    this.emailContent = null;
+    this.trustedEmailBody = null;
+
+    try {
+      const content = await this.analyticsDataService.getEmailContent(
+        log.outlookMessageId
+      );
+      this.emailContent = content;
+      this.trustedEmailBody = content.bodyHtml
+        ? this.sanitizer.bypassSecurityTrustHtml(content.bodyHtml)
+        : null;
+    } finally {
+      this.loadingEmail = false;
+    }
   }
 
   protected toggleRuleForm(): void {
@@ -125,8 +183,14 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
   protected async saveRule(): Promise<void> {
     const hasSingleRecipient = !!this.newRule.recipient;
-    const hasRotationRecipients = this.newRule.recipients.some((recipient) => recipient.email.trim());
-    if (!this.newRule.name || (!this.newRule.rotationEnabled && !hasSingleRecipient) || (this.newRule.rotationEnabled && !hasRotationRecipients)) {
+    const hasRotationRecipients = this.newRule.recipients.some((recipient) =>
+      recipient.email.trim()
+    );
+    if (
+      !this.newRule.name ||
+      (!this.newRule.rotationEnabled && !hasSingleRecipient) ||
+      (this.newRule.rotationEnabled && !hasRotationRecipients)
+    ) {
       return;
     }
 
@@ -135,6 +199,12 @@ export class DashboardComponent implements OnInit, OnDestroy {
       : { ...this.newRule };
 
     this.rules = await this.ruleManagementService.saveRule(ruleToSave);
+    this.toastService.success(
+      this.editingRuleId
+        ? 'Your forwarding rule has been updated.'
+        : 'Your forwarding rule has been created.',
+      this.editingRuleId ? 'Rule Updated' : 'Rule Added'
+    );
 
     this.resetRuleForm();
     this.showAddRule = false;
@@ -146,7 +216,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
       ...rule,
       keywords: [...rule.keywords],
       negativeKeywords: [...rule.negativeKeywords],
-      recipients: rule.recipients.map((recipient) => ({ ...recipient }))
+      recipients: rule.recipients.map((recipient) => ({ ...recipient })),
     });
     this.showAddRule = true;
   }
@@ -158,6 +228,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
   protected async deleteRule(id: string): Promise<void> {
     this.rules = await this.ruleManagementService.deleteRule(id);
+    this.toastService.success('Forwarding rule has been removed.', 'Rule Deleted');
   }
 
   protected handleRuleDragStarted(id: string): void {
@@ -169,7 +240,9 @@ export class DashboardComponent implements OnInit, OnDestroy {
       return;
     }
 
-    const oldIndex = this.rules.findIndex((rule) => rule.id === this.draggedRuleId);
+    const oldIndex = this.rules.findIndex(
+      (rule) => rule.id === this.draggedRuleId
+    );
     const newIndex = this.rules.findIndex((rule) => rule.id === targetId);
     if (oldIndex === -1 || newIndex === -1) {
       this.draggedRuleId = null;
@@ -180,6 +253,10 @@ export class DashboardComponent implements OnInit, OnDestroy {
     const [movedRule] = reordered.splice(oldIndex, 1);
     reordered.splice(newIndex, 0, movedRule);
     this.rules = await this.ruleManagementService.reorderRules(reordered);
+    this.toastService.success(
+      'Rule priorities have been updated successfully.',
+      'Rules Reordered'
+    );
     this.draggedRuleId = null;
   }
 
@@ -190,8 +267,15 @@ export class DashboardComponent implements OnInit, OnDestroy {
     }
 
     const nextRules = [...this.rules];
-    [nextRules[index - 1], nextRules[index]] = [nextRules[index], nextRules[index - 1]];
+    [nextRules[index - 1], nextRules[index]] = [
+      nextRules[index],
+      nextRules[index - 1],
+    ];
     this.rules = await this.ruleManagementService.reorderRules(nextRules);
+    this.toastService.success(
+      'Rule priorities have been updated successfully.',
+      'Rules Reordered'
+    );
   }
 
   protected async moveRuleDown(id: string): Promise<void> {
@@ -201,8 +285,15 @@ export class DashboardComponent implements OnInit, OnDestroy {
     }
 
     const nextRules = [...this.rules];
-    [nextRules[index], nextRules[index + 1]] = [nextRules[index + 1], nextRules[index]];
+    [nextRules[index], nextRules[index + 1]] = [
+      nextRules[index + 1],
+      nextRules[index],
+    ];
     this.rules = await this.ruleManagementService.reorderRules(nextRules);
+    this.toastService.success(
+      'Rule priorities have been updated successfully.',
+      'Rules Reordered'
+    );
   }
 
   protected async toggleRuleActive(id: string): Promise<void> {
@@ -213,12 +304,22 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
     this.rules = await this.ruleManagementService.saveRule({
       ...targetRule,
-      active: !targetRule.active
+      active: !targetRule.active,
     });
+    this.toastService.success(
+      targetRule.active
+        ? 'Forwarding rule has been paused.'
+        : 'Forwarding rule is now active.',
+      targetRule.active ? 'Rule Disabled' : 'Rule Enabled'
+    );
   }
 
   protected async signOut(): Promise<void> {
     this.authSessionService.logout();
+    this.toastService.success(
+      "You've been successfully logged out.",
+      'Logged Out'
+    );
     await this.router.navigate(['/auth']);
   }
 
@@ -243,6 +344,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
     this.outlookEmail = null;
     this.countdown = 300;
     this.connectionMessage = result.message;
+    this.toastService.success('Your Outlook account has been disconnected.', 'Outlook Disconnected');
   }
 
   protected async processNow(): Promise<void> {
@@ -251,6 +353,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
       const result = await this.dashboardDataService.processEmails();
       this.connectionMessage = result.message;
       this.countdown = 300;
+      this.toastService.success(result.message, 'Processing Complete');
     } finally {
       this.isProcessing = false;
     }
@@ -297,7 +400,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
       aiContext: '',
       extractAttachments: false,
       rotationEnabled: false,
-      smartThreadEnabled: true
+      smartThreadEnabled: true,
     };
   }
 }

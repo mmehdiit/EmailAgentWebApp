@@ -9,11 +9,11 @@ type UnreadEmailResponse = Array<{
   id: string;
   subject: string;
   from: string;
-  from_name: string;
-  received_date_time: string;
-  body_preview: string;
-  conversation_id: string;
-  has_attachments: boolean;
+  fromName: string;
+  receivedDateTime: string;
+  bodyPreview: string;
+  conversationId: string;
+  hasAttachments: boolean;
 }>;
 
 @Injectable({
@@ -47,19 +47,21 @@ export class UnreadEmailApiService {
   }
 
   getEmailContent(emailId: string): Observable<{
+    id: string;
     subject: string;
     from: string;
     body: string;
-    html_body: string;
-    received_date_time: string;
+    htmlBody: string;
+    receivedDateTime: string;
   }> {
     return this.http.get<{
+      id: string;
       subject: string;
       from: string;
       body: string;
-      html_body: string;
-      received_date_time: string;
-    }>(this.apiService.buildUrl(`/v1/api/emails/${emailId}/content`));
+      htmlBody: string;
+      receivedDateTime: string;
+    }>(this.apiService.buildUrl(`/v1/api/emails/${encodeURIComponent(emailId)}/content`));
   }
 
   retryFailedEmails(): Observable<{ retried?: number; still_failed?: number; success?: boolean; message?: string }> {

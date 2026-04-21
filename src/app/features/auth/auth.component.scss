@@ -124,7 +124,7 @@ label {
 
 input {
   width: 100%;
-  padding: 13px 16px 13px 44px;
+  padding: 13px 46px 13px 44px;
   border: 1px solid hsl(var(--input));
   border-radius: 14px;
   background: #fff;
@@ -137,6 +137,38 @@ input:focus {
   outline: none;
   border-color: hsl(var(--primary));
   box-shadow: 0 0 0 4px hsl(var(--primary) / 0.12);
+}
+
+.password-toggle {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: #74839b;
+  transform: translateY(-50%);
+  cursor: pointer;
+}
+
+.password-toggle svg {
+  width: 18px;
+  height: 18px;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.8;
+}
+
+.password-toggle:focus-visible {
+  outline: none;
+  color: hsl(var(--primary));
 }
 
 .error-text {

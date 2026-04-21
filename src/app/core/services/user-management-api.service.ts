@@ -7,7 +7,7 @@ import { ApiService } from './api.service';
 
 type CreateUserApiResponse = {
   token: string;
-  userId: string;
+  user_id: string;
   email: string;
   role: string;
 };

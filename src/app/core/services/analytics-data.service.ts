@@ -7,14 +7,14 @@ import {
   EmailContent,
   RuleItem,
   ReplyAnalyticsStats,
-  RulePerformanceStat
+  RulePerformanceStat,
 } from '../models/dashboard.models';
 import { AnalyticsApiService } from './analytics-api.service';
 import { RuleManagementService } from './rule-management.service';
 import { UnreadEmailApiService } from './unread-email-api.service';
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class AnalyticsDataService {
   private analyticsPromise: Promise<DashboardAnalytics> | null = null;
@@ -46,20 +46,31 @@ export class AnalyticsDataService {
     this.invalidateCache();
   }
 
-  async retryFailedEmails(): Promise<void> {
-    await firstValueFrom(this.unreadEmailApiService.retryFailedEmails());
+  async retryFailedEmails(): Promise<{
+    retried: number;
+    stillFailed: number;
+  }> {
+    const result = await firstValueFrom(
+      this.unreadEmailApiService.retryFailedEmails()
+    );
     this.invalidateCache();
+    return {
+      retried: result.retried ?? 0,
+      stillFailed: result.still_failed ?? 0,
+    };
   }
 
   async getEmailContent(messageId: string): Promise<EmailContent> {
-    const content = await firstValueFrom(this.unreadEmailApiService.getEmailContent(messageId));
+    const content = await firstValueFrom(
+      this.unreadEmailApiService.getEmailContent(messageId)
+    );
 
     return {
       subject: content.subject,
       from: content.from,
-      receivedAt: content.received_date_time,
-      bodyHtml: content.html_body,
-      bodyText: content.body
+      receivedAt: content.receivedDateTime,
+      bodyHtml: content.htmlBody,
+      bodyText: content.body,
     };
   }
 
@@ -68,7 +79,10 @@ export class AnalyticsDataService {
     this.invalidateCache();
   }
 
-  async assignToRule(emailId: string, ruleId: string): Promise<void> {
+  async assignToRule(
+    emailId: string,
+    ruleId: string
+  ): Promise<void> {
     await firstValueFrom(this.unreadEmailApiService.manualAssign(emailId, ruleId));
     this.invalidateCache();
   }
@@ -76,7 +90,7 @@ export class AnalyticsDataService {
   private async fetchAnalytics(): Promise<DashboardAnalytics> {
     const [logs, rules] = await Promise.all([
       firstValueFrom(this.analyticsApiService.getLogs()),
-      this.ruleManagementService.listRules()
+      this.ruleManagementService.listRules(),
     ]);
 
     const ruleMap = new Map(rules.map((rule) => [rule.id, rule.name]));
@@ -86,7 +100,7 @@ export class AnalyticsDataService {
       from: log.email_from ?? '',
       subject: log.email_subject ?? '',
       status: log.status,
-      ruleName: log.rule_matched ? (ruleMap.get(log.rule_matched) ?? null) : null,
+      ruleName: log.rule_matched ? ruleMap.get(log.rule_matched) ?? null : null,
       forwardedTo: log.forwarded_to,
       replyDetected: log.reply_detected,
       aiClassified: log.ai_classified,
@@ -95,19 +109,23 @@ export class AnalyticsDataService {
       replySource: log.reply_source,
       processedAt: log.processed_at,
       repliedAt: log.replied_at,
-      receivedAt: log.received_at
+      receivedAt: log.received_at,
     }));
 
     return {
       summary: this.buildSummary(mappedLogs),
       logs: mappedLogs,
       replyStats: this.buildReplyStats(mappedLogs),
-      rulePerformance: this.buildRulePerformance(mappedLogs)
+      rulePerformance: this.buildRulePerformance(mappedLogs),
     };
   }
 
-  private buildSummary(logs: EmailAnalyticsLog[]): DashboardAnalytics['summary'] {
-    const repliedLogs = logs.filter((log) => log.replyDetected && log.repliedAt && log.processedAt);
+  private buildSummary(
+    logs: EmailAnalyticsLog[]
+  ): DashboardAnalytics['summary'] {
+    const repliedLogs = logs.filter(
+      (log) => log.replyDetected && log.repliedAt && log.processedAt
+    );
     const avgResponseMinutes =
       repliedLogs.length > 0
         ? Math.round(
@@ -125,17 +143,26 @@ export class AnalyticsDataService {
       total: logs.length,
       forwarded: logs.filter((log) => log.status === 'forwarded').length,
       replied: logs.filter((log) => log.replyDetected).length,
-      pending: logs.filter((log) => log.status === 'forwarded' && !log.replyDetected).length,
+      pending: logs.filter(
+        (log) => log.status === 'forwarded' && !log.replyDetected
+      ).length,
       noMatch: logs.filter((log) => log.status === 'no_match').length,
       failed: logs.filter((log) => log.status === 'failed').length,
       aiClassified: logs.filter((log) => log.aiClassified).length,
-      avgResponseTime: avgResponseMinutes === null ? '-' : this.formatDuration(avgResponseMinutes)
+      avgResponseTime:
+        avgResponseMinutes === null
+          ? '-'
+          : this.formatDuration(avgResponseMinutes),
     };
   }
 
   private buildReplyStats(logs: EmailAnalyticsLog[]): ReplyAnalyticsStats {
-    const totalForwarded = logs.filter((log) => log.status === 'forwarded').length;
-    const repliedLogs = logs.filter((log) => log.replyDetected && log.repliedAt && log.processedAt);
+    const totalForwarded = logs.filter(
+      (log) => log.status === 'forwarded'
+    ).length;
+    const repliedLogs = logs.filter(
+      (log) => log.replyDetected && log.repliedAt && log.processedAt
+    );
     const replied = logs.filter((log) => log.replyDetected).length;
     const pending = Math.max(totalForwarded - replied, 0);
     const avgResponseTimeHours =
@@ -157,12 +184,15 @@ export class AnalyticsDataService {
       totalForwarded,
       replied,
       pending,
-      replyRate: totalForwarded === 0 ? 0 : Math.round((replied / totalForwarded) * 100),
-      avgResponseTimeHours
+      replyRate:
+        totalForwarded === 0 ? 0 : Math.round((replied / totalForwarded) * 100),
+      avgResponseTimeHours,
     };
   }
 
-  private buildRulePerformance(logs: EmailAnalyticsLog[]): RulePerformanceStat[] {
+  private buildRulePerformance(
+    logs: EmailAnalyticsLog[]
+  ): RulePerformanceStat[] {
     const grouped = new Map<string, EmailAnalyticsLog[]>();
 
     for (const log of logs) {
@@ -177,22 +207,29 @@ export class AnalyticsDataService {
 
     return Array.from(grouped.entries())
       .map(([ruleName, ruleLogs]) => {
-        const successful = ruleLogs.filter((log) => log.status === 'forwarded').length;
+        const successful = ruleLogs.filter(
+          (log) => log.status === 'forwarded'
+        ).length;
         const failed = ruleLogs.filter((log) => log.status === 'failed').length;
-        const lastMatched = ruleLogs
-          .map((log) => log.receivedAt ?? log.processedAt ?? null)
-          .filter((value): value is string => !!value)
-          .sort()
-          .at(-1) ?? null;
+        const lastMatched =
+          ruleLogs
+            .map((log) => log.receivedAt ?? log.processedAt ?? null)
+            .filter((value): value is string => !!value)
+            .sort()
+            .at(-1) ?? null;
 
         return {
-          ruleId: ruleLogs.find((log) => log.ruleName === ruleName)?.id ?? ruleName,
+          ruleId:
+            ruleLogs.find((log) => log.ruleName === ruleName)?.id ?? ruleName,
           ruleName,
           totalMatched: ruleLogs.length,
           forwarded: successful,
           failed,
-          successRate: ruleLogs.length === 0 ? 0 : Math.round((successful / ruleLogs.length) * 100),
-          lastMatched
+          successRate:
+            ruleLogs.length === 0
+              ? 0
+              : Math.round((successful / ruleLogs.length) * 100),
+          lastMatched,
         };
       })
       .sort((left, right) => right.totalMatched - left.totalMatched);
@@ -209,7 +246,7 @@ export class AnalyticsDataService {
       day: '2-digit',
       hour: '2-digit',
       minute: '2-digit',
-      hour12: false
+      hour12: false,
     }).format(date);
   }
 

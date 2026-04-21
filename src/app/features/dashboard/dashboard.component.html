@@ -2,37 +2,38 @@
   *ngIf="!loading && overview; else loadingState"
   class="min-h-screen bg-gradient-to-br from-background via-background/95 to-primary/5"
 >
-  <div class="sticky top-0 z-50 border-b bg-card/95 shadow-sm backdrop-blur-md">
-    <div class="container mx-auto px-4 py-3.5 sm:px-6">
+  <!-- ── TOP NAV ─────────────────────────────────────────────────────────── -->
+  <div
+    class="sticky top-0 z-50 border-b border-border/60 bg-card/95 shadow-[0_1px_12px_0_rgba(0,0,0,0.06)] backdrop-blur-md"
+  >
+    <div class="container mx-auto px-4 py-3 sm:px-6">
       <div class="flex items-center justify-between">
         <a routerLink="/" class="group flex items-center gap-3 sm:gap-4">
-          <img
-            src="assets/logo.jpeg"
-            alt="Al-Ittihad Al-Watani"
-            class="h-12 w-auto sm:h-14"
-          />
+          <div class="relative">
+            <img
+              src="assets/logo.jpeg"
+              alt="Al-Ittihad Al-Watani"
+              class="h-11 w-auto rounded-lg object-cover shadow-sm ring-1 ring-border/40 transition-shadow group-hover:shadow-md sm:h-13"
+            />
+          </div>
           <div>
-            <span class="text-base font-bold text-primary sm:text-lg"
-              >AI Email Agent</span
+            <span
+              class="text-base font-bold tracking-tight text-primary sm:text-lg"
             >
-            <p class="text-[10px] text-muted-foreground sm:text-xs">
+              AI Email Agent
+            </span>
+            <p
+              class="text-[10px] font-medium text-muted-foreground/80 sm:text-xs"
+            >
               Smart Email Routing
             </p>
           </div>
         </a>
 
-        <div class="flex items-center gap-2 sm:gap-3">
-          <span
-            *ngIf="outlookConnected"
-            class="hidden items-center gap-2 rounded-md border border-success/30 bg-success/10 px-3 py-1.5 text-xs font-semibold text-success shadow-sm md:inline-flex"
-          >
-            <span class="h-2 w-2 animate-pulse rounded-full bg-success"></span>
-            <span class="max-w-[150px] truncate">{{ outlookEmail }}</span>
-          </span>
-
-          <button
-            type="button"
-            class="inline-flex h-9 items-center gap-2 rounded-lg px-3 transition-all hover:bg-muted/80 sm:px-4"
+        <div class="flex items-center gap-1.5 sm:gap-2">
+          <a
+            routerLink="/"
+            class="nav-action-btn inline-flex h-9 items-center gap-2 rounded-lg px-3 text-sm font-medium text-foreground/80 transition-all hover:bg-muted/80 hover:text-foreground sm:px-4"
           >
             <svg
               class="h-4 w-4"
@@ -44,18 +45,27 @@
               stroke-width="2"
               aria-hidden="true"
             >
-              <path
-                d="M12.22 2h-.44a2 2 0 0 0-1.98 1.57l-.24 1.32a8 8 0 0 0-1.3.75l-1.26-.42a2 2 0 0 0-2.36.84l-.22.38a2 2 0 0 0 .36 2.48l1.02.9a8 8 0 0 0 0 1.5l-1.02.9a2 2 0 0 0-.36 2.48l.22.38a2 2 0 0 0 2.36.84l1.26-.42c.4.3.84.55 1.3.75l.24 1.32A2 2 0 0 0 11.78 22h.44a2 2 0 0 0 1.98-1.57l.24-1.32c.46-.2.9-.45 1.3-.75l1.26.42a2 2 0 0 0 2.36-.84l.22-.38a2 2 0 0 0-.36-2.48l-1.02-.9a8 8 0 0 0 0-1.5l1.02-.9a2 2 0 0 0 .36-2.48l-.22-.38a2 2 0 0 0-2.36-.84l-1.26.42a8 8 0 0 0-1.3-.75l-.24-1.32A2 2 0 0 0 12.22 2z"
-              />
-              <circle cx="12" cy="12" r="3" />
+              <path d="m3 9 9-7 9 7" />
+              <path d="M9 22V12h6v10" />
+              <path d="M21 9v13H3V9" />
             </svg>
-            <span class="hidden text-sm font-medium sm:inline">Settings</span>
-          </button>
+            <span class="hidden sm:inline">Home</span>
+          </a>
+
+          <span
+            *ngIf="outlookConnected"
+            class="hidden items-center gap-2 rounded-full border border-success/30 bg-success/10 px-3 py-1.5 text-xs font-semibold text-success shadow-sm md:inline-flex"
+          >
+            <span
+              class="h-1.5 w-1.5 animate-pulse rounded-full bg-success"
+            ></span>
+            <span class="max-w-[150px] truncate">{{ outlookEmail }}</span>
+          </span>
 
           <button
             type="button"
             (click)="signOut()"
-            class="inline-flex h-9 items-center gap-2 rounded-lg px-3 transition-all hover:bg-destructive/10 hover:text-destructive sm:px-4"
+            class="nav-action-btn inline-flex h-9 items-center gap-2 rounded-lg px-3 text-sm font-medium text-foreground/80 transition-all hover:bg-destructive/10 hover:text-destructive sm:px-4"
           >
             <svg
               class="h-4 w-4"
@@ -78,24 +88,26 @@
     </div>
   </div>
 
-  <div class="container mx-auto px-4 py-4 sm:px-6 sm:py-6 lg:py-8">
+  <!-- ── MAIN CONTENT ───────────────────────────────────────────────────── -->
+  <div class="container mx-auto px-4 py-5 sm:px-6 sm:py-7 lg:py-9">
     <div class="space-y-6 sm:space-y-8">
+      <!-- ── TAB NAV ──────────────────────────────────────────────────────── -->
       <div class="relative">
         <div
           class="absolute inset-0 -z-10 bg-gradient-to-r from-primary/5 via-purple-500/5 to-blue-500/5 blur-3xl"
         ></div>
         <nav
-          class="mx-auto grid w-full max-w-7xl gap-1.5 rounded-xl border border-border/50 bg-card/80 p-1.5 shadow-lg backdrop-blur-sm"
+          class="mx-auto grid w-full max-w-7xl gap-1 rounded-2xl border border-border/50 bg-card/80 p-1.5 shadow-[0_4px_24px_0_rgba(0,0,0,0.07)] backdrop-blur-sm"
           [ngClass]="isAdmin ? 'grid-cols-5' : 'grid-cols-4'"
         >
           <button
             type="button"
             (click)="setTab('overview')"
-            class="flex flex-col items-center justify-center gap-1.5 rounded-lg px-2 py-2.5 text-xs font-medium transition-all hover:bg-muted/50 sm:flex-row sm:gap-2 sm:px-4 sm:py-3 sm:text-sm"
+            class="tab-btn flex flex-col items-center justify-center gap-1.5 rounded-xl px-2 py-2.5 text-xs font-semibold tracking-wide transition-all duration-200 hover:bg-muted/60 sm:flex-row sm:gap-2 sm:px-4 sm:py-3 sm:text-sm"
             [ngClass]="
               activeTab === 'overview'
-                ? 'bg-gradient-to-br from-primary to-primary/80 text-primary-foreground shadow-lg'
-                : 'text-foreground'
+                ? 'bg-gradient-to-br from-primary to-primary/80 text-primary-foreground shadow-[0_4px_16px_0_rgba(var(--primary-rgb),0.35)]'
+                : 'text-foreground/70 hover:text-foreground'
             "
           >
             <svg
@@ -112,14 +124,15 @@
             </svg>
             <span>Overview</span>
           </button>
+
           <button
             type="button"
             (click)="setTab('rules')"
-            class="flex flex-col items-center justify-center gap-1.5 rounded-lg px-2 py-2.5 text-xs font-medium transition-all hover:bg-muted/50 sm:flex-row sm:gap-2 sm:px-4 sm:py-3 sm:text-sm"
+            class="tab-btn flex flex-col items-center justify-center gap-1.5 rounded-xl px-2 py-2.5 text-xs font-semibold tracking-wide transition-all duration-200 hover:bg-muted/60 sm:flex-row sm:gap-2 sm:px-4 sm:py-3 sm:text-sm"
             [ngClass]="
               activeTab === 'rules'
-                ? 'bg-gradient-to-br from-primary to-primary/80 text-primary-foreground shadow-lg'
-                : 'text-foreground'
+                ? 'bg-gradient-to-br from-primary to-primary/80 text-primary-foreground shadow-[0_4px_16px_0_rgba(var(--primary-rgb),0.35)]'
+                : 'text-foreground/70 hover:text-foreground'
             "
           >
             <svg
@@ -139,14 +152,15 @@
             </svg>
             <span>Rules</span>
           </button>
+
           <button
             type="button"
             (click)="setTab('analytics')"
-            class="flex flex-col items-center justify-center gap-1.5 rounded-lg px-2 py-2.5 text-xs font-medium transition-all hover:bg-muted/50 sm:flex-row sm:gap-2 sm:px-4 sm:py-3 sm:text-sm"
+            class="tab-btn flex flex-col items-center justify-center gap-1.5 rounded-xl px-2 py-2.5 text-xs font-semibold tracking-wide transition-all duration-200 hover:bg-muted/60 sm:flex-row sm:gap-2 sm:px-4 sm:py-3 sm:text-sm"
             [ngClass]="
               activeTab === 'analytics'
-                ? 'bg-gradient-to-br from-primary to-primary/80 text-primary-foreground shadow-lg'
-                : 'text-foreground'
+                ? 'bg-gradient-to-br from-primary to-primary/80 text-primary-foreground shadow-[0_4px_16px_0_rgba(var(--primary-rgb),0.35)]'
+                : 'text-foreground/70 hover:text-foreground'
             "
           >
             <svg
@@ -166,14 +180,15 @@
             </svg>
             <span>Analytics</span>
           </button>
+
           <button
             type="button"
             (click)="setTab('emails')"
-            class="flex flex-col items-center justify-center gap-1.5 rounded-lg px-2 py-2.5 text-xs font-medium transition-all hover:bg-muted/50 sm:flex-row sm:gap-2 sm:px-4 sm:py-3 sm:text-sm"
+            class="tab-btn flex flex-col items-center justify-center gap-1.5 rounded-xl px-2 py-2.5 text-xs font-semibold tracking-wide transition-all duration-200 hover:bg-muted/60 sm:flex-row sm:gap-2 sm:px-4 sm:py-3 sm:text-sm"
             [ngClass]="
               activeTab === 'emails'
-                ? 'bg-gradient-to-br from-primary to-primary/80 text-primary-foreground shadow-lg'
-                : 'text-foreground'
+                ? 'bg-gradient-to-br from-primary to-primary/80 text-primary-foreground shadow-[0_4px_16px_0_rgba(var(--primary-rgb),0.35)]'
+                : 'text-foreground/70 hover:text-foreground'
             "
           >
             <svg
@@ -190,15 +205,16 @@
             </svg>
             <span>Emails</span>
           </button>
+
           <button
             *ngIf="isAdmin"
             type="button"
             (click)="setTab('users')"
-            class="flex flex-col items-center justify-center gap-1.5 rounded-lg px-2 py-2.5 text-xs font-medium transition-all hover:bg-muted/50 sm:flex-row sm:gap-2 sm:px-4 sm:py-3 sm:text-sm"
+            class="tab-btn flex flex-col items-center justify-center gap-1.5 rounded-xl px-2 py-2.5 text-xs font-semibold tracking-wide transition-all duration-200 hover:bg-muted/60 sm:flex-row sm:gap-2 sm:px-4 sm:py-3 sm:text-sm"
             [ngClass]="
               activeTab === 'users'
-                ? 'bg-gradient-to-br from-primary to-primary/80 text-primary-foreground shadow-lg'
-                : 'text-foreground'
+                ? 'bg-gradient-to-br from-primary to-primary/80 text-primary-foreground shadow-[0_4px_16px_0_rgba(var(--primary-rgb),0.35)]'
+                : 'text-foreground/70 hover:text-foreground'
             "
           >
             <svg
@@ -221,26 +237,35 @@
         </nav>
       </div>
 
-      <section *ngIf="activeTab === 'overview'" class="space-y-6 sm:space-y-8">
+      <!-- ══════════════════ OVERVIEW TAB ══════════════════ -->
+      <section
+        *ngIf="activeTab === 'overview'"
+        class="dashboard-tab-enter space-y-6 sm:space-y-8"
+      >
+        <!-- STAT CARDS -->
         <div class="grid grid-cols-2 gap-4 sm:gap-5 lg:grid-cols-4">
+          <!-- Total Rules -->
           <article
-            class="group relative overflow-hidden rounded-lg border border-primary/30 bg-gradient-to-br from-card via-card to-primary/10 p-5 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl sm:p-6"
+            class="stat-card group relative overflow-hidden rounded-2xl border border-primary/25 bg-gradient-to-br from-card via-card to-primary/10 p-5 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl sm:p-6"
           >
             <div
-              class="absolute inset-0 bg-gradient-to-br from-primary/0 to-primary/5 opacity-0 transition-opacity group-hover:opacity-100"
+              class="absolute inset-0 bg-gradient-to-br from-primary/0 to-primary/8 opacity-0 transition-opacity duration-300 group-hover:opacity-100"
+            ></div>
+            <div
+              class="absolute top-0 right-0 h-20 w-20 -translate-y-6 translate-x-6 rounded-full bg-primary/5 blur-xl"
             ></div>
             <div class="relative">
-              <div class="mb-3 flex items-center justify-between">
+              <div class="mb-4 flex items-center justify-between">
                 <div
-                  class="text-xs font-semibold uppercase tracking-wide text-muted-foreground sm:text-sm"
+                  class="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/70 sm:text-xs"
                 >
                   Total Rules
                 </div>
                 <div
-                  class="rounded-xl bg-primary/10 p-2.5 transition-colors group-hover:bg-primary/20"
+                  class="rounded-xl bg-primary/10 p-2.5 ring-1 ring-primary/20 transition-all duration-300 group-hover:bg-primary/20 group-hover:ring-primary/30"
                 >
                   <svg
-                    class="h-5 w-5 text-primary"
+                    class="h-4 w-4 text-primary"
                     viewBox="0 0 24 24"
                     fill="none"
                     stroke="currentColor"
@@ -257,34 +282,40 @@
                 </div>
               </div>
               <div
-                class="mb-1 text-3xl font-bold text-foreground transition-transform group-hover:scale-105 sm:text-4xl"
+                class="stat-number mb-1 text-3xl font-extrabold tracking-tight text-foreground transition-transform duration-300 group-hover:scale-105 sm:text-4xl"
               >
                 {{ rules.length }}
               </div>
-              <p class="text-xs font-medium text-muted-foreground sm:text-sm">
+              <p
+                class="text-[11px] font-medium text-muted-foreground sm:text-xs"
+              >
                 Active forwarding rules
               </p>
             </div>
           </article>
 
+          <!-- Processed -->
           <article
-            class="group relative overflow-hidden rounded-lg border border-blue-500/30 bg-gradient-to-br from-card via-card to-blue-500/10 p-5 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl sm:p-6"
+            class="stat-card group relative overflow-hidden rounded-2xl border border-blue-500/25 bg-gradient-to-br from-card via-card to-blue-500/10 p-5 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl sm:p-6"
           >
             <div
-              class="absolute inset-0 bg-gradient-to-br from-blue-500/0 to-blue-500/5 opacity-0 transition-opacity group-hover:opacity-100"
+              class="absolute inset-0 bg-gradient-to-br from-blue-500/0 to-blue-500/8 opacity-0 transition-opacity duration-300 group-hover:opacity-100"
+            ></div>
+            <div
+              class="absolute top-0 right-0 h-20 w-20 -translate-y-6 translate-x-6 rounded-full bg-blue-500/5 blur-xl"
             ></div>
             <div class="relative">
-              <div class="mb-3 flex items-center justify-between">
+              <div class="mb-4 flex items-center justify-between">
                 <div
-                  class="text-xs font-semibold uppercase tracking-wide text-muted-foreground sm:text-sm"
+                  class="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/70 sm:text-xs"
                 >
                   Processed
                 </div>
                 <div
-                  class="rounded-xl bg-blue-500/10 p-2.5 transition-colors group-hover:bg-blue-500/20"
+                  class="rounded-xl bg-blue-500/10 p-2.5 ring-1 ring-blue-500/20 transition-all duration-300 group-hover:bg-blue-500/20 group-hover:ring-blue-500/30"
                 >
                   <svg
-                    class="h-5 w-5 text-blue-500"
+                    class="h-4 w-4 text-blue-500"
                     viewBox="0 0 24 24"
                     fill="none"
                     stroke="currentColor"
@@ -298,34 +329,40 @@
                 </div>
               </div>
               <div
-                class="mb-1 text-3xl font-bold text-foreground transition-transform group-hover:scale-105 sm:text-4xl"
+                class="stat-number mb-1 text-3xl font-extrabold tracking-tight text-foreground transition-transform duration-300 group-hover:scale-105 sm:text-4xl"
               >
                 {{ overview.stats.totalProcessed }}
               </div>
-              <p class="text-xs font-medium text-muted-foreground sm:text-sm">
+              <p
+                class="text-[11px] font-medium text-muted-foreground sm:text-xs"
+              >
                 Total emails handled
               </p>
             </div>
           </article>
 
+          <!-- Today -->
           <article
-            class="group relative overflow-hidden rounded-lg border border-purple-500/30 bg-gradient-to-br from-card via-card to-purple-500/10 p-5 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl sm:p-6"
+            class="stat-card group relative overflow-hidden rounded-2xl border border-purple-500/25 bg-gradient-to-br from-card via-card to-purple-500/10 p-5 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl sm:p-6"
           >
             <div
-              class="absolute inset-0 bg-gradient-to-br from-purple-500/0 to-purple-500/5 opacity-0 transition-opacity group-hover:opacity-100"
+              class="absolute inset-0 bg-gradient-to-br from-purple-500/0 to-purple-500/8 opacity-0 transition-opacity duration-300 group-hover:opacity-100"
+            ></div>
+            <div
+              class="absolute top-0 right-0 h-20 w-20 -translate-y-6 translate-x-6 rounded-full bg-purple-500/5 blur-xl"
             ></div>
             <div class="relative">
-              <div class="mb-3 flex items-center justify-between">
+              <div class="mb-4 flex items-center justify-between">
                 <div
-                  class="text-xs font-semibold uppercase tracking-wide text-muted-foreground sm:text-sm"
+                  class="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/70 sm:text-xs"
                 >
                   Today
                 </div>
                 <div
-                  class="rounded-xl bg-purple-500/10 p-2.5 transition-colors group-hover:bg-purple-500/20"
+                  class="rounded-xl bg-purple-500/10 p-2.5 ring-1 ring-purple-500/20 transition-all duration-300 group-hover:bg-purple-500/20 group-hover:ring-purple-500/30"
                 >
                   <svg
-                    class="h-5 w-5 text-purple-500"
+                    class="h-4 w-4 text-purple-500"
                     viewBox="0 0 24 24"
                     fill="none"
                     stroke="currentColor"
@@ -340,34 +377,40 @@
                 </div>
               </div>
               <div
-                class="mb-1 text-3xl font-bold text-foreground transition-transform group-hover:scale-105 sm:text-4xl"
+                class="stat-number mb-1 text-3xl font-extrabold tracking-tight text-foreground transition-transform duration-300 group-hover:scale-105 sm:text-4xl"
               >
                 {{ overview.stats.forwardedToday }}
               </div>
-              <p class="text-xs font-medium text-muted-foreground sm:text-sm">
+              <p
+                class="text-[11px] font-medium text-muted-foreground sm:text-xs"
+              >
                 Forwarded today
               </p>
             </div>
           </article>
 
+          <!-- Success -->
           <article
-            class="group relative overflow-hidden rounded-lg border border-success/30 bg-gradient-to-br from-card via-card to-success/10 p-5 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl sm:p-6"
+            class="stat-card group relative overflow-hidden rounded-2xl border border-success/25 bg-gradient-to-br from-card via-card to-success/10 p-5 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl sm:p-6"
           >
             <div
-              class="absolute inset-0 bg-gradient-to-br from-success/0 to-success/5 opacity-0 transition-opacity group-hover:opacity-100"
+              class="absolute inset-0 bg-gradient-to-br from-success/0 to-success/8 opacity-0 transition-opacity duration-300 group-hover:opacity-100"
+            ></div>
+            <div
+              class="absolute top-0 right-0 h-20 w-20 -translate-y-6 translate-x-6 rounded-full bg-success/5 blur-xl"
             ></div>
             <div class="relative">
-              <div class="mb-3 flex items-center justify-between">
+              <div class="mb-4 flex items-center justify-between">
                 <div
-                  class="text-xs font-semibold uppercase tracking-wide text-muted-foreground sm:text-sm"
+                  class="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/70 sm:text-xs"
                 >
                   Success
                 </div>
                 <div
-                  class="rounded-xl bg-success/10 p-2.5 transition-colors group-hover:bg-success/20"
+                  class="rounded-xl bg-success/10 p-2.5 ring-1 ring-success/20 transition-all duration-300 group-hover:bg-success/20 group-hover:ring-success/30"
                 >
                   <svg
-                    class="h-5 w-5 text-success"
+                    class="h-4 w-4 text-success"
                     viewBox="0 0 24 24"
                     fill="none"
                     stroke="currentColor"
@@ -384,27 +427,30 @@
                 </div>
               </div>
               <div
-                class="mb-1 text-3xl font-bold text-success transition-transform group-hover:scale-105 sm:text-4xl"
+                class="stat-number mb-1 text-3xl font-extrabold tracking-tight text-success transition-transform duration-300 group-hover:scale-105 sm:text-4xl"
               >
                 {{ overview.stats.successRate }}%
               </div>
-              <p class="text-xs font-medium text-muted-foreground sm:text-sm">
+              <p
+                class="text-[11px] font-medium text-muted-foreground sm:text-xs"
+              >
                 Success rate
               </p>
             </div>
           </article>
         </div>
 
+        <!-- OUTLOOK CONNECTED CARD -->
         <article
           *ngIf="outlookConnected; else connectOutlookCard"
-          class="rounded-lg border-2 border-success/40 bg-gradient-to-br from-success/10 via-card to-success/5 p-6 shadow-xl backdrop-blur-sm sm:p-7"
+          class="outlook-card rounded-2xl border-2 border-success/35 bg-gradient-to-br from-success/10 via-card to-success/5 p-6 shadow-[0_8px_32px_0_rgba(0,0,0,0.06)] backdrop-blur-sm sm:p-7"
         >
           <div
             class="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center sm:gap-6"
           >
             <div class="flex items-center gap-4">
               <div
-                class="shrink-0 rounded-2xl bg-success/20 p-3 shadow-lg sm:p-4"
+                class="shrink-0 rounded-2xl bg-success/15 p-3 shadow-[0_4px_16px_0_rgba(0,0,0,0.06)] ring-1 ring-success/20 sm:p-4"
               >
                 <svg
                   class="h-6 w-6 text-success sm:h-7 sm:w-7"
@@ -425,10 +471,10 @@
                 >
                   Outlook Connected
                   <span
-                    class="inline-flex items-center gap-2 rounded-md border border-primary/40 bg-primary/15 px-3 py-1 text-xs font-semibold shadow-sm"
+                    class="inline-flex items-center gap-1.5 rounded-full border border-primary/35 bg-primary/12 px-3 py-1 text-xs font-semibold shadow-sm"
                   >
                     <svg
-                      class="h-3.5 w-3.5"
+                      class="h-3 w-3"
                       viewBox="0 0 24 24"
                       fill="none"
                       stroke="currentColor"
@@ -442,7 +488,7 @@
                       <path d="M3 22v-6h6" />
                       <path d="M21 12a9 9 0 0 1-15 6.7L3 16" />
                     </svg>
-                    <span class="font-mono">{{
+                    <span class="font-mono text-[11px]">{{
                       formatCountdown(countdown)
                     }}</span>
                   </span>
@@ -452,8 +498,8 @@
                     class="block truncate font-semibold text-foreground sm:inline"
                     >{{ outlookEmail }}</span
                   >
-                  <span class="mx-2 hidden sm:inline">•</span>
-                  <span class="block sm:inline"
+                  <span class="mx-2 hidden sm:inline opacity-40">•</span>
+                  <span class="block sm:inline text-muted-foreground/80"
                     >Auto-processing every 5 minutes</span
                   >
                 </p>
@@ -465,7 +511,7 @@
                 type="button"
                 (click)="processNow()"
                 [disabled]="isProcessing"
-                class="inline-flex h-10 flex-1 items-center justify-center gap-2 rounded-lg bg-primary px-5 text-sm font-semibold text-primary-foreground shadow-lg transition-all hover:shadow-xl sm:flex-initial"
+                class="primary-btn inline-flex h-10 flex-1 items-center justify-center gap-2 rounded-xl bg-primary px-5 text-sm font-semibold text-primary-foreground shadow-[0_4px_14px_0_rgba(var(--primary-rgb),0.35)] transition-all hover:shadow-[0_6px_20px_0_rgba(var(--primary-rgb),0.45)] hover:-translate-y-px active:translate-y-0 sm:flex-initial disabled:opacity-60 disabled:pointer-events-none"
               >
                 <svg
                   class="h-4 w-4"
@@ -490,7 +536,7 @@
               <button
                 type="button"
                 (click)="disconnectOutlook()"
-                class="h-10 rounded-lg border border-success/40 px-5 text-sm font-semibold transition-all hover:border-success/60 hover:bg-success/15"
+                class="h-10 rounded-xl border border-success/40 px-5 text-sm font-semibold text-success/90 transition-all hover:border-success/60 hover:bg-success/12 hover:-translate-y-px active:translate-y-0"
               >
                 Disconnect
               </button>
@@ -498,9 +544,10 @@
           </div>
         </article>
 
+        <!-- CONNECT OUTLOOK CARD -->
         <ng-template #connectOutlookCard>
           <article
-            class="rounded-lg border-2 border-warning/40 bg-gradient-to-br from-warning/10 via-card to-warning/5 p-6 shadow-xl backdrop-blur-sm sm:p-8"
+            class="outlook-card rounded-2xl border-2 border-warning/35 bg-gradient-to-br from-warning/10 via-card to-warning/5 p-6 shadow-[0_8px_32px_0_rgba(0,0,0,0.06)] backdrop-blur-sm sm:p-8"
           >
             <div
               class="flex flex-col items-center justify-between gap-5 md:flex-row sm:gap-8"
@@ -509,7 +556,7 @@
                 class="flex items-center gap-4 text-center sm:gap-5 md:text-left"
               >
                 <div
-                  class="shrink-0 rounded-2xl bg-warning/20 p-4 shadow-lg sm:p-5"
+                  class="shrink-0 rounded-2xl bg-warning/15 p-4 shadow-[0_4px_16px_0_rgba(0,0,0,0.06)] ring-1 ring-warning/20 sm:p-5"
                 >
                   <svg
                     class="h-7 w-7 text-warning sm:h-8 sm:w-8"
@@ -540,7 +587,7 @@
                 type="button"
                 (click)="connectOutlook()"
                 [disabled]="isConnecting"
-                class="inline-flex h-12 w-full items-center justify-center gap-2.5 rounded-lg bg-primary px-8 font-bold text-primary-foreground shadow-xl transition-all hover:shadow-2xl md:w-auto"
+                class="primary-btn inline-flex h-12 w-full items-center justify-center gap-2.5 rounded-xl bg-primary px-8 font-bold text-primary-foreground shadow-[0_4px_20px_0_rgba(var(--primary-rgb),0.35)] transition-all hover:shadow-[0_8px_28px_0_rgba(var(--primary-rgb),0.45)] hover:-translate-y-px active:translate-y-0 md:w-auto disabled:opacity-60 disabled:pointer-events-none"
               >
                 <svg
                   class="h-5 w-5"
@@ -562,44 +609,56 @@
           </article>
         </ng-template>
 
+        <!-- STATUS MESSAGE -->
         <article
           *ngIf="connectionMessage"
-          class="rounded-lg border bg-card p-4 text-card-foreground shadow-sm sm:p-5"
+          class="rounded-2xl border border-border/60 bg-card p-4 text-card-foreground shadow-sm sm:p-5"
         >
-          <h3 class="mb-2 text-base font-semibold text-foreground sm:text-lg">
+          <h3 class="mb-2 text-sm font-semibold text-foreground sm:text-base">
             Status
           </h3>
           <p class="text-sm text-muted-foreground">{{ connectionMessage }}</p>
         </article>
 
+        <!-- RECENT ACTIVITY + TOP RULES -->
         <div class="grid gap-4 sm:gap-6 md:grid-cols-2">
+          <!-- Recent Activity -->
           <article
-            class="rounded-lg border bg-card p-4 text-card-foreground shadow-sm sm:p-5"
+            class="panel rounded-2xl border border-border/60 bg-card p-5 text-card-foreground shadow-sm sm:p-6"
           >
-            <div class="mb-3 flex items-center justify-between">
+            <div class="mb-4 flex items-center justify-between">
               <h3
-                class="flex items-center gap-2 text-base font-semibold text-foreground sm:text-lg"
+                class="flex items-center gap-2 text-sm font-semibold text-foreground sm:text-base"
               >
-                <svg
-                  class="h-4 w-4 text-primary"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  aria-hidden="true"
-                >
-                  <path d="M3 3v18h18" />
-                  <path d="M8 14v-4" />
-                  <path d="M12 14V8" />
-                  <path d="M16 14v-2" />
-                </svg>
+                <div class="rounded-lg bg-primary/10 p-1.5">
+                  <svg
+                    class="h-3.5 w-3.5 text-primary"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    aria-hidden="true"
+                  >
+                    <path d="M3 3v18h18" />
+                    <path d="M8 14v-4" />
+                    <path d="M12 14V8" />
+                    <path d="M16 14v-2" />
+                  </svg>
+                </div>
                 Recent Activity
               </h3>
-              <button type="button" class="h-8 rounded-md px-2 hover:bg-muted">
+              <button
+                type="button"
+                (click)="refreshOverview()"
+                [disabled]="isRefreshingActivity"
+                class="inline-flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground transition-all hover:bg-muted hover:text-foreground disabled:pointer-events-none disabled:opacity-50"
+                aria-label="Refresh recent activity"
+              >
                 <svg
                   class="h-3.5 w-3.5"
+                  [ngClass]="isRefreshingActivity ? 'animate-spin' : ''"
                   viewBox="0 0 24 24"
                   fill="none"
                   stroke="currentColor"
@@ -615,28 +674,32 @@
                 </svg>
               </button>
             </div>
-            <div class="mb-3 h-px bg-border"></div>
+            <div
+              class="panel-divider mb-4 h-px bg-gradient-to-r from-border via-border/50 to-transparent"
+            ></div>
 
             <div
               *ngIf="overview.recentLogs.length > 0; else noActivity"
-              class="max-h-[250px] space-y-2 overflow-y-auto sm:max-h-[300px]"
+              class="max-h-[250px] space-y-1.5 overflow-y-auto pr-1 sm:max-h-[300px]"
             >
               <div
                 *ngFor="let log of overview.recentLogs | slice : 0 : 5"
-                class="flex items-start gap-2 rounded-lg bg-muted/50 p-2.5 transition-colors hover:bg-muted"
+                class="log-item flex items-start gap-3 rounded-xl bg-muted/40 px-3 py-2.5 transition-all duration-200 hover:bg-muted/70"
               >
                 <div
-                  class="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full"
+                  class="mt-2 h-1.5 w-1.5 shrink-0 rounded-full ring-2 ring-offset-1 ring-offset-background"
                   [ngClass]="{
-                    'bg-success': log.status === 'replied',
-                    'bg-primary': log.status === 'forwarded',
-                    'bg-muted-foreground': log.status === 'no_match',
-                    'bg-destructive': log.status === 'failed'
+                    'bg-success ring-success/30': log.status === 'replied',
+                    'bg-primary ring-primary/30': log.status === 'forwarded',
+                    'bg-muted-foreground ring-muted-foreground/20':
+                      log.status === 'no_match',
+                    'bg-destructive ring-destructive/30':
+                      log.status === 'failed'
                   }"
                 ></div>
                 <div class="min-w-0 flex-1">
                   <p
-                    class="truncate text-xs font-medium text-foreground sm:text-sm"
+                    class="truncate text-xs font-semibold text-foreground sm:text-sm"
                   >
                     {{ log.emailSubject }}
                   </p>
@@ -646,14 +709,14 @@
                     From: {{ log.emailFrom }}
                   </p>
                 </div>
-                <div class="flex shrink-0 items-center gap-1">
+                <div class="flex shrink-0 items-center gap-1.5">
                   <span
                     *ngIf="log.aiClassified"
-                    class="inline-flex h-5 items-center rounded-md border border-purple-500/30 bg-purple-500/10 px-2 text-[10px] text-purple-600 sm:text-xs"
+                    class="inline-flex h-5 items-center rounded-md border border-purple-500/30 bg-purple-500/10 px-2 text-[10px] font-semibold text-purple-600 sm:text-xs"
                     >AI</span
                   >
                   <span
-                    class="inline-flex h-5 items-center rounded-md px-2 text-[10px] capitalize sm:text-xs"
+                    class="inline-flex h-5 items-center rounded-md px-2 text-[10px] font-semibold capitalize sm:text-xs"
                     [ngClass]="
                       log.status === 'forwarded'
                         ? 'bg-primary text-primary-foreground'
@@ -661,17 +724,50 @@
                         ? 'border border-success/30 bg-success/10 text-success'
                         : 'bg-muted text-muted-foreground'
                     "
+                    >{{ log.status }}</span
                   >
-                    {{ log.status }}
-                  </span>
                 </div>
               </div>
             </div>
 
             <ng-template #noActivity>
-              <div class="py-6 text-center text-muted-foreground sm:py-8">
+              <div class="py-8 text-center">
+                <div
+                  class="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-muted/60"
+                >
+                  <svg
+                    class="h-6 w-6 text-muted-foreground/50"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    aria-hidden="true"
+                  >
+                    <path d="M3 3v18h18" />
+                    <path d="M8 14v-4" />
+                    <path d="M12 14V8" />
+                    <path d="M16 14v-2" />
+                  </svg>
+                </div>
+                <p class="text-xs font-medium text-muted-foreground sm:text-sm">
+                  No activity yet
+                </p>
+              </div>
+            </ng-template>
+          </article>
+
+          <!-- Top Rules -->
+          <article
+            class="panel rounded-2xl border border-border/60 bg-card p-5 text-card-foreground shadow-sm sm:p-6"
+          >
+            <h3
+              class="mb-4 flex items-center gap-2 text-sm font-semibold text-foreground sm:text-base"
+            >
+              <div class="rounded-lg bg-primary/10 p-1.5">
                 <svg
-                  class="mx-auto mb-2 h-8 w-8 opacity-50 sm:h-10 sm:w-10"
+                  class="h-3.5 w-3.5 text-primary"
                   viewBox="0 0 24 24"
                   fill="none"
                   stroke="currentColor"
@@ -681,47 +777,26 @@
                   aria-hidden="true"
                 >
                   <path d="M3 3v18h18" />
-                  <path d="M8 14v-4" />
-                  <path d="M12 14V8" />
-                  <path d="M16 14v-2" />
+                  <path d="M18 17V9" />
+                  <path d="M13 17V5" />
+                  <path d="M8 17v-3" />
                 </svg>
-                <p class="text-xs sm:text-sm">No activity yet</p>
               </div>
-            </ng-template>
-          </article>
-
-          <article
-            class="rounded-lg border bg-card p-4 text-card-foreground shadow-sm sm:p-5"
-          >
-            <h3
-              class="mb-3 flex items-center gap-2 text-base font-semibold text-foreground sm:text-lg"
-            >
-              <svg
-                class="h-4 w-4 text-primary"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                aria-hidden="true"
-              >
-                <path d="M3 3v18h18" />
-                <path d="M18 17V9" />
-                <path d="M13 17V5" />
-                <path d="M8 17v-3" />
-              </svg>
               Top Rules
             </h3>
-            <div class="mb-3 h-px bg-border"></div>
+            <div
+              class="panel-divider mb-4 h-px bg-gradient-to-r from-border via-border/50 to-transparent"
+            ></div>
 
-            <div *ngIf="rules.length > 0; else noRules" class="space-y-2">
+            <div *ngIf="rules.length > 0; else noRules" class="space-y-1.5">
               <div
                 *ngFor="let rule of rules | slice : 0 : 5"
-                class="flex items-center justify-between rounded-lg bg-muted/50 p-2.5 transition-colors hover:bg-muted"
+                class="log-item flex items-center justify-between rounded-xl bg-muted/40 px-3 py-2.5 transition-all duration-200 hover:bg-muted/70"
               >
-                <div class="flex min-w-0 flex-1 items-center gap-2">
-                  <div class="shrink-0 rounded-lg bg-primary/10 p-1.5">
+                <div class="flex min-w-0 flex-1 items-center gap-3">
+                  <div
+                    class="shrink-0 rounded-lg bg-primary/10 p-1.5 ring-1 ring-primary/15"
+                  >
                     <svg
                       class="h-3 w-3 text-primary"
                       viewBox="0 0 24 24"
@@ -740,7 +815,7 @@
                   </div>
                   <div class="min-w-0">
                     <p
-                      class="truncate text-xs font-medium text-foreground sm:text-sm"
+                      class="truncate text-xs font-semibold text-foreground sm:text-sm"
                     >
                       {{ rule.name }}
                     </p>
@@ -752,55 +827,87 @@
                   </div>
                 </div>
                 <span
-                  class="inline-flex h-5 items-center rounded-md px-2 text-[10px] sm:text-xs"
+                  class="inline-flex h-5 items-center rounded-md px-2 text-[10px] font-semibold sm:text-xs"
                   [ngClass]="
                     rule.active
                       ? 'bg-primary text-primary-foreground'
                       : 'bg-muted text-muted-foreground'
                   "
+                  >{{ rule.active ? "Active" : "Inactive" }}</span
                 >
-                  {{ rule.active ? "Active" : "Inactive" }}
-                </span>
               </div>
             </div>
 
             <ng-template #noRules>
-              <div class="py-6 text-center text-muted-foreground sm:py-8">
-                <svg
-                  class="mx-auto mb-2 h-8 w-8 opacity-50 sm:h-10 sm:w-10"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  aria-hidden="true"
+              <div class="py-8 text-center">
+                <div
+                  class="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-muted/60"
                 >
-                  <path
-                    d="M12.22 2h-.44a2 2 0 0 0-1.98 1.57l-.24 1.32a8 8 0 0 0-1.3.75l-1.26-.42a2 2 0 0 0-2.36.84l-.22.38a2 2 0 0 0 .36 2.48l1.02.9a8 8 0 0 0 0 1.5l-1.02.9a2 2 0 0 0-.36 2.48l.22.38a2 2 0 0 0 2.36.84l1.26-.42c.4.3.84.55 1.3.75l.24 1.32A2 2 0 0 0 11.78 22h.44a2 2 0 0 0 1.98-1.57l.24-1.32c.46-.2.9-.45 1.3-.75l1.26.42a2 2 0 0 0 2.36-.84l.22-.38a2 2 0 0 0-.36-2.48l-1.02-.9a8 8 0 0 0 0-1.5l1.02-.9a2 2 0 0 0 .36-2.48l-.22-.38a2 2 0 0 0-2.36-.84l-1.26.42a8 8 0 0 0-1.3-.75l-.24-1.32A2 2 0 0 0 12.22 2z"
-                  />
-                  <circle cx="12" cy="12" r="3" />
-                </svg>
-                <p class="text-xs sm:text-sm">No rules yet</p>
+                  <svg
+                    class="h-6 w-6 text-muted-foreground/50"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    aria-hidden="true"
+                  >
+                    <path
+                      d="M12.22 2h-.44a2 2 0 0 0-1.98 1.57l-.24 1.32a8 8 0 0 0-1.3.75l-1.26-.42a2 2 0 0 0-2.36.84l-.22.38a2 2 0 0 0 .36 2.48l1.02.9a8 8 0 0 0 0 1.5l-1.02.9a2 2 0 0 0-.36 2.48l.22.38a2 2 0 0 0 2.36.84l1.26-.42c.4.3.84.55 1.3.75l.24 1.32A2 2 0 0 0 11.78 22h.44a2 2 0 0 0 1.98-1.57l.24-1.32c.46-.2.9-.45 1.3-.75l1.26.42a2 2 0 0 0 2.36-.84l.22-.38a2 2 0 0 0-.36-2.48l-1.02-.9a8 8 0 0 0 0-1.5l1.02-.9a2 2 0 0 0 .36-2.48l-.22-.38a2 2 0 0 0-2.36-.84l-1.26.42a8 8 0 0 0-1.3-.75l-.24-1.32A2 2 0 0 0 12.22 2z"
+                    />
+                    <circle cx="12" cy="12" r="3" />
+                  </svg>
+                </div>
+                <p class="text-xs font-medium text-muted-foreground sm:text-sm">
+                  No rules yet
+                </p>
               </div>
             </ng-template>
           </article>
         </div>
       </section>
 
-      <section *ngIf="activeTab === 'rules'" class="space-y-4 sm:space-y-6">
+      <!-- ══════════════════ RULES TAB ══════════════════ -->
+      <section
+        *ngIf="activeTab === 'rules'"
+        class="dashboard-tab-enter space-y-4 sm:space-y-6"
+      >
         <div
-          class="mb-4 flex flex-col items-start justify-between gap-3 sm:mb-6 sm:flex-row sm:items-center sm:gap-4"
+          class="flex flex-col items-start justify-between gap-3 sm:flex-row sm:items-center sm:gap-4"
         >
-          <h2 class="text-xl font-bold text-foreground sm:text-2xl lg:text-3xl">
+          <h2
+            class="text-xl font-bold tracking-tight text-foreground sm:text-2xl lg:text-3xl"
+          >
             Forwarding Rules
           </h2>
           <div class="flex w-full gap-2 sm:w-auto">
-            <app-rule-tester [rules]="rules" />
+            <button
+              type="button"
+              (click)="ruleTesterDialogOpen = true"
+              class="inline-flex flex-1 items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-800 shadow-sm transition-all hover:border-fuchsia-200 hover:bg-fuchsia-50 hover:text-fuchsia-700 hover:-translate-y-px active:translate-y-0 sm:flex-initial"
+            >
+              <svg
+                class="h-4 w-4"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                aria-hidden="true"
+              >
+                <path d="M10 2v7.31" />
+                <path d="M14 9.3V1.99" />
+                <path d="M8.5 2h7" />
+                <path d="M14 9.3a6.5 6.5 0 1 1-4 0" />
+              </svg>
+              Test Rules
+            </button>
             <button
               type="button"
               (click)="toggleRuleForm()"
-              class="inline-flex flex-1 items-center justify-center gap-1.5 rounded-md bg-primary px-4 py-2 text-sm text-primary-foreground shadow-sm sm:flex-initial"
+              class="primary-btn inline-flex flex-1 items-center justify-center gap-1.5 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground shadow-[0_4px_14px_0_rgba(var(--primary-rgb),0.3)] transition-all hover:shadow-[0_6px_20px_0_rgba(var(--primary-rgb),0.4)] hover:-translate-y-px active:translate-y-0 sm:flex-initial"
             >
               <svg
                 class="h-3.5 w-3.5"
@@ -812,38 +919,50 @@
                 stroke-width="2"
                 aria-hidden="true"
               >
-                <path d="M5 12h14" />
-                <path d="M12 5v14" />
+                <!-- PLUS ICON -->
+                <ng-container *ngIf="!showAddRule; else closeIcon">
+                  <path d="M5 12h14" />
+                  <path d="M12 5v14" />
+                </ng-container>
+
+                <!-- TIMES (X) ICON -->
+                <ng-template #closeIcon>
+                  <path d="M6 6l12 12" />
+                  <path d="M6 18L18 6" />
+                </ng-template>
               </svg>
-              <span class="text-sm">{{
-                showAddRule ? "Close" : "Add Rule"
-              }}</span>
+
+              <span>{{ showAddRule ? "Close" : "Add Rule" }}</span>
             </button>
           </div>
         </div>
 
+        <!-- ADD / EDIT RULE FORM -->
         <div
           *ngIf="showAddRule"
-          class="mb-4 rounded-lg border-2 border-primary/30 bg-card p-4 shadow-lg sm:mb-6 sm:p-5"
+          class="rounded-2xl border-2 border-primary/25 bg-card p-5 shadow-[0_8px_32px_0_rgba(0,0,0,0.06)] sm:p-6"
         >
-          <h3
-            class="mb-3 text-base font-semibold text-foreground sm:mb-4 sm:text-lg"
-          >
+          <h3 class="mb-4 text-base font-semibold text-foreground sm:text-lg">
             {{ editingRuleId ? "Edit Rule" : "Create New Rule" }}
           </h3>
-          <div class="space-y-3 sm:space-y-4">
-            <div class="grid gap-3 sm:grid-cols-2 sm:gap-4">
+          <div class="space-y-4 sm:space-y-5">
+            <div class="grid gap-4 sm:grid-cols-2">
               <div>
-                <label class="text-xs sm:text-sm">Rule Name</label>
+                <label class="text-xs font-medium text-foreground/80 sm:text-sm"
+                  >Rule Name</label
+                >
                 <input
                   [(ngModel)]="newRule.name"
                   placeholder="e.g., Customer Support"
-                  class="mt-1 h-9 w-full rounded-md border border-input bg-background px-3 text-sm"
+                  class="mt-1.5 h-10 w-full rounded-xl border border-input bg-background px-3.5 text-sm outline-none ring-primary/30 transition-shadow focus:ring-2 focus:border-primary/50"
                 />
               </div>
               <div>
-                <div class="mb-1 flex items-center justify-between">
-                  <label class="text-xs sm:text-sm">Forward To</label>
+                <div class="mb-1.5 flex items-center justify-between">
+                  <label
+                    class="text-xs font-medium text-foreground/80 sm:text-sm"
+                    >Forward To</label
+                  >
                   <div class="flex items-center gap-2">
                     <label class="text-[10px] text-muted-foreground"
                       >Rotation</label
@@ -851,7 +970,7 @@
                     <input
                       [(ngModel)]="newRule.rotationEnabled"
                       type="checkbox"
-                      class="scale-75 sm:scale-100 h-4 w-4"
+                      class="h-4 w-4 scale-75 sm:scale-100"
                     />
                     <ng-container *ngIf="newRule.rotationEnabled">
                       <label class="ml-2 text-[10px] text-muted-foreground"
@@ -860,23 +979,21 @@
                       <input
                         [(ngModel)]="newRule.smartThreadEnabled"
                         type="checkbox"
-                        class="scale-75 sm:scale-100 h-4 w-4"
+                        class="h-4 w-4 scale-75 sm:scale-100"
                       />
                     </ng-container>
                   </div>
                 </div>
-
                 <input
                   *ngIf="!newRule.rotationEnabled"
                   [(ngModel)]="newRule.recipient"
                   type="email"
                   placeholder="recipient@email.com"
-                  class="mt-1 h-9 w-full rounded-md border border-input bg-background px-3 text-sm"
+                  class="mt-1.5 h-10 w-full rounded-xl border border-input bg-background px-3.5 text-sm outline-none ring-primary/30 transition-shadow focus:ring-2 focus:border-primary/50"
                 />
-
                 <div
                   *ngIf="newRule.rotationEnabled"
-                  class="rounded-lg border border-blue-500/20 bg-blue-500/5 p-3"
+                  class="mt-1.5 rounded-xl border border-blue-500/20 bg-blue-500/5 p-3"
                 >
                   <app-recipient-manager
                     [recipients]="newRule.recipients"
@@ -887,20 +1004,28 @@
             </div>
 
             <div>
-              <label class="text-xs sm:text-sm">Keywords (optional)</label>
+              <label class="text-xs font-medium text-foreground/80 sm:text-sm"
+                >Keywords
+                <span class="text-muted-foreground font-normal"
+                  >(optional)</span
+                ></label
+              >
               <app-keyword-input
                 [keywords]="newRule.keywords"
                 (keywordsChange)="newRule.keywords = $event"
                 placeholder="Type keyword and press Enter"
               />
-              <p class="mt-1 text-[10px] text-muted-foreground sm:text-xs">
+              <p class="mt-1.5 text-[10px] text-muted-foreground sm:text-xs">
                 Match emails containing any of these keywords in subject or body
               </p>
             </div>
 
             <div>
-              <label class="text-xs sm:text-sm"
-                >Exclude Keywords (optional)</label
+              <label class="text-xs font-medium text-foreground/80 sm:text-sm"
+                >Exclude Keywords
+                <span class="text-muted-foreground font-normal"
+                  >(optional)</span
+                ></label
               >
               <app-keyword-input
                 [keywords]="newRule.negativeKeywords"
@@ -908,81 +1033,99 @@
                 placeholder="Type keyword and press Enter"
                 variant="destructive"
               />
-              <p class="mt-1 text-[10px] text-muted-foreground sm:text-xs">
+              <p class="mt-1.5 text-[10px] text-muted-foreground sm:text-xs">
                 Skip this rule if email contains any of these words
               </p>
             </div>
 
             <div>
-              <label class="text-xs sm:text-sm">Sender Filter (optional)</label>
+              <label class="text-xs font-medium text-foreground/80 sm:text-sm"
+                >Sender Filter
+                <span class="text-muted-foreground font-normal"
+                  >(optional)</span
+                ></label
+              >
               <input
                 [(ngModel)]="newRule.senderPattern"
                 placeholder="e.g., *@domain.com"
-                class="mt-1 h-9 w-full rounded-md border border-input bg-background px-3 text-sm"
+                class="mt-1.5 h-10 w-full rounded-xl border border-input bg-background px-3.5 text-sm outline-none ring-primary/30 transition-shadow focus:ring-2 focus:border-primary/50"
               />
-              <p class="mt-1 text-[10px] text-muted-foreground sm:text-xs">
+              <p class="mt-1.5 text-[10px] text-muted-foreground sm:text-xs">
                 Match specific email, domain (&#64;example.com), or pattern
                 (*&#64;company.net)
               </p>
             </div>
 
             <div>
-              <label class="text-xs sm:text-sm"
-                >Subject Filter (optional)</label
+              <label class="text-xs font-medium text-foreground/80 sm:text-sm"
+                >Subject Filter
+                <span class="text-muted-foreground font-normal"
+                  >(optional)</span
+                ></label
               >
               <app-keyword-input
                 [keywords]="parseSubjectPatternKeywords(newRule.subjectPattern)"
                 (keywordsChange)="newRule.subjectPattern = $event.join(', ')"
                 placeholder="Type keyword and press Enter"
               />
-              <p class="mt-1 text-[10px] text-muted-foreground sm:text-xs">
+              <p class="mt-1.5 text-[10px] text-muted-foreground sm:text-xs">
                 Match emails containing any of these subject keywords
               </p>
             </div>
 
             <div>
-              <label class="text-xs sm:text-sm"
-                >Additional Conditions (Optional)</label
+              <label class="text-xs font-medium text-foreground/80 sm:text-sm"
+                >Additional Conditions
+                <span class="text-muted-foreground font-normal"
+                  >(optional)</span
+                ></label
               >
               <textarea
                 [(ngModel)]="newRule.conditions"
                 placeholder="Extra routing instructions..."
-                class="mt-1 min-h-[60px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                class="mt-1.5 min-h-[64px] w-full rounded-xl border border-input bg-background px-3.5 py-2.5 text-sm outline-none ring-primary/30 transition-shadow focus:ring-2 focus:border-primary/50"
               ></textarea>
             </div>
 
             <div>
-              <label class="text-xs sm:text-sm"
-                >Priority (Higher = First)</label
+              <label class="text-xs font-medium text-foreground/80 sm:text-sm"
+                >Priority
+                <span class="text-muted-foreground font-normal"
+                  >(Higher = First)</span
+                ></label
               >
               <input
                 [(ngModel)]="newRule.priority"
                 type="number"
                 min="0"
-                class="mt-1 h-9 w-full rounded-md border border-input bg-background px-3 text-sm"
+                class="mt-1.5 h-10 w-full rounded-xl border border-input bg-background px-3.5 text-sm outline-none ring-primary/30 transition-shadow focus:ring-2 focus:border-primary/50"
               />
             </div>
 
+            <!-- AI Matching -->
             <div
-              class="rounded-lg border border-purple-500/20 bg-gradient-to-br from-purple-500/5 to-blue-500/5 p-3 sm:p-4"
+              class="rounded-2xl border border-purple-500/20 bg-gradient-to-br from-purple-500/5 to-blue-500/5 p-4 sm:p-5"
             >
               <div class="mb-3 flex items-center justify-between">
-                <div class="flex items-center gap-2">
-                  <svg
-                    class="h-4 w-4 text-purple-500"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    aria-hidden="true"
-                  >
-                    <path d="M12 18V5" />
-                    <path d="M9 8a3 3 0 1 1 6 0c0 3-3 2-3 5" />
-                    <path d="M10 22h4" />
-                  </svg>
-                  <label class="text-xs font-medium sm:text-sm"
+                <div class="flex items-center gap-2.5">
+                  <div class="rounded-lg bg-purple-500/10 p-1.5">
+                    <svg
+                      class="h-3.5 w-3.5 text-purple-500"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      aria-hidden="true"
+                    >
+                      <path d="M12 18V5" />
+                      <path d="M9 8a3 3 0 1 1 6 0c0 3-3 2-3 5" />
+                      <path d="M10 22h4" />
+                    </svg>
+                  </div>
+                  <label
+                    class="text-xs font-semibold text-foreground sm:text-sm"
                     >AI-Powered Matching</label
                   >
                 </div>
@@ -997,35 +1140,44 @@
                 semantically to find the best rule
               </p>
               <div *ngIf="newRule.aiEnabled" class="mt-3">
-                <label class="text-xs sm:text-sm">AI Context (Optional)</label>
+                <label class="text-xs font-medium text-foreground/80 sm:text-sm"
+                  >AI Context
+                  <span class="text-muted-foreground font-normal"
+                    >(Optional)</span
+                  ></label
+                >
                 <textarea
                   [(ngModel)]="newRule.aiContext"
                   placeholder="Help AI understand this rule better..."
-                  class="mt-1 min-h-[60px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                  class="mt-1.5 min-h-[60px] w-full rounded-xl border border-input bg-background px-3.5 py-2.5 text-sm outline-none ring-primary/30 transition-shadow focus:ring-2 focus:border-primary/50"
                 ></textarea>
               </div>
             </div>
 
+            <!-- Extract Attachments -->
             <div
-              class="rounded-lg border border-green-500/20 bg-gradient-to-br from-green-500/5 to-teal-500/5 p-3 sm:p-4"
+              class="rounded-2xl border border-green-500/20 bg-gradient-to-br from-green-500/5 to-teal-500/5 p-4 sm:p-5"
             >
               <div class="mb-2 flex items-center justify-between">
-                <div class="flex items-center gap-2">
-                  <svg
-                    class="h-4 w-4 text-green-600"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    aria-hidden="true"
-                  >
-                    <path d="M4 20h16" />
-                    <path d="M8 16V4h8v12" />
-                    <path d="m8 12 4-4 4 4" />
-                  </svg>
-                  <label class="text-xs font-medium sm:text-sm"
+                <div class="flex items-center gap-2.5">
+                  <div class="rounded-lg bg-green-500/10 p-1.5">
+                    <svg
+                      class="h-3.5 w-3.5 text-green-600"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      aria-hidden="true"
+                    >
+                      <path d="M4 20h16" />
+                      <path d="M8 16V4h8v12" />
+                      <path d="m8 12 4-4 4 4" />
+                    </svg>
+                  </div>
+                  <label
+                    class="text-xs font-semibold text-foreground sm:text-sm"
                     >Extract Attachments</label
                   >
                 </div>
@@ -1041,18 +1193,18 @@
               </p>
             </div>
 
-            <div class="flex gap-2 pt-2">
+            <div class="flex gap-2.5 pt-1">
               <button
                 type="button"
                 (click)="saveRule()"
-                class="flex-1 rounded-md bg-primary px-4 py-2 text-sm text-primary-foreground sm:flex-initial"
+                class="primary-btn flex-1 rounded-xl bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground shadow-[0_4px_14px_0_rgba(var(--primary-rgb),0.3)] transition-all hover:shadow-[0_6px_20px_0_rgba(var(--primary-rgb),0.4)] hover:-translate-y-px active:translate-y-0 sm:flex-initial"
               >
                 {{ editingRuleId ? "Update Rule" : "Save Rule" }}
               </button>
               <button
                 type="button"
                 (click)="cancelEdit()"
-                class="flex-1 rounded-md border border-input bg-background px-4 py-2 text-sm sm:flex-initial"
+                class="flex-1 rounded-xl border border-input bg-background px-5 py-2.5 text-sm font-medium transition-all hover:bg-muted hover:-translate-y-px active:translate-y-0 sm:flex-initial"
               >
                 Cancel
               </button>
@@ -1060,24 +1212,29 @@
           </div>
         </div>
 
+        <!-- EMPTY STATE -->
         <div
           *ngIf="rules.length === 0"
-          class="rounded-lg border bg-card p-8 text-center text-card-foreground shadow-sm sm:p-12"
+          class="rounded-2xl border border-border/60 bg-card p-10 text-center shadow-sm sm:p-14"
         >
-          <svg
-            class="mx-auto mb-3 h-10 w-10 text-muted-foreground opacity-50 sm:h-12 sm:w-12"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            stroke-width="2"
-            aria-hidden="true"
+          <div
+            class="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-muted/60"
           >
-            <path d="M12 20h9" />
-            <path d="M16.5 3.5a2.121 2.121 0 1 1 3 3L7 19l-4 1 1-4Z" />
-          </svg>
-          <p class="mb-1 text-sm text-muted-foreground sm:text-base">
+            <svg
+              class="h-7 w-7 text-muted-foreground/50"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              aria-hidden="true"
+            >
+              <path d="M12 20h9" />
+              <path d="M16.5 3.5a2.121 2.121 0 1 1 3 3L7 19l-4 1 1-4Z" />
+            </svg>
+          </div>
+          <p class="mb-1 text-sm font-medium text-foreground sm:text-base">
             No forwarding rules yet
           </p>
           <p class="text-xs text-muted-foreground sm:text-sm">
@@ -1085,9 +1242,10 @@
           </p>
         </div>
 
+        <!-- RULES LIST -->
         <div *ngIf="rules.length > 0" class="space-y-3">
           <div
-            class="flex items-center gap-2 px-1 text-xs text-muted-foreground sm:text-sm"
+            class="mb-2 flex items-center gap-2 px-1 text-xs font-medium text-muted-foreground sm:text-sm"
           >
             <svg
               class="h-3.5 w-3.5"
@@ -1125,32 +1283,241 @@
         </div>
       </section>
 
-      <section *ngIf="activeTab === 'analytics'" class="space-y-4 sm:space-y-6">
-        <app-email-analytics-table />
-
+      <!-- ══════════════════ OTHER TABS ══════════════════ -->
+      <section
+        *ngIf="activeTab === 'analytics'"
+        class="dashboard-tab-enter space-y-4 sm:space-y-6"
+      >
+        <app-email-analytics-table (viewEmailRequested)="viewEmail($event)" />
         <div class="grid gap-4 sm:gap-6 lg:grid-cols-2">
           <app-reply-analytics />
           <app-rule-performance />
         </div>
       </section>
 
-      <section *ngIf="activeTab === 'emails'" class="space-y-4 sm:space-y-6">
+      <section
+        *ngIf="activeTab === 'emails'"
+        class="dashboard-tab-enter space-y-4 sm:space-y-6"
+      >
         <app-unread-emails />
       </section>
 
-      <section *ngIf="activeTab === 'users'" class="space-y-4 sm:space-y-6">
+      <section
+        *ngIf="activeTab === 'users'"
+        class="dashboard-tab-enter space-y-4 sm:space-y-6"
+      >
         <app-user-management [isAdmin]="isAdmin" />
       </section>
     </div>
   </div>
 </section>
 
+<!-- ══════════════════ RULE TESTER DIALOG ══════════════════ -->
+<div
+  *ngIf="ruleTesterDialogOpen"
+  class="fixed inset-0 z-[80] flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm"
+>
+  <div
+    class="modal-enter max-h-[88vh] w-full max-w-4xl overflow-hidden rounded-2xl border border-slate-200/80 bg-slate-50 shadow-[0_24px_64px_0_rgba(0,0,0,0.18)]"
+  >
+    <div
+      class="flex items-start justify-between gap-4 border-b border-slate-200 bg-white px-5 py-4"
+    >
+      <div class="min-w-0 flex items-center gap-3">
+        <span
+          class="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-fuchsia-50 text-fuchsia-700 ring-1 ring-fuchsia-200/60"
+        >
+          <svg
+            class="h-4 w-4"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            aria-hidden="true"
+          >
+            <path d="M10 2v7.31" />
+            <path d="M14 9.3V1.99" />
+            <path d="M8.5 2h7" />
+            <path d="M14 9.3a6.5 6.5 0 1 1-4 0" />
+          </svg>
+        </span>
+        <div>
+          <h4 class="text-sm font-semibold text-slate-950 sm:text-base">
+            Test Forwarding Rules
+          </h4>
+          <p class="mt-0.5 text-[11px] text-slate-500 sm:text-xs">
+            Validate exact keyword matching and AI classification before
+            processing real emails.
+          </p>
+        </div>
+      </div>
+      <button
+        type="button"
+        (click)="ruleTesterDialogOpen = false"
+        class="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-slate-400 transition-all hover:bg-slate-100 hover:text-slate-900"
+        aria-label="Close test forwarding rules dialog"
+      >
+        <svg
+          class="h-4 w-4"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          aria-hidden="true"
+        >
+          <path d="M18 6 6 18" />
+          <path d="m6 6 12 12" />
+        </svg>
+      </button>
+    </div>
+    <div class="max-h-[calc(88vh-76px)] overflow-y-auto p-4 sm:p-5">
+      <app-rule-tester [rules]="rules" />
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════ EMAIL PREVIEW DIALOG ══════════════════ -->
+<div
+  *ngIf="emailDialogOpen"
+  class="fixed inset-0 z-[80] flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm"
+>
+  <div
+    class="modal-enter max-h-[86vh] w-full max-w-4xl overflow-hidden rounded-2xl border border-border/70 bg-background shadow-[0_24px_64px_0_rgba(0,0,0,0.18)]"
+  >
+    <div
+      class="flex items-start justify-between gap-4 border-b bg-card px-5 py-4"
+    >
+      <div class="min-w-0">
+        <h4 class="truncate text-sm font-semibold text-foreground sm:text-base">
+          {{ emailContent?.subject || "Loading email..." }}
+        </h4>
+        <p class="mt-1 text-[11px] text-muted-foreground sm:text-xs">
+          {{ emailContent?.from || "Fetching email from Outlook..." }}
+        </p>
+      </div>
+      <button
+        type="button"
+        (click)="emailDialogOpen = false"
+        class="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-muted-foreground transition-all hover:bg-muted hover:text-foreground"
+        aria-label="Close email preview"
+      >
+        <svg
+          class="h-4 w-4"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          aria-hidden="true"
+        >
+          <path d="M18 6 6 18" />
+          <path d="m6 6 12 12" />
+        </svg>
+      </button>
+    </div>
+
+    <div class="max-h-[calc(86vh-73px)] overflow-y-auto p-5">
+      <div
+        *ngIf="loadingEmail"
+        class="flex items-center justify-center py-14 gap-3"
+      >
+        <svg
+          class="h-6 w-6 animate-spin text-primary"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          aria-hidden="true"
+        >
+          <path d="M21 2v6h-6" />
+          <path d="M3 12a9 9 0 0 1 15-6.7L21 8" />
+          <path d="M3 22v-6h6" />
+          <path d="M21 12a9 9 0 0 1-15 6.7L3 16" />
+        </svg>
+        <span class="text-sm text-muted-foreground"
+          >Fetching email from Outlook...</span
+        >
+      </div>
+
+      <div *ngIf="!loadingEmail && emailContent" class="space-y-4">
+        <div
+          class="grid gap-2.5 rounded-xl border border-border/60 bg-muted/40 p-4 text-sm sm:grid-cols-2"
+        >
+          <div>
+            <span class="font-semibold">From : </span>
+            <span class="text-muted-foreground">{{
+              emailContent.from || "-"
+            }}</span>
+          </div>
+          <div>
+            <span class="font-semibold">Date : </span>
+            <span class="text-muted-foreground">{{
+              emailContent.receivedAt | date : "medium"
+            }}</span>
+          </div>
+          <div>
+            <span class="font-semibold">To : </span>
+            <span class="text-muted-foreground">{{
+              emailContent.to || "-"
+            }}</span>
+          </div>
+          <div>
+            <span class="font-semibold">CC : </span>
+            <span class="text-muted-foreground">{{
+              emailContent.cc || "-"
+            }}</span>
+          </div>
+        </div>
+
+        <div
+          *ngIf="trustedEmailBody; else plainEmailBody"
+          class="rounded-xl border border-border/60 bg-background p-4"
+          [innerHTML]="trustedEmailBody"
+        ></div>
+
+        <ng-template #plainEmailBody>
+          <div
+            class="whitespace-pre-wrap rounded-xl border border-border/60 bg-background p-4 text-sm leading-relaxed"
+          >
+            {{ emailContent.bodyText || "No email content available." }}
+          </div>
+        </ng-template>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════ LOADING STATE ══════════════════ -->
 <ng-template #loadingState>
   <section
     class="grid min-h-screen place-items-center bg-gradient-to-br from-background via-background/95 to-primary/5 p-6"
   >
-    <div class="rounded-lg border bg-card p-7 shadow-sm">
-      <h1 class="m-0 text-xl font-semibold text-foreground">
+    <div
+      class="flex items-center gap-4 rounded-2xl border border-border/60 bg-card px-8 py-6 shadow-[0_8px_32px_0_rgba(0,0,0,0.06)]"
+    >
+      <svg
+        class="h-5 w-5 animate-spin text-primary"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        stroke-width="2"
+        aria-hidden="true"
+      >
+        <path d="M21 2v6h-6" />
+        <path d="M3 12a9 9 0 0 1 15-6.7L21 8" />
+        <path d="M3 22v-6h6" />
+        <path d="M21 12a9 9 0 0 1-15 6.7L3 16" />
+      </svg>
+      <h1 class="text-base font-semibold text-foreground">
         Loading dashboard...
       </h1>
     </div>

@@ -42,7 +42,6 @@ type TestResult = {
 export class RuleTesterComponent {
   @Input() rules: RuleTesterRule[] = [];
 
-  protected open = false;
   protected isLoading = false;
   protected aiResult: EmailClassificationResult | null = null;
   protected testResults: TestResult[] | null = null;

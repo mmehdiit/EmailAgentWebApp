@@ -3,6 +3,7 @@ import { Component, OnInit } from '@angular/core';
 
 import { ReplyAnalyticsStats } from '../../../core/models/dashboard.models';
 import { AnalyticsDataService } from '../../../core/services/analytics-data.service';
+import { ToastService } from '../../../core/services/toast.service';
 
 @Component({
   selector: 'app-reply-analytics',
@@ -15,7 +16,10 @@ export class ReplyAnalyticsComponent implements OnInit {
   protected checking = false;
   protected stats: ReplyAnalyticsStats | null = null;
 
-  constructor(private readonly analyticsDataService: AnalyticsDataService) {}
+  constructor(
+    private readonly analyticsDataService: AnalyticsDataService,
+    private readonly toastService: ToastService
+  ) {}
 
   async ngOnInit(): Promise<void> {
     await this.loadStats();
@@ -32,6 +36,10 @@ export class ReplyAnalyticsComponent implements OnInit {
     this.checking = true;
     try {
       await this.analyticsDataService.checkReplies();
+      this.toastService.success(
+        'Reply check completed successfully.',
+        'Reply Check Complete'
+      );
       await this.loadStats();
     } finally {
       this.checking = false;

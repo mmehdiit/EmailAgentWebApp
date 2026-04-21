@@ -16,7 +16,7 @@ export interface AuthSessionResponse {
 
 export interface AuthLoginResponse {
   token: string;
-  userId: string;
+  user_id: string;
   email: string;
   role: string;
 }

@@ -4,6 +4,7 @@ import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 
 import { AuthSessionService } from '../../core/services/auth-session.service';
+import { ToastService } from '../../core/services/toast.service';
 
 @Component({
   selector: 'app-auth',
@@ -14,6 +15,7 @@ import { AuthSessionService } from '../../core/services/auth-session.service';
 })
 export class AuthComponent {
   protected loading = false;
+  protected showPassword = false;
   protected feedback: { type: 'success' | 'error'; title: string; description: string } | null = null;
 
   protected readonly form = this.formBuilder.nonNullable.group({
@@ -24,7 +26,8 @@ export class AuthComponent {
   constructor(
     private readonly formBuilder: FormBuilder,
     private readonly authSessionService: AuthSessionService,
-    private readonly router: Router
+    private readonly router: Router,
+    private readonly toastService: ToastService
   ) {}
 
   protected async onSubmit(): Promise<void> {
@@ -45,6 +48,10 @@ export class AuthComponent {
         title: 'Welcome back!',
         description: response.message ?? "You've successfully logged in."
       };
+      this.toastService.success(
+        response.message ?? "You've successfully logged in.",
+        'Welcome Back'
+      );
 
       await this.router.navigate(['/dashboard']);
     } catch (error: unknown) {
@@ -55,6 +62,7 @@ export class AuthComponent {
         title: 'Login failed',
         description: message
       };
+      this.toastService.error(message, 'Login Failed');
     } finally {
       this.loading = false;
     }
@@ -63,6 +71,10 @@ export class AuthComponent {
   protected hasError(controlName: 'email' | 'password', errorName: string): boolean {
     const control = this.form.controls[controlName];
     return control.touched && control.hasError(errorName);
+  }
+
+  protected togglePasswordVisibility(): void {
+    this.showPassword = !this.showPassword;
   }
 
   private resolveErrorMessage(error: unknown): string {

@@ -4,11 +4,13 @@ import { FormsModule } from '@angular/forms';
 
 import { CreateUserPayload, UserRoleOption } from '../../../core/models/dashboard.models';
 import { UserManagementService } from '../../../core/services/user-management.service';
+import { ToastService } from '../../../core/services/toast.service';
+import { AppSelectDropdownComponent } from '../app-select-dropdown/app-select-dropdown.component';
 
 @Component({
   selector: 'app-user-management',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, AppSelectDropdownComponent],
   templateUrl: './user-management.component.html'
 })
 export class UserManagementComponent {
@@ -16,7 +18,7 @@ export class UserManagementComponent {
 
   protected email = '';
   protected password = '';
-  protected role: 'user' | 'admin' = 'user';
+  protected role = 'user';
   protected loading = false;
   protected message = '';
   protected errorMessage = '';
@@ -25,7 +27,10 @@ export class UserManagementComponent {
     { value: 'admin', label: 'Admin' }
   ];
 
-  constructor(private readonly userManagementService: UserManagementService) {}
+  constructor(
+    private readonly userManagementService: UserManagementService,
+    private readonly toastService: ToastService
+  ) {}
 
   protected async createUser(): Promise<void> {
     this.message = '';
@@ -34,12 +39,13 @@ export class UserManagementComponent {
     const payload: CreateUserPayload = {
       email: this.email.trim(),
       password: this.password,
-      role: this.role
+      role: this.role as 'user' | 'admin'
     };
 
     const validationError = this.validate(payload);
     if (validationError) {
       this.errorMessage = validationError;
+      this.toastService.error(validationError, 'Validation Error');
       return;
     }
 
@@ -48,6 +54,10 @@ export class UserManagementComponent {
     try {
       const response = await this.userManagementService.createUser(payload);
       this.message = response.message;
+      this.toastService.success(
+        `Successfully created user ${payload.email} with ${payload.role} role.`,
+        'User Created'
+      );
       this.email = '';
       this.password = '';
       this.role = 'user';

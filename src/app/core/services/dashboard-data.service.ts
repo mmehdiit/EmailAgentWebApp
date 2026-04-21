@@ -21,9 +21,9 @@ export class DashboardDataService {
     private readonly ruleManagementService: RuleManagementService
   ) {}
 
-  async getOverview(): Promise<DashboardOverview> {
+  async getOverview(forceRefresh = false): Promise<DashboardOverview> {
     const [analytics, rules, connection] = await Promise.all([
-      this.analyticsDataService.getAnalytics(),
+      this.analyticsDataService.getAnalytics(forceRefresh),
       this.ruleManagementService.listRules(),
       this.getConnectionStatus()
     ]);
@@ -105,10 +105,26 @@ export class DashboardDataService {
   }
 
   async disconnectOutlook(): Promise<DashboardProcessResult> {
-    return await firstValueFrom(this.dashboardApiService.disconnectOutlook());
+    const response = await firstValueFrom(this.dashboardApiService.disconnectOutlook());
+    return {
+      success: response.success,
+      message: response.message ?? 'Outlook disconnected successfully.'
+    };
   }
 
   async processEmails(): Promise<DashboardProcessResult> {
-    return await firstValueFrom(this.dashboardApiService.processEmails());
+    const response = await firstValueFrom(this.dashboardApiService.processEmails()) as DashboardProcessResult & {
+      processed?: number;
+      forwarded?: number;
+    };
+
+    const message =
+      response.message ??
+      `Processed ${response.processed ?? 0} emails and forwarded ${response.forwarded ?? 0}.`;
+
+    return {
+      success: response.success ?? true,
+      message
+    };
   }
 }

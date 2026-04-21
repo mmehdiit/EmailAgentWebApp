@@ -42,7 +42,7 @@ export class UnreadEmailDataService {
           classification = await firstValueFrom(
             this.unreadEmailApiService.classifyEmail({
               subject: email.subject,
-              body: email.body_preview,
+              body: email.bodyPreview,
               sender: email.from
             })
           );
@@ -56,9 +56,9 @@ export class UnreadEmailDataService {
           id: email.id,
           subject: email.subject,
           from: email.from,
-          fromName: email.from_name,
-          receivedAt: email.received_date_time,
-          preview: email.body_preview,
+          fromName: email.fromName,
+          receivedAt: email.receivedDateTime,
+          preview: email.bodyPreview,
           isRead: false,
           matchesRule: hasMatch,
           matchedRuleName: hasMatch ? classification?.matched_rule_name ?? null : null,

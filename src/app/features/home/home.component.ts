@@ -1,6 +1,8 @@
 import { NgFor } from '@angular/common';
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { RouterLink } from '@angular/router';
+
+import { AuthSessionService } from '../../core/services/auth-session.service';
 
 type HomeStep = {
   step: number;
@@ -15,7 +17,11 @@ type HomeStep = {
   templateUrl: './home.component.html',
   styleUrl: './home.component.scss'
 })
-export class HomeComponent {
+export class HomeComponent implements OnInit {
+  protected authenticated = false;
+
+  constructor(private readonly authSessionService: AuthSessionService) {}
+
   protected readonly steps: HomeStep[] = [
     { step: 1, title: 'Connect Outlook', desc: 'Securely link your Outlook account' },
     {
@@ -29,4 +35,9 @@ export class HomeComponent {
       desc: 'AI analyzes emails and forwards them automatically'
     }
   ];
+
+  async ngOnInit(): Promise<void> {
+    const session = await this.authSessionService.getSession();
+    this.authenticated = session.authenticated;
+  }
 }
