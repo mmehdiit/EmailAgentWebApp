@@ -84,12 +84,6 @@ export class EmailAnalyticsTableComponent implements OnInit {
     await this.loadAnalytics();
     await this.loadRules();
   }
-  protected rangeDurationLabel(): string {
-    const from = this.startOfDay(this.dateRange.from).getTime();
-    const to = this.startOfDay(this.dateRange.to).getTime();
-    const days = Math.round((to - from) / 86_400_000) + 1;
-    return days === 1 ? '1 day' : `${days} days`;
-  }
   protected async loadAnalytics(forceRefresh = false): Promise<void> {
     this.loading = true;
     try {
@@ -217,6 +211,13 @@ export class EmailAnalyticsTableComponent implements OnInit {
     )} - ${this.formatLongDate(this.dateRange.to)}`;
   }
 
+  protected rangeDurationLabel(): string {
+    const from = this.startOfDay(this.dateRange.from).getTime();
+    const to = this.startOfDay(this.dateRange.to).getTime();
+    const days = Math.round((to - from) / 86_400_000) + 1;
+    return days === 1 ? '1 day' : `${days} days`;
+  }
+
   protected async setPreset(days: number): Promise<void> {
     this.datePreset = String(days);
     this.dateRange = this.buildPresetRange(days);
@@ -304,16 +305,25 @@ export class EmailAnalyticsTableComponent implements OnInit {
     const from = this.startOfDay(this.dateRange.from);
     const to = this.startOfDay(this.dateRange.to);
 
+    const isEndpoint =
+      date.getTime() === from.getTime() || date.getTime() === to.getTime();
+    const isBetween = date > from && date < to;
+    const isToday = date.getTime() === this.startOfDay(new Date()).getTime();
+
+    if (isEndpoint) {
+      return 'bg-primary text-primary-foreground shadow-sm hover:bg-primary';
+    }
+
+    if (isBetween) {
+      return 'bg-primary/10 text-primary hover:bg-primary/15';
+    }
+
     if (!day.currentMonth) {
-      return 'text-slate-300';
+      return 'text-slate-300 hover:bg-slate-50';
     }
 
-    if (date.getTime() === from.getTime() || date.getTime() === to.getTime()) {
-      return 'bg-fuchsia-600 text-white';
-    }
-
-    if (date > from && date < to) {
-      return 'bg-fuchsia-600 text-white';
+    if (isToday) {
+      return 'border border-primary/40 text-primary hover:bg-primary/10';
     }
 
     return 'text-slate-700 hover:bg-slate-100';
@@ -324,18 +334,24 @@ export class EmailAnalyticsTableComponent implements OnInit {
     const from = this.startOfDay(this.dateRange.from);
     const to = this.startOfDay(this.dateRange.to);
 
-    const classes = ['flex', 'justify-center'];
+    const classes = ['flex', 'justify-center', 'py-0.5'];
+    const isEndpoint =
+      date.getTime() === from.getTime() || date.getTime() === to.getTime();
 
     if (date > from && date < to) {
-      classes.push('bg-fuchsia-600');
+      classes.push('bg-primary/10');
     }
 
     if (date.getTime() === from.getTime()) {
-      classes.push('rounded-l-md');
+      classes.push('rounded-l-full');
     }
 
     if (date.getTime() === to.getTime()) {
-      classes.push('rounded-r-md');
+      classes.push('rounded-r-full');
+    }
+
+    if (isEndpoint && from.getTime() !== to.getTime()) {
+      classes.push('bg-primary/10');
     }
 
     return classes.join(' ');
