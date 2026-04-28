@@ -14,12 +14,12 @@ export const routes: Routes = [
       import('./features/auth/auth.component').then((m) => m.AuthComponent),
   },
 
-  {
-    path: 'home',
-    loadComponent: () =>
-      import('./features/home/home.component').then((m) => m.HomeComponent),
-    canActivate: [authGuard],
-  },
+  //   {
+  //     path: 'home',
+  //     loadComponent: () =>
+  //       import('./features/home/home.component').then((m) => m.HomeComponent),
+  //     canActivate: [authGuard],
+  //   },
   {
     path: 'dashboard',
     loadComponent: () =>

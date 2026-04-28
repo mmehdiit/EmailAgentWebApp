@@ -3,7 +3,7 @@
 >
   <div class="container mx-auto px-4 py-3 sm:px-6">
     <div class="flex items-center justify-between">
-      <a routerLink="/" class="group flex items-center gap-3 sm:gap-4">
+      <a routerLink="/dashboard" class="group flex items-center gap-3 sm:gap-4">
         <div class="relative">
           <img
             src="assets/logo.jpeg"
@@ -12,19 +12,23 @@
           />
         </div>
         <div>
-          <span class="text-base font-bold tracking-tight text-primary sm:text-lg">
+          <span
+            class="text-base font-bold tracking-tight text-primary sm:text-lg"
+          >
             AI Email Agent
           </span>
-          <p class="text-[10px] font-medium text-muted-foreground/80 sm:text-xs">
+          <p
+            class="text-[10px] font-medium text-muted-foreground/80 sm:text-xs"
+          >
             Smart Email Routing
           </p>
         </div>
       </a>
 
       <div class="flex items-center gap-1.5 sm:gap-2">
-        <a
+        <!-- <a
           *ngIf="showHomeLink"
-          routerLink="/home"
+          routerLink="/dashboard"
           class="nav-action-btn inline-flex h-9 items-center gap-2 rounded-lg px-3 text-sm font-medium text-foreground/80 transition-all hover:bg-muted/80 hover:text-foreground sm:px-4"
         >
           <svg
@@ -42,7 +46,7 @@
             <path d="M21 9v13H3V9" />
           </svg>
           <span class="hidden sm:inline">Home</span>
-        </a>
+        </a> -->
 
         <a
           *ngIf="showAuthLink"
@@ -63,14 +67,18 @@
             <path d="m10 17 5-5-5-5" />
             <path d="M15 12H3" />
           </svg>
-          <span class="hidden text-sm font-medium sm:inline">{{ authLabel() }}</span>
+          <span class="hidden text-sm font-medium sm:inline">{{
+            authLabel()
+          }}</span>
         </a>
 
         <span
           *ngIf="showOutlookStatus && outlookConnected"
           class="hidden items-center gap-2 rounded-full border border-success/30 bg-success/10 px-3 py-1.5 text-xs font-semibold text-success shadow-sm md:inline-flex"
         >
-          <span class="h-1.5 w-1.5 animate-pulse rounded-full bg-success"></span>
+          <span
+            class="h-1.5 w-1.5 animate-pulse rounded-full bg-success"
+          ></span>
           <span class="max-w-[150px] truncate">{{ outlookEmail }}</span>
         </span>
 

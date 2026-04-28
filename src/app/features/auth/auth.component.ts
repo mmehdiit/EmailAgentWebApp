@@ -65,7 +65,7 @@ export class AuthComponent {
         'Welcome Back'
       );
 
-      await this.router.navigate(['/home']);
+      await this.router.navigate(['/dashboard']);
     } catch (error: unknown) {
       const message = this.resolveErrorMessage(error);
 
