@@ -1,5 +1,5 @@
 export const environment = {
   production: false,
-  apiBaseUrl: '_EMAIL_AI_AGENT_URL_',
-  //   apiBaseUrl: 'http://localhost:8080',
+//   apiBaseUrl: '_EMAIL_AI_AGENT_URL_',
+    apiBaseUrl: 'http://localhost:8080',
 };
