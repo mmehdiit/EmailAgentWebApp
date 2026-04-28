@@ -1,8 +1,7 @@
-import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
+import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 
-import { ApiService } from './api.service';
 import { environment } from '../../../environments/environment';
 
 type EmailLogDto = {
@@ -30,25 +29,22 @@ type EmailLogDto = {
 })
 export class AnalyticsApiService {
   private readonly baseUrl: string = environment.apiBaseUrl;
-  constructor(
-    private readonly http: HttpClient,
-    private readonly apiService: ApiService
-  ) {}
+  constructor(private readonly http: HttpClient) {}
 
   getLogs(): Observable<EmailLogDto[]> {
-    return this.http.get<EmailLogDto[]>(`${this.baseUrl}/v1/api/email-logs`);
+    return this.http.get<EmailLogDto[]>(`${this.baseUrl}/email-logs`);
   }
 
   checkReplies(): Observable<{ success: boolean }> {
     return this.http.post<{ success: boolean }>(
-      `${this.baseUrl}/v1/api/reply/check`,
+      `${this.baseUrl}/reply/check`,
       {}
     );
   }
 
   markReplyManual(emailLogId: string): Observable<{ success: boolean }> {
     return this.http.post<{ success: boolean }>(
-      `${this.baseUrl}/v1/api/reply/mark-manual`,
+      `${this.baseUrl}/reply/mark-manual`,
       {
         emailLogId,
       }

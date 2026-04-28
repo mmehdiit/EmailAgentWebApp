@@ -1,8 +1,7 @@
-import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
+import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 
-import { ApiService } from './api.service';
 import { environment } from '../../../environments/environment';
 
 type ForwardingRuleDto = {
@@ -66,20 +65,14 @@ type RuleRecipientRequest = {
 })
 export class RuleManagementApiService {
   private readonly baseUrl: string = environment.apiBaseUrl;
-  constructor(
-    private readonly http: HttpClient,
-    private readonly apiService: ApiService
-  ) {}
+  constructor(private readonly http: HttpClient) {}
 
   listRules(): Observable<ForwardingRuleDto[]> {
-    return this.http.get<ForwardingRuleDto[]>(`${this.baseUrl}/v1/api/rules`);
+    return this.http.get<ForwardingRuleDto[]>(`${this.baseUrl}/rules`);
   }
 
   createRule(rule: ForwardingRuleRequest): Observable<ForwardingRuleDto> {
-    return this.http.post<ForwardingRuleDto>(
-      `${this.baseUrl}/v1/api/rules`,
-      rule
-    );
+    return this.http.post<ForwardingRuleDto>(`${this.baseUrl}/rules`, rule);
   }
 
   updateRule(
@@ -87,27 +80,27 @@ export class RuleManagementApiService {
     rule: ForwardingRuleRequest
   ): Observable<ForwardingRuleDto> {
     return this.http.put<ForwardingRuleDto>(
-      `${this.baseUrl}/v1/api/rules/${ruleId}`,
+      `${this.baseUrl}/rules/${ruleId}`,
       rule
     );
   }
 
   deleteRule(ruleId: string): Observable<{ success: boolean }> {
     return this.http.delete<{ success: boolean }>(
-      `${this.baseUrl}/v1/api/rules/${ruleId}`
+      `${this.baseUrl}/rules/${ruleId}`
     );
   }
 
   reorderRules(ids: string[]): Observable<{ success: boolean }> {
     return this.http.post<{ success: boolean }>(
-      `${this.baseUrl}/v1/api/rules/reorder`,
+      `${this.baseUrl}/rules/reorder`,
       { ids }
     );
   }
 
   listRecipients(ruleId: string): Observable<RuleRecipientDto[]> {
     return this.http.get<RuleRecipientDto[]>(
-      `${this.baseUrl}/v1/api/rules/${ruleId}/recipients`
+      `${this.baseUrl}/rules/${ruleId}/recipients`
     );
   }
 
@@ -116,7 +109,7 @@ export class RuleManagementApiService {
     recipients: RuleRecipientRequest[]
   ): Observable<{ success: boolean }> {
     return this.http.post<{ success: boolean }>(
-      `${this.baseUrl}/v1/api/rules/${ruleId}/recipients/sync`,
+      `${this.baseUrl}/rules/${ruleId}/recipients/sync`,
       recipients
     );
   }

@@ -1,14 +1,9 @@
-import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
+import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 
-import {
-  DashboardConnectionStatus,
-  DashboardProcessResult,
-  OutlookConnectResult,
-} from '../models/dashboard.models';
-import { ApiService } from './api.service';
 import { environment } from '../../../environments/environment';
+import { DashboardProcessResult } from '../models/dashboard.models';
 
 type OutlookConnectionResponse = {
   connected: boolean;
@@ -35,14 +30,11 @@ type OutlookCallbackResponse = {
 })
 export class DashboardApiService {
   private readonly baseUrl: string = environment.apiBaseUrl;
-  constructor(
-    private readonly http: HttpClient,
-    private readonly apiService: ApiService
-  ) {}
+  constructor(private readonly http: HttpClient) {}
 
   getConnectionStatus(): Observable<OutlookConnectionResponse> {
     return this.http.get<OutlookConnectionResponse>(
-      `${this.baseUrl}/v1/api/outlook/connection`
+      `${this.baseUrl}/outlook/connection`
     );
   }
 
@@ -50,33 +42,30 @@ export class DashboardApiService {
     frontendOrigin: string,
     redirectUri: string
   ): Observable<OutlookAuthResponse> {
-    return this.http.post<OutlookAuthResponse>(
-      `${this.baseUrl}/v1/api/outlook/auth`,
-      {
-        frontendOrigin,
-        redirectUri,
-      }
-    );
+    return this.http.post<OutlookAuthResponse>(`${this.baseUrl}/outlook/auth`, {
+      frontendOrigin,
+      redirectUri,
+    });
   }
 
   completeOutlookConnection(
     payload: OutlookCallbackPayload
   ): Observable<OutlookCallbackResponse> {
     return this.http.post<OutlookCallbackResponse>(
-      `${this.baseUrl}/v1/api/outlook/callback`,
+      `${this.baseUrl}/outlook/callback`,
       payload
     );
   }
 
   disconnectOutlook(): Observable<DashboardProcessResult> {
     return this.http.delete<DashboardProcessResult>(
-      `${this.baseUrl}/v1/api/outlook/connection`
+      `${this.baseUrl}/outlook/connection`
     );
   }
 
   processEmails(): Observable<DashboardProcessResult> {
     return this.http.post<DashboardProcessResult>(
-      `${this.baseUrl}/v1/api/emails/process`,
+      `${this.baseUrl}/emails/process`,
       {}
     );
   }

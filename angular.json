@@ -20,6 +20,8 @@
             "outputPath": "dist/email-agent-web-app",
             "index": "src/index.html",
             "browser": "src/main.ts",
+            "baseHref": "/email-agent/",
+            "deployUrl": "/email-agent/",
             "polyfills": ["zone.js"],
             "tsConfig": "tsconfig.app.json",
             "inlineStyleLanguage": "scss",
@@ -62,7 +64,7 @@
             }
           },
           "options": {
-            "port": 4600
+            "port": 4700
           },
           "defaultConfiguration": "development"
         },

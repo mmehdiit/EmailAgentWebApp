@@ -1,10 +1,9 @@
-import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
+import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 
-import { CreateUserPayload } from '../models/dashboard.models';
-import { ApiService } from './api.service';
 import { environment } from '../../../environments/environment';
+import { CreateUserPayload } from '../models/dashboard.models';
 
 type CreateUserApiResponse = {
   token: string;
@@ -18,14 +17,11 @@ type CreateUserApiResponse = {
 })
 export class UserManagementApiService {
   private readonly baseUrl: string = environment.apiBaseUrl;
-  constructor(
-    private readonly http: HttpClient,
-    private readonly apiService: ApiService
-  ) {}
+  constructor(private readonly http: HttpClient) {}
 
   createUser(payload: CreateUserPayload): Observable<CreateUserApiResponse> {
     return this.http.post<CreateUserApiResponse>(
-      `${this.baseUrl}/v1/api/admin/users`,
+      `${this.baseUrl}/admin/users`,
       payload
     );
   }
