@@ -5,7 +5,7 @@ import { Observable } from 'rxjs';
 import {
   DashboardConnectionStatus,
   DashboardProcessResult,
-  OutlookConnectResult
+  OutlookConnectResult,
 } from '../models/dashboard.models';
 import { ApiService } from './api.service';
 
@@ -30,7 +30,7 @@ type OutlookCallbackResponse = {
 };
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class DashboardApiService {
   constructor(
@@ -39,25 +39,43 @@ export class DashboardApiService {
   ) {}
 
   getConnectionStatus(): Observable<OutlookConnectionResponse> {
-    return this.http.get<OutlookConnectionResponse>(this.apiService.buildUrl('/v1/api/outlook/connection'));
+    return this.http.get<OutlookConnectionResponse>(
+      this.apiService.buildUrl('v1/api/outlook/connection')
+    );
   }
 
-  getOutlookAuthUrl(frontendOrigin: string, redirectUri: string): Observable<OutlookAuthResponse> {
-    return this.http.post<OutlookAuthResponse>(this.apiService.buildUrl('/v1/api/outlook/auth'), {
-      frontendOrigin,
-      redirectUri
-    });
+  getOutlookAuthUrl(
+    frontendOrigin: string,
+    redirectUri: string
+  ): Observable<OutlookAuthResponse> {
+    return this.http.post<OutlookAuthResponse>(
+      this.apiService.buildUrl('v1/api/outlook/auth'),
+      {
+        frontendOrigin,
+        redirectUri,
+      }
+    );
   }
 
-  completeOutlookConnection(payload: OutlookCallbackPayload): Observable<OutlookCallbackResponse> {
-    return this.http.post<OutlookCallbackResponse>(this.apiService.buildUrl('/v1/api/outlook/callback'), payload);
+  completeOutlookConnection(
+    payload: OutlookCallbackPayload
+  ): Observable<OutlookCallbackResponse> {
+    return this.http.post<OutlookCallbackResponse>(
+      this.apiService.buildUrl('v1/api/outlook/callback'),
+      payload
+    );
   }
 
   disconnectOutlook(): Observable<DashboardProcessResult> {
-    return this.http.delete<DashboardProcessResult>(this.apiService.buildUrl('/v1/api/outlook/connection'));
+    return this.http.delete<DashboardProcessResult>(
+      this.apiService.buildUrl('v1/api/outlook/connection')
+    );
   }
 
   processEmails(): Observable<DashboardProcessResult> {
-    return this.http.post<DashboardProcessResult>(this.apiService.buildUrl('/v1/api/emails/process'), {});
+    return this.http.post<DashboardProcessResult>(
+      this.apiService.buildUrl('v1/api/emails/process'),
+      {}
+    );
   }
 }

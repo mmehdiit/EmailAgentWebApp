@@ -3,10 +3,13 @@ import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 
 import { ApiService } from './api.service';
-import { MarkReplyConfirmResponse, MarkReplyPreviewResponse } from '../models/mark-reply.models';
+import {
+  MarkReplyConfirmResponse,
+  MarkReplyPreviewResponse,
+} from '../models/mark-reply.models';
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class MarkReplyApiService {
   constructor(
@@ -16,14 +19,14 @@ export class MarkReplyApiService {
 
   preview(token: string): Observable<MarkReplyPreviewResponse> {
     return this.http.post<MarkReplyPreviewResponse>(
-      this.apiService.buildUrl('/v1/api/reply/mark'),
+      this.apiService.buildUrl('v1/api/reply/mark'),
       { token, preview: true }
     );
   }
 
   confirm(token: string): Observable<MarkReplyConfirmResponse> {
     return this.http.post<MarkReplyConfirmResponse>(
-      this.apiService.buildUrl('/v1/api/reply/mark'),
+      this.apiService.buildUrl('v1/api/reply/mark'),
       { token, preview: false }
     );
   }

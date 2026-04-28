@@ -17,7 +17,7 @@ type UnreadEmailResponse = Array<{
 }>;
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class UnreadEmailApiService {
   constructor(
@@ -26,24 +26,42 @@ export class UnreadEmailApiService {
   ) {}
 
   getUnreadEmails(): Observable<UnreadEmailResponse> {
-    return this.http.get<UnreadEmailResponse>(this.apiService.buildUrl('/v1/api/emails/unread'));
+    return this.http.get<UnreadEmailResponse>(
+      this.apiService.buildUrl('v1/api/emails/unread')
+    );
   }
 
-  classifyEmail(email: { subject: string; body: string; sender: string }): Observable<EmailClassificationResult> {
-    return this.http.post<EmailClassificationResult>(this.apiService.buildUrl('/v1/api/emails/classify'), {
-      email
-    });
+  classifyEmail(email: {
+    subject: string;
+    body: string;
+    sender: string;
+  }): Observable<EmailClassificationResult> {
+    return this.http.post<EmailClassificationResult>(
+      this.apiService.buildUrl('v1/api/emails/classify'),
+      {
+        email,
+      }
+    );
   }
 
   markAsRead(emailId: string): Observable<{ success: boolean }> {
-    return this.http.patch<{ success: boolean }>(this.apiService.buildUrl(`/v1/api/emails/${emailId}/read`), {});
+    return this.http.patch<{ success: boolean }>(
+      this.apiService.buildUrl(`v1/api/emails/${emailId}/read`),
+      {}
+    );
   }
 
-  manualAssign(emailId: string, ruleId: string): Observable<{ success: boolean }> {
-    return this.http.post<{ success: boolean }>(this.apiService.buildUrl('/v1/api/emails/manual-assign'), {
-      emailId,
-      ruleId
-    });
+  manualAssign(
+    emailId: string,
+    ruleId: string
+  ): Observable<{ success: boolean }> {
+    return this.http.post<{ success: boolean }>(
+      this.apiService.buildUrl('v1/api/emails/manual-assign'),
+      {
+        emailId,
+        ruleId,
+      }
+    );
   }
 
   getEmailContent(emailId: string): Observable<{
@@ -61,13 +79,24 @@ export class UnreadEmailApiService {
       body: string;
       htmlBody: string;
       receivedDateTime: string;
-    }>(this.apiService.buildUrl(`/v1/api/emails/${encodeURIComponent(emailId)}/content`));
+    }>(
+      this.apiService.buildUrl(
+        `v1/api/emails/${encodeURIComponent(emailId)}/content`
+      )
+    );
   }
 
-  retryFailedEmails(): Observable<{ retried?: number; still_failed?: number; success?: boolean; message?: string }> {
-    return this.http.post<{ retried?: number; still_failed?: number; success?: boolean; message?: string }>(
-      this.apiService.buildUrl('/v1/api/emails/retry-failed'),
-      {}
-    );
+  retryFailedEmails(): Observable<{
+    retried?: number;
+    still_failed?: number;
+    success?: boolean;
+    message?: string;
+  }> {
+    return this.http.post<{
+      retried?: number;
+      still_failed?: number;
+      success?: boolean;
+      message?: string;
+    }>(this.apiService.buildUrl('v1/api/emails/retry-failed'), {});
   }
 }

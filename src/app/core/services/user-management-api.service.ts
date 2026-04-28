@@ -13,7 +13,7 @@ type CreateUserApiResponse = {
 };
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class UserManagementApiService {
   constructor(
@@ -22,6 +22,9 @@ export class UserManagementApiService {
   ) {}
 
   createUser(payload: CreateUserPayload): Observable<CreateUserApiResponse> {
-    return this.http.post<CreateUserApiResponse>(this.apiService.buildUrl('/v1/api/admin/users'), payload);
+    return this.http.post<CreateUserApiResponse>(
+      this.apiService.buildUrl('v1/api/admin/users'),
+      payload
+    );
   }
 }

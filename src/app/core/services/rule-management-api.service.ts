@@ -61,7 +61,7 @@ type RuleRecipientRequest = {
 };
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class RuleManagementApiService {
   constructor(
@@ -70,32 +70,53 @@ export class RuleManagementApiService {
   ) {}
 
   listRules(): Observable<ForwardingRuleDto[]> {
-    return this.http.get<ForwardingRuleDto[]>(this.apiService.buildUrl('/v1/api/rules'));
+    return this.http.get<ForwardingRuleDto[]>(
+      this.apiService.buildUrl('v1/api/rules')
+    );
   }
 
   createRule(rule: ForwardingRuleRequest): Observable<ForwardingRuleDto> {
-    return this.http.post<ForwardingRuleDto>(this.apiService.buildUrl('/v1/api/rules'), rule);
+    return this.http.post<ForwardingRuleDto>(
+      this.apiService.buildUrl('v1/api/rules'),
+      rule
+    );
   }
 
-  updateRule(ruleId: string, rule: ForwardingRuleRequest): Observable<ForwardingRuleDto> {
-    return this.http.put<ForwardingRuleDto>(this.apiService.buildUrl(`/v1/api/rules/${ruleId}`), rule);
+  updateRule(
+    ruleId: string,
+    rule: ForwardingRuleRequest
+  ): Observable<ForwardingRuleDto> {
+    return this.http.put<ForwardingRuleDto>(
+      this.apiService.buildUrl(`v1/api/rules/${ruleId}`),
+      rule
+    );
   }
 
   deleteRule(ruleId: string): Observable<{ success: boolean }> {
-    return this.http.delete<{ success: boolean }>(this.apiService.buildUrl(`/v1/api/rules/${ruleId}`));
+    return this.http.delete<{ success: boolean }>(
+      this.apiService.buildUrl(`v1/api/rules/${ruleId}`)
+    );
   }
 
   reorderRules(ids: string[]): Observable<{ success: boolean }> {
-    return this.http.post<{ success: boolean }>(this.apiService.buildUrl('/v1/api/rules/reorder'), { ids });
+    return this.http.post<{ success: boolean }>(
+      this.apiService.buildUrl('v1/api/rules/reorder'),
+      { ids }
+    );
   }
 
   listRecipients(ruleId: string): Observable<RuleRecipientDto[]> {
-    return this.http.get<RuleRecipientDto[]>(this.apiService.buildUrl(`/v1/api/rules/${ruleId}/recipients`));
+    return this.http.get<RuleRecipientDto[]>(
+      this.apiService.buildUrl(`v1/api/rules/${ruleId}/recipients`)
+    );
   }
 
-  syncRecipients(ruleId: string, recipients: RuleRecipientRequest[]): Observable<{ success: boolean }> {
+  syncRecipients(
+    ruleId: string,
+    recipients: RuleRecipientRequest[]
+  ): Observable<{ success: boolean }> {
     return this.http.post<{ success: boolean }>(
-      this.apiService.buildUrl(`/v1/api/rules/${ruleId}/recipients/sync`),
+      this.apiService.buildUrl(`v1/api/rules/${ruleId}/recipients/sync`),
       recipients
     );
   }

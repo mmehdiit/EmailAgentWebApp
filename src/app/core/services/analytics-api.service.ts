@@ -25,7 +25,7 @@ type EmailLogDto = {
 };
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class AnalyticsApiService {
   constructor(
@@ -34,16 +34,24 @@ export class AnalyticsApiService {
   ) {}
 
   getLogs(): Observable<EmailLogDto[]> {
-    return this.http.get<EmailLogDto[]>(this.apiService.buildUrl('/v1/api/email-logs'));
+    return this.http.get<EmailLogDto[]>(
+      this.apiService.buildUrl('v1/api/email-logs')
+    );
   }
 
   checkReplies(): Observable<{ success: boolean }> {
-    return this.http.post<{ success: boolean }>(this.apiService.buildUrl('/v1/api/reply/check'), {});
+    return this.http.post<{ success: boolean }>(
+      this.apiService.buildUrl('v1/api/reply/check'),
+      {}
+    );
   }
 
   markReplyManual(emailLogId: string): Observable<{ success: boolean }> {
-    return this.http.post<{ success: boolean }>(this.apiService.buildUrl('/v1/api/reply/mark-manual'), {
-      emailLogId
-    });
+    return this.http.post<{ success: boolean }>(
+      this.apiService.buildUrl('v1/api/reply/mark-manual'),
+      {
+        emailLogId,
+      }
+    );
   }
 }

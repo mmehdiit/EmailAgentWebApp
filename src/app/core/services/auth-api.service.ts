@@ -2,11 +2,15 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 
-import { AuthLoginResponse, AuthSessionData, SignInPayload } from '../models/auth.models';
+import {
+  AuthLoginResponse,
+  AuthSessionData,
+  SignInPayload,
+} from '../models/auth.models';
 import { ApiService } from './api.service';
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class AuthApiService {
   constructor(
@@ -15,10 +19,15 @@ export class AuthApiService {
   ) {}
 
   getSession(): Observable<AuthSessionData> {
-    return this.http.get<AuthSessionData>(this.apiService.buildUrl('/v1/api/auth/me'));
+    return this.http.get<AuthSessionData>(
+      this.apiService.buildUrl('v1/api/auth/me')
+    );
   }
 
   signIn(payload: SignInPayload): Observable<AuthLoginResponse> {
-    return this.http.post<AuthLoginResponse>(this.apiService.buildUrl('/v1/api/auth/login'), payload);
+    return this.http.post<AuthLoginResponse>(
+      this.apiService.buildUrl('v1/api/auth/login'),
+      payload
+    );
   }
 }
