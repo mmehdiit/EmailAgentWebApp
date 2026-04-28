@@ -4,6 +4,7 @@ import { Observable } from 'rxjs';
 
 import { CreateUserPayload } from '../models/dashboard.models';
 import { ApiService } from './api.service';
+import { environment } from '../../../environments/environment';
 
 type CreateUserApiResponse = {
   token: string;
@@ -16,6 +17,7 @@ type CreateUserApiResponse = {
   providedIn: 'root',
 })
 export class UserManagementApiService {
+  private readonly baseUrl: string = environment.apiBaseUrl;
   constructor(
     private readonly http: HttpClient,
     private readonly apiService: ApiService
@@ -23,7 +25,7 @@ export class UserManagementApiService {
 
   createUser(payload: CreateUserPayload): Observable<CreateUserApiResponse> {
     return this.http.post<CreateUserApiResponse>(
-      this.apiService.buildUrl('v1/api/admin/users'),
+      `${this.baseUrl}/v1/api/admin/users`,
       payload
     );
   }

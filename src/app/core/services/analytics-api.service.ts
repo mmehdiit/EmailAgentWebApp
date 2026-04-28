@@ -3,6 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 
 import { ApiService } from './api.service';
+import { environment } from '../../../environments/environment';
 
 type EmailLogDto = {
   id: string;
@@ -28,27 +29,26 @@ type EmailLogDto = {
   providedIn: 'root',
 })
 export class AnalyticsApiService {
+  private readonly baseUrl: string = environment.apiBaseUrl;
   constructor(
     private readonly http: HttpClient,
     private readonly apiService: ApiService
   ) {}
 
   getLogs(): Observable<EmailLogDto[]> {
-    return this.http.get<EmailLogDto[]>(
-      this.apiService.buildUrl('v1/api/email-logs')
-    );
+    return this.http.get<EmailLogDto[]>(`${this.baseUrl}/v1/api/email-logs`);
   }
 
   checkReplies(): Observable<{ success: boolean }> {
     return this.http.post<{ success: boolean }>(
-      this.apiService.buildUrl('v1/api/reply/check'),
+      `${this.baseUrl}/v1/api/reply/check`,
       {}
     );
   }
 
   markReplyManual(emailLogId: string): Observable<{ success: boolean }> {
     return this.http.post<{ success: boolean }>(
-      this.apiService.buildUrl('v1/api/reply/mark-manual'),
+      `${this.baseUrl}/v1/api/reply/mark-manual`,
       {
         emailLogId,
       }

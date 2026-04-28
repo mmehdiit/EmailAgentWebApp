@@ -8,6 +8,7 @@ import {
   OutlookConnectResult,
 } from '../models/dashboard.models';
 import { ApiService } from './api.service';
+import { environment } from '../../../environments/environment';
 
 type OutlookConnectionResponse = {
   connected: boolean;
@@ -33,6 +34,7 @@ type OutlookCallbackResponse = {
   providedIn: 'root',
 })
 export class DashboardApiService {
+  private readonly baseUrl: string = environment.apiBaseUrl;
   constructor(
     private readonly http: HttpClient,
     private readonly apiService: ApiService
@@ -40,7 +42,7 @@ export class DashboardApiService {
 
   getConnectionStatus(): Observable<OutlookConnectionResponse> {
     return this.http.get<OutlookConnectionResponse>(
-      this.apiService.buildUrl('v1/api/outlook/connection')
+      `${this.baseUrl}/v1/api/outlook/connection`
     );
   }
 
@@ -49,7 +51,7 @@ export class DashboardApiService {
     redirectUri: string
   ): Observable<OutlookAuthResponse> {
     return this.http.post<OutlookAuthResponse>(
-      this.apiService.buildUrl('v1/api/outlook/auth'),
+      `${this.baseUrl}/v1/api/outlook/auth`,
       {
         frontendOrigin,
         redirectUri,
@@ -61,20 +63,20 @@ export class DashboardApiService {
     payload: OutlookCallbackPayload
   ): Observable<OutlookCallbackResponse> {
     return this.http.post<OutlookCallbackResponse>(
-      this.apiService.buildUrl('v1/api/outlook/callback'),
+      `${this.baseUrl}/v1/api/outlook/callback`,
       payload
     );
   }
 
   disconnectOutlook(): Observable<DashboardProcessResult> {
     return this.http.delete<DashboardProcessResult>(
-      this.apiService.buildUrl('v1/api/outlook/connection')
+      `${this.baseUrl}/v1/api/outlook/connection`
     );
   }
 
   processEmails(): Observable<DashboardProcessResult> {
     return this.http.post<DashboardProcessResult>(
-      this.apiService.buildUrl('v1/api/emails/process'),
+      `${this.baseUrl}/v1/api/emails/process`,
       {}
     );
   }

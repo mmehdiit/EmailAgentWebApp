@@ -7,11 +7,13 @@ import {
   MarkReplyConfirmResponse,
   MarkReplyPreviewResponse,
 } from '../models/mark-reply.models';
+import { environment } from '../../../environments/environment';
 
 @Injectable({
   providedIn: 'root',
 })
 export class MarkReplyApiService {
+  private readonly baseUrl: string = environment.apiBaseUrl;
   constructor(
     private readonly http: HttpClient,
     private readonly apiService: ApiService
@@ -19,14 +21,14 @@ export class MarkReplyApiService {
 
   preview(token: string): Observable<MarkReplyPreviewResponse> {
     return this.http.post<MarkReplyPreviewResponse>(
-      this.apiService.buildUrl('v1/api/reply/mark'),
+      `${this.baseUrl}/v1/api/reply/mark`,
       { token, preview: true }
     );
   }
 
   confirm(token: string): Observable<MarkReplyConfirmResponse> {
     return this.http.post<MarkReplyConfirmResponse>(
-      this.apiService.buildUrl('v1/api/reply/mark'),
+      `${this.baseUrl}/v1/api/reply/mark`,
       { token, preview: false }
     );
   }

@@ -4,6 +4,7 @@ import { Observable } from 'rxjs';
 
 import { EmailClassificationResult } from '../models/dashboard.models';
 import { ApiService } from './api.service';
+import { environment } from '../../../environments/environment';
 
 type UnreadEmailResponse = Array<{
   id: string;
@@ -20,6 +21,7 @@ type UnreadEmailResponse = Array<{
   providedIn: 'root',
 })
 export class UnreadEmailApiService {
+  private readonly baseUrl: string = environment.apiBaseUrl;
   constructor(
     private readonly http: HttpClient,
     private readonly apiService: ApiService
@@ -27,7 +29,7 @@ export class UnreadEmailApiService {
 
   getUnreadEmails(): Observable<UnreadEmailResponse> {
     return this.http.get<UnreadEmailResponse>(
-      this.apiService.buildUrl('v1/api/emails/unread')
+      `${this.baseUrl}/v1/api/emails/unread`
     );
   }
 
@@ -37,7 +39,7 @@ export class UnreadEmailApiService {
     sender: string;
   }): Observable<EmailClassificationResult> {
     return this.http.post<EmailClassificationResult>(
-      this.apiService.buildUrl('v1/api/emails/classify'),
+      `${this.baseUrl}/v1/api/emails/classify`,
       {
         email,
       }
@@ -46,7 +48,7 @@ export class UnreadEmailApiService {
 
   markAsRead(emailId: string): Observable<{ success: boolean }> {
     return this.http.patch<{ success: boolean }>(
-      this.apiService.buildUrl(`v1/api/emails/${emailId}/read`),
+      `${this.baseUrl}/v1/api/emails/${emailId}/read`,
       {}
     );
   }
@@ -56,7 +58,7 @@ export class UnreadEmailApiService {
     ruleId: string
   ): Observable<{ success: boolean }> {
     return this.http.post<{ success: boolean }>(
-      this.apiService.buildUrl('v1/api/emails/manual-assign'),
+      `${this.baseUrl}/v1/api/emails/manual-assign`,
       {
         emailId,
         ruleId,
@@ -79,11 +81,7 @@ export class UnreadEmailApiService {
       body: string;
       htmlBody: string;
       receivedDateTime: string;
-    }>(
-      this.apiService.buildUrl(
-        `v1/api/emails/${encodeURIComponent(emailId)}/content`
-      )
-    );
+    }>(`${this.baseUrl}/v1/api/emails/${encodeURIComponent(emailId)}/content`);
   }
 
   retryFailedEmails(): Observable<{
@@ -97,6 +95,6 @@ export class UnreadEmailApiService {
       still_failed?: number;
       success?: boolean;
       message?: string;
-    }>(this.apiService.buildUrl('v1/api/emails/retry-failed'), {});
+    }>(`${this.baseUrl}/v1/api/emails/retry-failed`, {});
   }
 }
