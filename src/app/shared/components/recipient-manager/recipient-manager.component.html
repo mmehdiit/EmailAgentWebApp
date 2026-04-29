@@ -25,7 +25,7 @@
 
   <div *ngIf="recipients.length > 0" class="space-y-2">
     <div
-      *ngFor="let recipient of recipients; let i = index"
+      *ngFor="let recipient of recipients; let i = index; trackBy: trackByRecipientId"
       draggable="true"
       (dragstart)="handleRecipientDragStarted(recipient.id)"
       (dragover)="$event.preventDefault()"

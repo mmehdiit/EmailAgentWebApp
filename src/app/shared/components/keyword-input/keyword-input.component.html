@@ -2,7 +2,7 @@
   class="flex min-h-[38px] flex-wrap gap-1.5 rounded-md border bg-background p-2 ring-offset-background focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2"
 >
   <span
-    *ngFor="let keyword of keywords; let i = index"
+    *ngFor="let keyword of keywords; let i = index; trackBy: trackByKeyword"
     class="inline-flex h-6 items-center gap-1 rounded-md border px-2 text-xs"
     [ngClass]="{
       'border-destructive/50 text-destructive': variant === 'destructive'

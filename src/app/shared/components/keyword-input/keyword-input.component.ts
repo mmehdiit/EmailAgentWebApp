@@ -16,6 +16,10 @@ export class KeywordInputComponent {
 
   protected inputValue = '';
 
+  protected trackByKeyword(_: number, keyword: string): string {
+    return keyword;
+  }
+
   protected addKeyword(value: string): void {
     const trimmed = value.trim();
     if (trimmed && !this.keywords.includes(trimmed)) {

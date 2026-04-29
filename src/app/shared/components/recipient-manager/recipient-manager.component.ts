@@ -28,6 +28,10 @@ export class RecipientManagerComponent {
   protected selectedRecipient: Recipient | null = null;
   protected draggedRecipientId: string | null = null;
 
+  protected trackByRecipientId(_: number, recipient: Recipient): string {
+    return recipient.id;
+  }
+
   protected addRecipient(): void {
     const next: Recipient = {
       id: `temp-${Date.now()}`,
