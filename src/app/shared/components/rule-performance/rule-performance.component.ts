@@ -1,5 +1,8 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit } from '@angular/core';
+import { Component, DestroyRef, OnInit, inject } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { EMPTY, from } from 'rxjs';
+import { catchError, finalize, tap } from 'rxjs/operators';
 
 import { RulePerformanceStat } from '../../../core/models/dashboard.models';
 import { AnalyticsDataService } from '../../../core/services/analytics-data.service';
@@ -14,12 +17,26 @@ export class RulePerformanceComponent implements OnInit {
   protected loading = true;
   protected stats: RulePerformanceStat[] = [];
 
+  private readonly destroyRef = inject(DestroyRef);
+
   constructor(private readonly analyticsDataService: AnalyticsDataService) {}
 
-  async ngOnInit(): Promise<void> {
-    const analytics = await this.analyticsDataService.getAnalytics();
-    this.stats = analytics.rulePerformance;
-    this.loading = false;
+  ngOnInit(): void {
+    from(this.analyticsDataService.getAnalytics())
+      .pipe(
+        tap((analytics) => {
+          this.stats = analytics.rulePerformance;
+        }),
+        catchError(() => {
+          this.stats = [];
+          return EMPTY;
+        }),
+        finalize(() => {
+          this.loading = false;
+        }),
+        takeUntilDestroyed(this.destroyRef)
+      )
+      .subscribe();
   }
 
   protected badgeClasses(stat: RulePerformanceStat): string {

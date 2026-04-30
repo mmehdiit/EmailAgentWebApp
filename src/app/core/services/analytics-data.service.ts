@@ -18,6 +18,7 @@ import { UnreadEmailApiService } from './unread-email-api.service';
 })
 export class AnalyticsDataService {
   private analyticsPromise: Promise<DashboardAnalytics> | null = null;
+  private analyticsCacheKey = '';
 
   constructor(
     private readonly analyticsApiService: AnalyticsApiService,
@@ -25,12 +26,18 @@ export class AnalyticsDataService {
     private readonly unreadEmailApiService: UnreadEmailApiService
   ) {}
 
-  async getAnalytics(forceRefresh = false): Promise<DashboardAnalytics> {
-    if (!forceRefresh && this.analyticsPromise) {
+  async getAnalytics(
+    forceRefresh = false,
+    filters: { fromDate?: string; toDate?: string } = {}
+  ): Promise<DashboardAnalytics> {
+    const cacheKey = this.buildAnalyticsCacheKey(filters);
+
+    if (!forceRefresh && this.analyticsPromise && this.analyticsCacheKey === cacheKey) {
       return this.analyticsPromise;
     }
 
-    this.analyticsPromise = this.fetchAnalytics();
+    this.analyticsCacheKey = cacheKey;
+    this.analyticsPromise = this.fetchAnalytics(filters);
     return this.analyticsPromise;
   }
 
@@ -87,9 +94,9 @@ export class AnalyticsDataService {
     this.invalidateCache();
   }
 
-  private async fetchAnalytics(): Promise<DashboardAnalytics> {
+  private async fetchAnalytics(filters: { fromDate?: string; toDate?: string }): Promise<DashboardAnalytics> {
     const [logs, rules] = await Promise.all([
-      firstValueFrom(this.analyticsApiService.getLogs()),
+      firstValueFrom(this.analyticsApiService.getLogs(filters)),
       this.ruleManagementService.listRules(),
     ]);
 
@@ -262,5 +269,10 @@ export class AnalyticsDataService {
 
   private invalidateCache(): void {
     this.analyticsPromise = null;
+    this.analyticsCacheKey = '';
+  }
+
+  private buildAnalyticsCacheKey(filters: { fromDate?: string; toDate?: string }): string {
+    return `${filters.fromDate ?? ''}:${filters.toDate ?? ''}`;
   }
 }

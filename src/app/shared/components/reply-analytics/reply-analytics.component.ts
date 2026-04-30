@@ -1,5 +1,8 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit } from '@angular/core';
+import { Component, DestroyRef, OnInit, inject } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { EMPTY, from } from 'rxjs';
+import { catchError, finalize, switchMap, tap } from 'rxjs/operators';
 
 import { ReplyAnalyticsStats } from '../../../core/models/dashboard.models';
 import { AnalyticsDataService } from '../../../core/services/analytics-data.service';
@@ -16,33 +19,55 @@ export class ReplyAnalyticsComponent implements OnInit {
   protected checking = false;
   protected stats: ReplyAnalyticsStats | null = null;
 
+  private readonly destroyRef = inject(DestroyRef);
+
   constructor(
     private readonly analyticsDataService: AnalyticsDataService,
     private readonly toastService: ToastService
   ) {}
 
-  async ngOnInit(): Promise<void> {
-    await this.loadStats();
+  ngOnInit(): void {
+    this.loadStats();
   }
 
-  protected async loadStats(): Promise<void> {
+  protected loadStats(): void {
     this.loading = true;
-    const analytics = await this.analyticsDataService.getAnalytics();
-    this.stats = analytics.replyStats;
-    this.loading = false;
+
+    from(this.analyticsDataService.getAnalytics())
+      .pipe(
+        tap((analytics) => {
+          this.stats = analytics.replyStats;
+        }),
+        catchError(() => EMPTY),
+        finalize(() => {
+          this.loading = false;
+        }),
+        takeUntilDestroyed(this.destroyRef)
+      )
+      .subscribe();
   }
 
-  protected async checkReplies(): Promise<void> {
+  protected checkReplies(): void {
     this.checking = true;
-    try {
-      await this.analyticsDataService.checkReplies();
-      this.toastService.success(
-        'Reply check completed successfully.',
-        'Reply Check Complete'
-      );
-      await this.loadStats();
-    } finally {
-      this.checking = false;
-    }
+
+    from(this.analyticsDataService.checkReplies())
+      .pipe(
+        tap(() => {
+          this.toastService.success(
+            'Reply check completed successfully.',
+            'Reply Check Complete'
+          );
+        }),
+        switchMap(() => from(this.analyticsDataService.getAnalytics())),
+        tap((analytics) => {
+          this.stats = analytics.replyStats;
+        }),
+        catchError(() => EMPTY),
+        finalize(() => {
+          this.checking = false;
+        }),
+        takeUntilDestroyed(this.destroyRef)
+      )
+      .subscribe();
   }
 }

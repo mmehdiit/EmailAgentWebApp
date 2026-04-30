@@ -1,6 +1,9 @@
 import { NgFor } from '@angular/common';
-import { Component, OnInit } from '@angular/core';
+import { Component, DestroyRef, OnInit, inject } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Router, RouterLink } from '@angular/router';
+import { from } from 'rxjs';
+import { tap } from 'rxjs/operators';
 
 import { AuthSessionService } from '../../core/services/auth-session.service';
 import { ToastService } from '../../core/services/toast.service';
@@ -23,6 +26,8 @@ export class HomeComponent implements OnInit {
   protected authenticated = false;
   protected outlookConnected = false;
   protected outlookEmail: string | null = null;
+
+  private readonly destroyRef = inject(DestroyRef);
 
   constructor(
     private readonly authSessionService: AuthSessionService,
@@ -48,17 +53,25 @@ export class HomeComponent implements OnInit {
     },
   ];
 
-  async ngOnInit(): Promise<void> {
-    const session = await this.authSessionService.getSession();
-    this.authenticated = session.authenticated;
+  ngOnInit(): void {
+    from(this.authSessionService.getSession())
+      .pipe(
+        tap((session) => {
+          this.authenticated = session.authenticated;
+        }),
+        takeUntilDestroyed(this.destroyRef)
+      )
+      .subscribe();
   }
 
-  protected async signOut(): Promise<void> {
+  protected signOut(): void {
     this.authSessionService.logout();
     this.toastService.success(
       "You've been successfully logged out.",
       'Logged Out'
     );
-    await this.router.navigate(['/auth']);
+    from(this.router.navigate(['/auth']))
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe();
   }
 }

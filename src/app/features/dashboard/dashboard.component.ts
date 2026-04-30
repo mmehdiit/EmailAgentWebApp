@@ -1,8 +1,17 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnDestroy, OnInit } from '@angular/core';
+import {
+  Component,
+  DestroyRef,
+  OnDestroy,
+  OnInit,
+  inject,
+} from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { ActivatedRoute, Router } from '@angular/router';
+import { EMPTY, Observable, forkJoin, from, of } from 'rxjs';
+import { catchError, finalize, switchMap, tap } from 'rxjs/operators';
 
 import {
   DashboardOverview,
@@ -52,6 +61,7 @@ type DashboardRuleEditor = SortableDashboardRule;
 })
 export class DashboardComponent implements OnInit, OnDestroy {
   protected loading = true;
+  protected loadingError = '';
   protected activeTab: 'overview' | 'rules' | 'analytics' | 'emails' | 'users' =
     'overview';
   protected countdown = 300;
@@ -75,6 +85,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
   protected readonly newRule: DashboardRuleEditor = this.createEmptyRule();
   protected draggedRuleId: string | null = null;
 
+  private readonly destroyRef = inject(DestroyRef);
   private countdownInterval?: ReturnType<typeof setInterval>;
 
   constructor(
@@ -88,36 +99,67 @@ export class DashboardComponent implements OnInit, OnDestroy {
     private readonly sanitizer: DomSanitizer
   ) {}
 
-  async ngOnInit(): Promise<void> {
-    const session = await this.authSessionService.getSession();
-    if (!session.authenticated) {
-      await this.router.navigate(['/auth']);
-      return;
-    }
+  ngOnInit(): void {
+    this.loading = true;
+    this.loadingError = '';
 
-    this.userEmail = session.user?.email ?? this.userEmail;
-    this.isAdmin = session.user?.role?.toLowerCase() === 'admin';
+    from(this.authSessionService.getSession())
+      .pipe(
+        switchMap((session) => {
+          if (!session.authenticated) {
+            return from(this.router.navigate(['/auth'])).pipe(
+              switchMap(() => EMPTY)
+            );
+          }
 
-    const callbackCode = this.route.snapshot.queryParamMap.get('code');
-    if (callbackCode) {
-      const callbackResult =
-        await this.dashboardDataService.completeOutlookConnection(callbackCode);
-      this.connectionMessage = callbackResult.message;
-      this.toastService.success(
-        callbackResult.message,
-        'Outlook Connected'
-      );
-      await this.router.navigate(['/dashboard']);
-    }
+          this.userEmail = session.user?.email ?? this.userEmail;
+          this.isAdmin = session.user?.role?.toLowerCase() === 'admin';
 
-    const overview = await this.dashboardDataService.getOverview();
-    this.overview = overview;
-    this.outlookConnected = overview.connection.connected;
-    this.outlookEmail = overview.connection.email;
-    this.countdown = overview.connection.nextProcessInSeconds;
-    this.rules = await this.ruleManagementService.listRules();
-    this.startCountdown();
-    this.loading = false;
+          const callbackCode = this.route.snapshot.queryParamMap.get('code');
+          const completeOutlookCallback$: Observable<unknown> = callbackCode
+            ? from(
+                this.dashboardDataService.completeOutlookConnection(
+                  callbackCode
+                )
+              ).pipe(
+                tap((callbackResult) => {
+                  this.connectionMessage = callbackResult.message;
+                  this.toastService.success(
+                    callbackResult.message,
+                    'Outlook Connected'
+                  );
+                }),
+                switchMap(() => from(this.router.navigate(['/dashboard'])))
+              )
+            : of(null);
+
+          return completeOutlookCallback$.pipe(
+            switchMap(() =>
+              forkJoin({
+                overview: from(this.dashboardDataService.getOverview()),
+                rules: from(this.ruleManagementService.listRules()),
+              })
+            )
+          );
+        }),
+        tap(({ overview, rules }) => {
+          this.overview = overview;
+          this.outlookConnected = overview.connection.connected;
+          this.outlookEmail = overview.connection.email;
+          this.countdown = overview.connection.nextProcessInSeconds;
+          this.rules = rules;
+          this.startCountdown();
+        }),
+        catchError((error) => {
+          this.loadingError = this.resolveErrorMessage(error);
+          return EMPTY;
+        }),
+        finalize(() => {
+          this.loading = false;
+        }),
+        takeUntilDestroyed(this.destroyRef)
+      )
+      .subscribe();
   }
 
   ngOnDestroy(): void {
@@ -132,20 +174,27 @@ export class DashboardComponent implements OnInit, OnDestroy {
     this.activeTab = tab;
   }
 
-  protected async refreshOverview(): Promise<void> {
+  protected refreshOverview(): void {
     this.isRefreshingActivity = true;
-    try {
-      const overview = await this.dashboardDataService.getOverview(true);
-      this.overview = overview;
-      this.outlookConnected = overview.connection.connected;
-      this.outlookEmail = overview.connection.email;
-      this.countdown = overview.connection.nextProcessInSeconds;
-    } finally {
-      this.isRefreshingActivity = false;
-    }
+
+    from(this.dashboardDataService.getOverview(true))
+      .pipe(
+        tap((overview) => {
+          this.overview = overview;
+          this.outlookConnected = overview.connection.connected;
+          this.outlookEmail = overview.connection.email;
+          this.countdown = overview.connection.nextProcessInSeconds;
+        }),
+        catchError(() => EMPTY),
+        finalize(() => {
+          this.isRefreshingActivity = false;
+        }),
+        takeUntilDestroyed(this.destroyRef)
+      )
+      .subscribe();
   }
 
-  protected async viewEmail(log: EmailAnalyticsLog): Promise<void> {
+  protected viewEmail(log: EmailAnalyticsLog): void {
     if (!log.outlookMessageId) {
       return;
     }
@@ -155,17 +204,21 @@ export class DashboardComponent implements OnInit, OnDestroy {
     this.emailContent = null;
     this.trustedEmailBody = null;
 
-    try {
-      const content = await this.analyticsDataService.getEmailContent(
-        log.outlookMessageId
-      );
-      this.emailContent = content;
-      this.trustedEmailBody = content.bodyHtml
-        ? this.sanitizer.bypassSecurityTrustHtml(content.bodyHtml)
-        : null;
-    } finally {
-      this.loadingEmail = false;
-    }
+    from(this.analyticsDataService.getEmailContent(log.outlookMessageId))
+      .pipe(
+        tap((content) => {
+          this.emailContent = content;
+          this.trustedEmailBody = content.bodyHtml
+            ? this.sanitizer.bypassSecurityTrustHtml(content.bodyHtml)
+            : null;
+        }),
+        catchError(() => EMPTY),
+        finalize(() => {
+          this.loadingEmail = false;
+        }),
+        takeUntilDestroyed(this.destroyRef)
+      )
+      .subscribe();
   }
 
   protected toggleRuleForm(): void {
@@ -182,7 +235,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
       .filter(Boolean);
   }
 
-  protected async saveRule(): Promise<void> {
+  protected saveRule(): void {
     const hasSingleRecipient = !!this.newRule.recipient;
     const hasRotationRecipients = this.newRule.recipients.some((recipient) =>
       recipient.email.trim()
@@ -199,16 +252,24 @@ export class DashboardComponent implements OnInit, OnDestroy {
       ? { ...this.newRule, id: this.editingRuleId }
       : { ...this.newRule };
 
-    this.rules = await this.ruleManagementService.saveRule(ruleToSave);
-    this.toastService.success(
-      this.editingRuleId
-        ? 'Your forwarding rule has been updated.'
-        : 'Your forwarding rule has been created.',
-      this.editingRuleId ? 'Rule Updated' : 'Rule Added'
-    );
+    from(this.ruleManagementService.saveRule(ruleToSave))
+      .pipe(
+        tap((rules) => {
+          this.rules = rules;
+          this.toastService.success(
+            this.editingRuleId
+              ? 'Your forwarding rule has been updated.'
+              : 'Your forwarding rule has been created.',
+            this.editingRuleId ? 'Rule Updated' : 'Rule Added'
+          );
 
-    this.resetRuleForm();
-    this.showAddRule = false;
+          this.resetRuleForm();
+          this.showAddRule = false;
+        }),
+        catchError(() => EMPTY),
+        takeUntilDestroyed(this.destroyRef)
+      )
+      .subscribe();
   }
 
   protected editRule(rule: DashboardRuleEditor): void {
@@ -227,16 +288,27 @@ export class DashboardComponent implements OnInit, OnDestroy {
     this.showAddRule = false;
   }
 
-  protected async deleteRule(id: string): Promise<void> {
-    this.rules = await this.ruleManagementService.deleteRule(id);
-    this.toastService.success('Forwarding rule has been removed.', 'Rule Deleted');
+  protected deleteRule(id: string): void {
+    from(this.ruleManagementService.deleteRule(id))
+      .pipe(
+        tap((rules) => {
+          this.rules = rules;
+          this.toastService.success(
+            'Forwarding rule has been removed.',
+            'Rule Deleted'
+          );
+        }),
+        catchError(() => EMPTY),
+        takeUntilDestroyed(this.destroyRef)
+      )
+      .subscribe();
   }
 
   protected handleRuleDragStarted(id: string): void {
     this.draggedRuleId = id;
   }
 
-  protected async handleRuleDropped(targetId: string): Promise<void> {
+  protected handleRuleDropped(targetId: string): void {
     if (!this.draggedRuleId || this.draggedRuleId === targetId) {
       return;
     }
@@ -253,15 +325,25 @@ export class DashboardComponent implements OnInit, OnDestroy {
     const reordered = [...this.rules];
     const [movedRule] = reordered.splice(oldIndex, 1);
     reordered.splice(newIndex, 0, movedRule);
-    this.rules = await this.ruleManagementService.reorderRules(reordered);
-    this.toastService.success(
-      'Rule priorities have been updated successfully.',
-      'Rules Reordered'
-    );
-    this.draggedRuleId = null;
+    from(this.ruleManagementService.reorderRules(reordered))
+      .pipe(
+        tap((rules) => {
+          this.rules = rules;
+          this.toastService.success(
+            'Rule priorities have been updated successfully.',
+            'Rules Reordered'
+          );
+        }),
+        catchError(() => EMPTY),
+        finalize(() => {
+          this.draggedRuleId = null;
+        }),
+        takeUntilDestroyed(this.destroyRef)
+      )
+      .subscribe();
   }
 
-  protected async moveRuleUp(id: string): Promise<void> {
+  protected moveRuleUp(id: string): void {
     const index = this.rules.findIndex((rule) => rule.id === id);
     if (index <= 0) {
       return;
@@ -272,14 +354,10 @@ export class DashboardComponent implements OnInit, OnDestroy {
       nextRules[index],
       nextRules[index - 1],
     ];
-    this.rules = await this.ruleManagementService.reorderRules(nextRules);
-    this.toastService.success(
-      'Rule priorities have been updated successfully.',
-      'Rules Reordered'
-    );
+    this.updateRuleOrder(nextRules);
   }
 
-  protected async moveRuleDown(id: string): Promise<void> {
+  protected moveRuleDown(id: string): void {
     const index = this.rules.findIndex((rule) => rule.id === id);
     if (index === -1 || index >= this.rules.length - 1) {
       return;
@@ -290,74 +368,105 @@ export class DashboardComponent implements OnInit, OnDestroy {
       nextRules[index + 1],
       nextRules[index],
     ];
-    this.rules = await this.ruleManagementService.reorderRules(nextRules);
-    this.toastService.success(
-      'Rule priorities have been updated successfully.',
-      'Rules Reordered'
-    );
+    this.updateRuleOrder(nextRules);
   }
 
-  protected async toggleRuleActive(id: string): Promise<void> {
+  protected toggleRuleActive(id: string): void {
     const targetRule = this.rules.find((rule) => rule.id === id);
     if (!targetRule) {
       return;
     }
 
-    this.rules = await this.ruleManagementService.saveRule({
-      ...targetRule,
-      active: !targetRule.active,
-    });
-    this.toastService.success(
-      targetRule.active
-        ? 'Forwarding rule has been paused.'
-        : 'Forwarding rule is now active.',
-      targetRule.active ? 'Rule Disabled' : 'Rule Enabled'
-    );
+    from(
+      this.ruleManagementService.saveRule({
+        ...targetRule,
+        active: !targetRule.active,
+      })
+    )
+      .pipe(
+        tap((rules) => {
+          this.rules = rules;
+          this.toastService.success(
+            targetRule.active
+              ? 'Forwarding rule has been paused.'
+              : 'Forwarding rule is now active.',
+            targetRule.active ? 'Rule Disabled' : 'Rule Enabled'
+          );
+        }),
+        catchError(() => EMPTY),
+        takeUntilDestroyed(this.destroyRef)
+      )
+      .subscribe();
   }
 
-  protected async signOut(): Promise<void> {
+  protected signOut(): void {
     this.authSessionService.logout();
     this.toastService.success(
       "You've been successfully logged out.",
       'Logged Out'
     );
-    await this.router.navigate(['/auth']);
+    from(this.router.navigate(['/auth']))
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe();
   }
 
-  protected async connectOutlook(): Promise<void> {
+  protected connectOutlook(): void {
     this.isConnecting = true;
     this.connectionMessage = '';
-    try {
-      const result = await this.dashboardDataService.connectOutlook();
-      this.connectionMessage = result.message;
-      if (result.authUrl) {
-        window.location.href = result.authUrl;
-        return;
-      }
-    } finally {
-      this.isConnecting = false;
-    }
+
+    from(this.dashboardDataService.connectOutlook())
+      .pipe(
+        tap((result) => {
+          this.connectionMessage = result.message;
+          if (result.authUrl) {
+            window.location.href = result.authUrl;
+          }
+        }),
+        catchError(() => EMPTY),
+        finalize(() => {
+          this.isConnecting = false;
+        }),
+        takeUntilDestroyed(this.destroyRef)
+      )
+      .subscribe();
   }
 
-  protected async disconnectOutlook(): Promise<void> {
-    const result = await this.dashboardDataService.disconnectOutlook();
-    this.outlookConnected = false;
-    this.outlookEmail = null;
-    this.countdown = 300;
-    this.connectionMessage = result.message;
-    this.toastService.success('Your Outlook account has been disconnected.', 'Outlook Disconnected');
+  protected disconnectOutlook(): void {
+    from(this.dashboardDataService.disconnectOutlook())
+      .pipe(
+        tap((result) => {
+          this.outlookConnected = false;
+          this.outlookEmail = null;
+          this.countdown = 300;
+          this.connectionMessage = result.message;
+          this.toastService.success(
+            'Your Outlook account has been disconnected.',
+            'Outlook Disconnected'
+          );
+        }),
+        catchError(() => EMPTY),
+        takeUntilDestroyed(this.destroyRef)
+      )
+      .subscribe();
   }
 
-  protected async processNow(): Promise<void> {
+  protected processNow(): void {
     this.isProcessing = true;
-    try {
-      const result = await this.dashboardDataService.processEmails();
-      this.connectionMessage = result.message;
-      this.countdown = 300;
-      this.toastService.success(result.message, 'Processing Complete');
-    } finally {
-      this.isProcessing = false;
-    }
+
+    from(this.dashboardDataService.processEmails())
+      .pipe(
+        tap((result) => {
+          this.connectionMessage = result.message;
+          this.countdown = 300;
+          this.toastService.success(result.message, 'Processing Complete');
+        }),
+        catchError(() => EMPTY),
+        finalize(() => {
+          this.isProcessing = false;
+        }),
+        takeUntilDestroyed(this.destroyRef)
+      )
+      .subscribe();
   }
 
   protected formatCountdown(seconds: number): string {
@@ -382,6 +491,33 @@ export class DashboardComponent implements OnInit, OnDestroy {
   private resetRuleForm(): void {
     this.editingRuleId = null;
     Object.assign(this.newRule, this.createEmptyRule());
+  }
+
+  private updateRuleOrder(rules: DashboardRuleEditor[]): void {
+    from(this.ruleManagementService.reorderRules(rules))
+      .pipe(
+        tap((nextRules) => {
+          this.rules = nextRules;
+          this.toastService.success(
+            'Rule priorities have been updated successfully.',
+            'Rules Reordered'
+          );
+        }),
+        catchError(() => EMPTY),
+        takeUntilDestroyed(this.destroyRef)
+      )
+      .subscribe();
+  }
+
+  private resolveErrorMessage(error: unknown): string {
+    if (error && typeof error === 'object' && 'message' in error) {
+      const message = (error as { message?: unknown }).message;
+      if (typeof message === 'string' && message.trim()) {
+        return message;
+      }
+    }
+
+    return 'Dashboard data could not be loaded.';
   }
 
   private createEmptyRule(): DashboardRuleEditor {

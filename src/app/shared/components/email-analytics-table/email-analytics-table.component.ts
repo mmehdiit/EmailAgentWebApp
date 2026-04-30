@@ -1,6 +1,16 @@
 import { CommonModule } from '@angular/common';
-import { Component, EventEmitter, OnInit, Output } from '@angular/core';
+import {
+  Component,
+  DestroyRef,
+  EventEmitter,
+  OnInit,
+  Output,
+  inject,
+} from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
+import { EMPTY, from } from 'rxjs';
+import { catchError, finalize, switchMap, tap } from 'rxjs/operators';
 
 import {
   DashboardAnalytics,
@@ -75,32 +85,49 @@ export class EmailAnalyticsTableComponent implements OnInit {
 
   protected availableRules: RuleItem[] = [];
 
+  private readonly destroyRef = inject(DestroyRef);
+
   constructor(
     private readonly analyticsDataService: AnalyticsDataService,
     private readonly toastService: ToastService
   ) {}
 
-  async ngOnInit(): Promise<void> {
-    await this.loadAnalytics();
-    await this.loadRules();
+  ngOnInit(): void {
+    this.loadAnalytics();
+    this.loadRules();
   }
-  protected async loadAnalytics(forceRefresh = false): Promise<void> {
+
+  protected loadAnalytics(forceRefresh = false): void {
     this.loading = true;
-    try {
-      this.analytics = await this.analyticsDataService.getAnalytics(
-        forceRefresh
-      );
-    } finally {
-      this.loading = false;
-    }
+
+    from(this.analyticsDataService.getAnalytics(forceRefresh, this.analyticsDateFilters()))
+      .pipe(
+        tap((analytics) => {
+          this.analytics = analytics;
+        }),
+        catchError(() => EMPTY),
+        finalize(() => {
+          this.loading = false;
+        }),
+        takeUntilDestroyed(this.destroyRef)
+      )
+      .subscribe();
   }
 
-  protected async loadLogs(): Promise<void> {
-    await this.loadAnalytics(true);
+  protected loadLogs(): void {
+    this.loadAnalytics(true);
   }
 
-  protected async loadRules(): Promise<void> {
-    this.availableRules = await this.analyticsDataService.listAvailableRules();
+  protected loadRules(): void {
+    from(this.analyticsDataService.listAvailableRules())
+      .pipe(
+        tap((rules) => {
+          this.availableRules = rules;
+        }),
+        catchError(() => EMPTY),
+        takeUntilDestroyed(this.destroyRef)
+      )
+      .subscribe();
   }
 
   protected logs(): EmailAnalyticsLog[] {
@@ -176,10 +203,10 @@ export class EmailAnalyticsTableComponent implements OnInit {
     return rows;
   }
 
-  protected async applyPreset(): Promise<void> {
+  protected applyPreset(): void {
     const days = Number(this.datePreset);
     if (!Number.isNaN(days) && days > 0) {
-      await this.setPreset(days);
+      this.setPreset(days);
     }
   }
 
@@ -218,11 +245,11 @@ export class EmailAnalyticsTableComponent implements OnInit {
     return days === 1 ? '1 day' : `${days} days`;
   }
 
-  protected async setPreset(days: number): Promise<void> {
+  protected setPreset(days: number): void {
     this.datePreset = String(days);
     this.dateRange = this.buildPresetRange(days);
     this.calendarMonth = this.startOfMonth(this.dateRange.from);
-    await this.loadAnalytics(true);
+    this.loadAnalytics(true);
   }
 
   protected previousCalendarMonth(): void {
@@ -274,7 +301,7 @@ export class EmailAnalyticsTableComponent implements OnInit {
     });
   }
 
-  protected async selectDate(date: Date): Promise<void> {
+  protected selectDate(date: Date): void {
     const selected = this.startOfDay(date);
     const from = this.startOfDay(this.dateRange.from);
     const to = this.startOfDay(this.dateRange.to);
@@ -288,13 +315,13 @@ export class EmailAnalyticsTableComponent implements OnInit {
         this.dateRange = { from, to: selected };
       }
       this.datePreset = 'custom';
-      await this.loadAnalytics(true);
+      this.loadAnalytics(true);
       return;
     }
 
     this.dateRange = { from: selected, to: selected };
     this.datePreset = 'custom';
-    await this.loadAnalytics(true);
+    this.loadAnalytics(true);
   }
 
   protected dayButtonClasses(day: {
@@ -387,29 +414,41 @@ export class EmailAnalyticsTableComponent implements OnInit {
     return this.logs().some((log) => !log.receivedAt);
   }
 
-  protected async backfillReceivedDates(): Promise<void> {
+  protected backfillReceivedDates(): void {
     return;
   }
 
-  protected async retryFailedEmails(): Promise<void> {
+  protected retryFailedEmails(): void {
     this.isRetrying = true;
-    try {
-      const result = await this.analyticsDataService.retryFailedEmails();
-      this.toastService.success(
-        `${result.retried} emails re-sent, ${result.stillFailed} still failed.`,
-        'Retry Complete'
-      );
-      await this.loadAnalytics();
-    } finally {
-      this.isRetrying = false;
-    }
+
+    from(this.analyticsDataService.retryFailedEmails())
+      .pipe(
+        tap((result) => {
+          this.toastService.success(
+            `${result.retried} emails re-sent, ${result.stillFailed} still failed.`,
+            'Retry Complete'
+          );
+        }),
+        switchMap(() =>
+          from(this.analyticsDataService.getAnalytics(true, this.analyticsDateFilters()))
+        ),
+        tap((analytics) => {
+          this.analytics = analytics;
+        }),
+        catchError(() => EMPTY),
+        finalize(() => {
+          this.isRetrying = false;
+        }),
+        takeUntilDestroyed(this.destroyRef)
+      )
+      .subscribe();
   }
 
-  protected async clearLogs(): Promise<void> {
+  protected clearLogs(): void {
     return;
   }
 
-  protected async exportCsv(): Promise<void> {
+  protected exportCsv(): void {
     const rows = this.filteredLogs();
     if (rows.length === 0) {
       return;
@@ -533,43 +572,68 @@ export class EmailAnalyticsTableComponent implements OnInit {
     return `${minutes}m`;
   }
 
-  protected async viewEmail(log: EmailAnalyticsLog): Promise<void> {
+  protected viewEmail(log: EmailAnalyticsLog): void {
     this.viewEmailRequested.emit(log);
   }
 
-  protected async markAsReplied(logId: string): Promise<void> {
-    await this.analyticsDataService.markAsReplied(logId);
-    this.toastService.success(
-      'Email has been marked as replied.',
-      'Marked As Replied'
-    );
-    await this.loadAnalytics();
+  protected markAsReplied(logId: string): void {
+    from(this.analyticsDataService.markAsReplied(logId))
+      .pipe(
+        tap(() => {
+          this.toastService.success(
+            'Email has been marked as replied.',
+            'Marked As Replied'
+          );
+        }),
+        switchMap(() =>
+          from(this.analyticsDataService.getAnalytics(true, this.analyticsDateFilters()))
+        ),
+        tap((analytics) => {
+          this.analytics = analytics;
+        }),
+        catchError(() => EMPTY),
+        takeUntilDestroyed(this.destroyRef)
+      )
+      .subscribe();
   }
 
   protected toggleAssignPopover(logId: string): void {
     this.assignPopoverOpen = this.assignPopoverOpen === logId ? null : logId;
   }
 
-  protected async assignToRule(
+  protected assignToRule(
     log: EmailAnalyticsLog,
     ruleId: string
-  ): Promise<void> {
+  ): void {
     this.isAssigning = log.id;
 
-    try {
-      await this.analyticsDataService.assignToRule(
+    from(
+      this.analyticsDataService.assignToRule(
         log.outlookMessageId as string,
         ruleId
-      );
-      this.toastService.success(
-        'Email has been assigned and processed successfully.',
-        'Assigned Successfully'
-      );
-      this.assignPopoverOpen = null;
-      await this.loadAnalytics();
-    } finally {
-      this.isAssigning = null;
-    }
+      )
+    )
+      .pipe(
+        tap(() => {
+          this.toastService.success(
+            'Email has been assigned and processed successfully.',
+            'Assigned Successfully'
+          );
+          this.assignPopoverOpen = null;
+        }),
+        switchMap(() =>
+          from(this.analyticsDataService.getAnalytics(true, this.analyticsDateFilters()))
+        ),
+        tap((analytics) => {
+          this.analytics = analytics;
+        }),
+        catchError(() => EMPTY),
+        finalize(() => {
+          this.isAssigning = null;
+        }),
+        takeUntilDestroyed(this.destroyRef)
+      )
+      .subscribe();
   }
 
   private buildPresetRange(days: number): { from: Date; to: Date } {
@@ -608,5 +672,20 @@ export class EmailAnalyticsTableComponent implements OnInit {
       day: 'numeric',
       year: 'numeric',
     });
+  }
+
+  private analyticsDateFilters(): { fromDate: string; toDate: string } {
+    return {
+      fromDate: this.formatApiDate(this.dateRange.from),
+      toDate: this.formatApiDate(this.dateRange.to),
+    };
+  }
+
+  private formatApiDate(value: Date): string {
+    const year = value.getFullYear();
+    const month = String(value.getMonth() + 1).padStart(2, '0');
+    const day = String(value.getDate()).padStart(2, '0');
+
+    return `${year}-${month}-${day}`;
   }
 }

@@ -1,4 +1,4 @@
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 
@@ -31,8 +31,20 @@ export class AnalyticsApiService {
   private readonly baseUrl: string = environment.apiBaseUrl;
   constructor(private readonly http: HttpClient) {}
 
-  getLogs(): Observable<EmailLogDto[]> {
-    return this.http.get<EmailLogDto[]>(`${this.baseUrl}/email-logs`);
+  getLogs(filters: { fromDate?: string; toDate?: string } = {}): Observable<EmailLogDto[]> {
+    let params = new HttpParams();
+
+    if (filters.fromDate) {
+      params = params.set('fromDate', filters.fromDate);
+    }
+
+    if (filters.toDate) {
+      params = params.set('toDate', filters.toDate);
+    }
+
+    return this.http.get<EmailLogDto[]>(`${this.baseUrl}/email-logs`, {
+      params,
+    });
   }
 
   checkReplies(): Observable<{ success: boolean }> {

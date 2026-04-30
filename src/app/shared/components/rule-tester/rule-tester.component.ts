@@ -1,7 +1,9 @@
 import { CommonModule } from '@angular/common';
-import { Component, Input } from '@angular/core';
+import { Component, DestroyRef, Input, inject } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
-import { firstValueFrom } from 'rxjs';
+import { EMPTY } from 'rxjs';
+import { catchError, finalize, tap } from 'rxjs/operators';
 
 import { Recipient } from '../recipient-manager/recipient-manager.component';
 import { EmailClassificationResult } from '../../../core/models/dashboard.models';
@@ -51,9 +53,11 @@ export class RuleTesterComponent {
     body: ''
   };
 
+  private readonly destroyRef = inject(DestroyRef);
+
   constructor(private readonly unreadEmailApiService: UnreadEmailApiService) {}
 
-  protected async runTest(): Promise<void> {
+  protected runTest(): void {
     this.isLoading = true;
     this.aiResult = null;
 
@@ -64,23 +68,35 @@ export class RuleTesterComponent {
       const aiRules = this.rules.filter((rule) => rule.aiEnabled);
 
       if (aiRules.length > 0) {
-        this.aiResult = await firstValueFrom(
-          this.unreadEmailApiService.classifyEmail({
+        this.unreadEmailApiService
+          .classifyEmail({
             subject: this.testEmail.subject,
             body: this.testEmail.body,
             sender: this.testEmail.from
           })
-        );
+          .pipe(
+            tap((aiResult) => {
+              this.aiResult = aiResult;
 
-        if (this.aiResult.matched_rule_id) {
-          this.testResults = exactResults.map((result) => ({
-            ...result,
-            matched: result.rule.id === this.aiResult?.matched_rule_id,
-            matchType: result.rule.id === this.aiResult?.matched_rule_id ? 'ai' : 'none'
-          }));
-          this.isLoading = false;
-          return;
-        }
+              this.testResults = aiResult.matched_rule_id
+                ? exactResults.map((result) => ({
+                    ...result,
+                    matched: result.rule.id === aiResult.matched_rule_id,
+                    matchType: result.rule.id === aiResult.matched_rule_id ? 'ai' : 'none'
+                  }))
+                : exactResults;
+            }),
+            catchError(() => {
+              this.testResults = exactResults;
+              return EMPTY;
+            }),
+            finalize(() => {
+              this.isLoading = false;
+            }),
+            takeUntilDestroyed(this.destroyRef)
+          )
+          .subscribe();
+        return;
       }
     }
 

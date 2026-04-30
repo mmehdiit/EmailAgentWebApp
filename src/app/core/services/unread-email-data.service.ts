@@ -1,7 +1,8 @@
 import { Injectable } from '@angular/core';
-import { firstValueFrom } from 'rxjs';
+import { Observable, firstValueFrom, forkJoin, of } from 'rxjs';
+import { catchError, map } from 'rxjs/operators';
 
-import { UnreadEmailOverview } from '../models/dashboard.models';
+import { UnprocessedEmail, UnreadEmailOverview } from '../models/dashboard.models';
 import { RuleManagementService } from './rule-management.service';
 import { UnreadEmailApiService } from './unread-email-api.service';
 
@@ -14,65 +15,71 @@ export class UnreadEmailDataService {
     private readonly ruleManagementService: RuleManagementService
   ) {}
 
-  async getUnreadEmails(): Promise<UnreadEmailOverview> {
-    const [emails, rules] = await Promise.all([
-      firstValueFrom(this.unreadEmailApiService.getUnreadEmails()),
-      this.ruleManagementService.listRules()
-    ]);
+  getUnreadEmailsOverview(): Observable<UnreadEmailOverview> {
+    return forkJoin({
+      emails: this.unreadEmailApiService.getUnreadEmails(),
+      rules: this.ruleManagementService.listRules()
+    }).pipe(
+      map(({ emails, rules }) => {
+        const activeRules = rules
+          .filter((rule) => rule.active)
+          .map((rule) => ({
+            id: rule.id,
+            name: rule.name,
+            recipientEmail: rule.recipient,
+            active: rule.active
+          }));
 
-    const activeRules = rules
-      .filter((rule) => rule.active)
-      .map((rule) => ({
-        id: rule.id,
-        name: rule.name,
-        recipientEmail: rule.recipient,
-        active: rule.active
-      }));
+        return {
+          emails: emails.map((email) => ({
+            id: email.id,
+            subject: email.subject,
+            from: email.from,
+            fromName: email.fromName,
+            receivedAt: email.receivedDateTime,
+            preview: email.bodyPreview,
+            isRead: false,
+            matchesRule: false,
+            matchedRuleName: null,
+            aiClassified: false,
+            aiConfidence: null,
+            aiReasoning: null
+          })),
+          rules: activeRules
+        };
+      })
+    );
+  }
 
-    const classifiedEmails = await Promise.all(
-      emails.map(async (email) => {
-        let classification: {
-          matched_rule_id: string;
-          matched_rule_name: string;
-          confidence: number;
-          reasoning: string;
-        } | null = null;
-
-        try {
-          classification = await firstValueFrom(
-            this.unreadEmailApiService.classifyEmail({
-              subject: email.subject,
-              body: email.bodyPreview,
-              sender: email.from
-            })
-          );
-        } catch {
-          classification = null;
-        }
-
+  classifyEmail(email: UnprocessedEmail): Observable<UnprocessedEmail> {
+    return this.unreadEmailApiService.classifyEmail({
+      subject: email.subject,
+      body: email.preview,
+      sender: email.from
+    }).pipe(
+      map((classification) => {
         const hasMatch = !!classification?.matched_rule_id;
 
         return {
-          id: email.id,
-          subject: email.subject,
-          from: email.from,
-          fromName: email.fromName,
-          receivedAt: email.receivedDateTime,
-          preview: email.bodyPreview,
-          isRead: false,
+          ...email,
           matchesRule: hasMatch,
           matchedRuleName: hasMatch ? classification?.matched_rule_name ?? null : null,
           aiClassified: hasMatch && (classification?.confidence ?? 0) > 0,
           aiConfidence: hasMatch ? classification?.confidence ?? null : null,
           aiReasoning: classification?.reasoning || null
         };
-      })
+      }),
+      catchError(() => of(email))
+    );
+  }
+
+  async getUnreadEmails(): Promise<UnreadEmailOverview> {
+    const overview = await firstValueFrom(this.getUnreadEmailsOverview());
+    const classifiedEmails = await Promise.all(
+      overview.emails.map((email) => firstValueFrom(this.classifyEmail(email)))
     );
 
-    return {
-      emails: classifiedEmails,
-      rules: activeRules
-    };
+    return { ...overview, emails: classifiedEmails };
   }
 
   async markAsRead(emailId: string): Promise<void> {

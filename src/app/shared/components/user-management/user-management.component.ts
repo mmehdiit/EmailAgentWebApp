@@ -1,6 +1,9 @@
 import { CommonModule } from '@angular/common';
-import { Component, Input } from '@angular/core';
+import { Component, DestroyRef, Input, inject } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
+import { EMPTY, from } from 'rxjs';
+import { catchError, finalize, tap } from 'rxjs/operators';
 
 import { CreateUserPayload, UserRoleOption } from '../../../core/models/dashboard.models';
 import { UserManagementService } from '../../../core/services/user-management.service';
@@ -27,12 +30,14 @@ export class UserManagementComponent {
     { value: 'admin', label: 'Admin' }
   ];
 
+  private readonly destroyRef = inject(DestroyRef);
+
   constructor(
     private readonly userManagementService: UserManagementService,
     private readonly toastService: ToastService
   ) {}
 
-  protected async createUser(): Promise<void> {
+  protected createUser(): void {
     this.message = '';
     this.errorMessage = '';
 
@@ -51,21 +56,28 @@ export class UserManagementComponent {
 
     this.loading = true;
 
-    try {
-      const response = await this.userManagementService.createUser(payload);
-      this.message = response.message;
-      this.toastService.success(
-        `Successfully created user ${payload.email} with ${payload.role} role.`,
-        'User Created'
-      );
-      this.email = '';
-      this.password = '';
-      this.role = 'user';
-    } catch {
-      this.errorMessage = 'Failed to create user.';
-    } finally {
-      this.loading = false;
-    }
+    from(this.userManagementService.createUser(payload))
+      .pipe(
+        tap((response) => {
+          this.message = response.message;
+          this.toastService.success(
+            `Successfully created user ${payload.email} with ${payload.role} role.`,
+            'User Created'
+          );
+          this.email = '';
+          this.password = '';
+          this.role = 'user';
+        }),
+        catchError(() => {
+          this.errorMessage = 'Failed to create user.';
+          return EMPTY;
+        }),
+        finalize(() => {
+          this.loading = false;
+        }),
+        takeUntilDestroyed(this.destroyRef)
+      )
+      .subscribe();
   }
 
   private validate(payload: CreateUserPayload): string | null {

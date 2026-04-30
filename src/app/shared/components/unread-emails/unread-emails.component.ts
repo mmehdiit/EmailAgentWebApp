@@ -1,6 +1,9 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit } from '@angular/core';
+import { Component, DestroyRef, OnInit, inject } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
+import { EMPTY, from } from 'rxjs';
+import { catchError, finalize, mergeMap, tap } from 'rxjs/operators';
 
 import {
   ActiveForwardingRule,
@@ -29,53 +32,82 @@ export class UnreadEmailsComponent implements OnInit {
   protected markingReadId: string | null = null;
   protected assigningEmailId: string | null = null;
 
+  private readonly destroyRef = inject(DestroyRef);
+  private loadSequence = 0;
+
   constructor(
     private readonly unreadEmailDataService: UnreadEmailDataService,
     private readonly toastService: ToastService
   ) {}
 
-  async ngOnInit(): Promise<void> {
-    await this.loadUnreadEmails();
+  ngOnInit(): void {
+    this.loadUnreadEmails();
   }
 
-  protected async loadUnreadEmails(): Promise<void> {
+  protected loadUnreadEmails(): void {
+    const loadId = ++this.loadSequence;
     this.loading = true;
     this.errorMessage = '';
 
-    try {
-      const data = await this.unreadEmailDataService.getUnreadEmails();
-      this.emails = data.emails;
-      this.rules = data.rules.filter((rule) => rule.active);
-    } catch {
-      this.emails = [];
-      this.rules = [];
-      this.errorMessage = 'Failed to load unread emails. Please try again.';
-    } finally {
-      this.loading = false;
-      this.refreshing = false;
-    }
+    this.unreadEmailDataService.getUnreadEmailsOverview()
+      .pipe(
+        tap((data) => {
+          if (loadId !== this.loadSequence) {
+            return;
+          }
+
+          this.emails = data.emails;
+          this.rules = data.rules.filter((rule) => rule.active);
+          this.classifyEmails(data.emails, loadId);
+        }),
+        catchError(() => {
+          if (loadId !== this.loadSequence) {
+            return EMPTY;
+          }
+
+          this.emails = [];
+          this.rules = [];
+          this.errorMessage = 'Failed to load unread emails. Please try again.';
+          return EMPTY;
+        }),
+        finalize(() => {
+          if (loadId === this.loadSequence) {
+            this.loading = false;
+            this.refreshing = false;
+          }
+        }),
+        takeUntilDestroyed(this.destroyRef)
+      )
+      .subscribe();
   }
 
-  protected async refresh(): Promise<void> {
+  protected refresh(): void {
     this.refreshing = true;
-    await this.loadUnreadEmails();
+    this.loadUnreadEmails();
   }
 
-  protected async markAsRead(emailId: string): Promise<void> {
+  protected markAsRead(emailId: string): void {
     this.markingReadId = emailId;
-    try {
-      await this.unreadEmailDataService.markAsRead(emailId);
-      this.emails = this.emails.filter((email) => email.id !== emailId);
-      this.toastService.success(
-        'Email has been marked as read and removed from the list.',
-        'Marked as Read'
-      );
-    } finally {
-      this.markingReadId = null;
-    }
+
+    from(this.unreadEmailDataService.markAsRead(emailId))
+      .pipe(
+        tap(() => {
+          this.emails = this.emails.filter((email) => email.id !== emailId);
+          this.toastService.success(
+            'Email has been marked as read and removed from the list.',
+            'Marked as Read'
+          );
+        }),
+        catchError(() => EMPTY),
+        finalize(() => {
+          this.markingReadId = null;
+        }),
+        takeUntilDestroyed(this.destroyRef)
+      )
+      .subscribe();
   }
 
-  protected async assignEmail(emailId: string): Promise<void> {
+  protected assignEmail(emailId: string): void {
     if (!this.selectedRules[emailId]) {
       this.toastService.error(
         'Please select a rule to assign this email to.',
@@ -85,20 +117,28 @@ export class UnreadEmailsComponent implements OnInit {
     }
 
     this.assigningEmailId = emailId;
-    try {
-      const ruleName =
-        this.rules.find((rule) => rule.id === this.selectedRules[emailId])?.name ??
-        'selected rule';
-      await this.unreadEmailDataService.assignEmail(emailId, this.selectedRules[emailId]);
-      this.emails = this.emails.filter((email) => email.id !== emailId);
-      delete this.selectedRules[emailId];
-      this.toastService.success(
-        `Forwarded via "${ruleName}".`,
-        'Email Assigned'
-      );
-    } finally {
-      this.assigningEmailId = null;
-    }
+    const selectedRuleId = this.selectedRules[emailId];
+    const ruleName =
+      this.rules.find((rule) => rule.id === selectedRuleId)?.name ??
+      'selected rule';
+
+    from(this.unreadEmailDataService.assignEmail(emailId, selectedRuleId))
+      .pipe(
+        tap(() => {
+          this.emails = this.emails.filter((email) => email.id !== emailId);
+          delete this.selectedRules[emailId];
+          this.toastService.success(
+            `Forwarded via "${ruleName}".`,
+            'Email Assigned'
+          );
+        }),
+        catchError(() => EMPTY),
+        finalize(() => {
+          this.assigningEmailId = null;
+        }),
+        takeUntilDestroyed(this.destroyRef)
+      )
+      .subscribe();
   }
 
   protected ruleOptions(): SelectDropdownOption[] {
@@ -130,5 +170,23 @@ export class UnreadEmailsComponent implements OnInit {
     }
 
     return date.toLocaleDateString();
+  }
+
+  private classifyEmails(emails: UnprocessedEmail[], loadId: number): void {
+    from(emails)
+      .pipe(
+        mergeMap((email) => this.unreadEmailDataService.classifyEmail(email), 4),
+        tap((classifiedEmail) => {
+          if (loadId !== this.loadSequence) {
+            return;
+          }
+
+          this.emails = this.emails.map((email) =>
+            email.id === classifiedEmail.id ? classifiedEmail : email
+          );
+        }),
+        takeUntilDestroyed(this.destroyRef)
+      )
+      .subscribe();
   }
 }

@@ -1,7 +1,10 @@
 import { CommonModule } from '@angular/common';
-import { Component } from '@angular/core';
+import { Component, DestroyRef, inject } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
+import { EMPTY, from } from 'rxjs';
+import { catchError, finalize, switchMap, tap } from 'rxjs/operators';
 
 import { AuthSessionService } from '../../core/services/auth-session.service';
 import { ToastService } from '../../core/services/toast.service';
@@ -33,6 +36,8 @@ export class AuthComponent {
     ],
   });
 
+  private readonly destroyRef = inject(DestroyRef);
+
   constructor(
     private readonly formBuilder: FormBuilder,
     private readonly authSessionService: AuthSessionService,
@@ -40,7 +45,7 @@ export class AuthComponent {
     private readonly toastService: ToastService
   ) {}
 
-  protected async onSubmit(): Promise<void> {
+  protected onSubmit(): void {
     this.feedback = null;
 
     if (this.form.invalid) {
@@ -50,34 +55,38 @@ export class AuthComponent {
 
     this.loading = true;
 
-    try {
-      const response = await this.authSessionService.signIn(
-        this.form.getRawValue()
-      );
+    from(this.authSessionService.signIn(this.form.getRawValue()))
+      .pipe(
+        tap((response) => {
+          this.feedback = {
+            type: 'success',
+            title: 'Welcome back!',
+            description: response.message ?? "You've successfully logged in.",
+          };
+          this.toastService.success(
+            response.message ?? "You've successfully logged in.",
+            'Welcome Back'
+          );
+        }),
+        switchMap(() => from(this.router.navigate(['/dashboard']))),
+        catchError((error: unknown) => {
+          const message = this.resolveErrorMessage(error);
 
-      this.feedback = {
-        type: 'success',
-        title: 'Welcome back!',
-        description: response.message ?? "You've successfully logged in.",
-      };
-      this.toastService.success(
-        response.message ?? "You've successfully logged in.",
-        'Welcome Back'
-      );
+          this.feedback = {
+            type: 'error',
+            title: 'Login failed',
+            description: message,
+          };
+          this.toastService.error(message, 'Login Failed');
 
-      await this.router.navigate(['/dashboard']);
-    } catch (error: unknown) {
-      const message = this.resolveErrorMessage(error);
-
-      this.feedback = {
-        type: 'error',
-        title: 'Login failed',
-        description: message,
-      };
-      this.toastService.error(message, 'Login Failed');
-    } finally {
-      this.loading = false;
-    }
+          return EMPTY;
+        }),
+        finalize(() => {
+          this.loading = false;
+        }),
+        takeUntilDestroyed(this.destroyRef)
+      )
+      .subscribe();
   }
 
   protected hasError(
