@@ -5,20 +5,22 @@ import {
   EventEmitter,
   OnInit,
   Output,
+  computed,
   inject,
+  signal,
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import { EMPTY, from } from 'rxjs';
 import { catchError, finalize, switchMap, tap } from 'rxjs/operators';
 
+import { SafeHtml } from '@angular/platform-browser';
 import {
   DashboardAnalytics,
   EmailAnalyticsLog,
   EmailContent,
   RuleItem,
 } from '../../../core/models/dashboard.models';
-import { SafeHtml } from '@angular/platform-browser';
 import { AnalyticsDataService } from '../../../core/services/analytics-data.service';
 import { ToastService } from '../../../core/services/toast.service';
 import {
@@ -50,10 +52,97 @@ const RULE_COLOR_PALETTE = [
     AppSelectDropdownComponent,
   ],
   templateUrl: './email-analytics-table.component.html',
+  styles: [
+    `
+      .paginator {
+        // Meta section
+        &__count {
+          white-space: nowrap;
+        }
+
+        &__size-select {
+          display: inline-flex;
+          align-items: center;
+        }
+
+        &__select {
+          cursor: pointer;
+          transition: border-color 0.15s ease, box-shadow 0.15s ease;
+
+          &:hover {
+            background-color: hsl(var(--muted) / 0.4);
+          }
+        }
+
+        // Navigation
+        &__nav {
+          flex-wrap: wrap;
+        }
+
+        &__btn {
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          height: 28px;
+          min-width: 28px;
+          padding: 0 6px;
+          border-radius: 8px;
+          border: 1px solid hsl(var(--border) / 0.5);
+          background: hsl(var(--background));
+          color: hsl(var(--foreground) / 0.7);
+          font-size: 11px;
+          font-weight: 500;
+          cursor: pointer;
+          transition: all 0.15s ease;
+          line-height: 1;
+          white-space: nowrap;
+
+          &:hover:not(:disabled):not(.paginator__btn--active) {
+            border-color: hsl(var(--primary) / 0.35);
+            background: hsl(var(--primary) / 0.06);
+            color: hsl(var(--primary));
+          }
+
+          &:disabled {
+            opacity: 0.35;
+            cursor: not-allowed;
+          }
+
+          // Active/current page
+          &--active {
+            border-color: hsl(var(--primary) / 0.5);
+            background: hsl(var(--primary) / 0.1);
+            color: hsl(var(--primary));
+            font-weight: 600;
+            cursor: default;
+          }
+
+          // Arrow prev/next — slightly wider touch target
+          &--arrow {
+            color: hsl(var(--muted-foreground) / 0.7);
+          }
+        }
+
+        &__ellipsis {
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          height: 28px;
+          min-width: 28px;
+          font-size: 12px;
+          color: hsl(var(--muted-foreground) / 0.5);
+          letter-spacing: 0.05em;
+          user-select: none;
+        }
+      }
+    `,
+  ],
 })
 export class EmailAnalyticsTableComponent implements OnInit {
   @Output() viewEmailRequested = new EventEmitter<EmailAnalyticsLog>();
-
+  pageSize = signal(10);
+  currentPage = signal(1);
+  pageSizeOptions = [10, 25, 50];
   protected readonly weekDays = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'];
   protected loading = true;
   protected exporting = false;
@@ -97,10 +186,76 @@ export class EmailAnalyticsTableComponent implements OnInit {
     this.loadRules();
   }
 
+  visiblePages = computed(() => {
+    const total = this.totalPages();
+    const current = this.currentPage();
+    const pages: (number | '…')[] = [];
+
+    if (total <= 7) {
+      for (let i = 1; i <= total; i++) pages.push(i);
+      return pages;
+    }
+
+    pages.push(1);
+    if (current > 3) pages.push('…');
+
+    const start = Math.max(2, current - 1);
+    const end = Math.min(total - 1, current + 1);
+    for (let i = start; i <= end; i++) pages.push(i);
+
+    if (current < total - 2) pages.push('…');
+    pages.push(total);
+    return pages;
+  });
+
+  getEndRecord(): number {
+    return Math.min(
+      this.currentPage() * this.pageSize(),
+      this.filteredLogs().length
+    );
+  }
+
+  goToPage(page: number | '…') {
+    if (typeof page !== 'number') return;
+    this.currentPage.set(Math.min(Math.max(1, page), this.totalPages()));
+  }
+
+  onPageSizeChange(event: Event) {
+    const size = Number((event.target as HTMLSelectElement).value);
+    this.pageSize.set(size);
+    this.currentPage.set(1);
+  }
+
+  prevPage() {
+    if (this.currentPage() > 1) this.currentPage.update((p) => p - 1);
+  }
+
+  nextPage() {
+    if (this.currentPage() < this.totalPages())
+      this.currentPage.update((p) => p + 1);
+  }
+
+  paginatedLogs = computed(() => {
+    const all = this.filteredLogs();
+    const size = this.pageSize();
+    const page = this.currentPage();
+    const start = (page - 1) * size;
+    return all.slice(start, start + size);
+  });
+
+  totalPages = computed(() =>
+    Math.max(1, Math.ceil(this.filteredLogs().length / this.pageSize()))
+  );
+
   protected loadAnalytics(forceRefresh = false): void {
     this.loading = true;
 
-    from(this.analyticsDataService.getAnalytics(forceRefresh, this.analyticsDateFilters()))
+    from(
+      this.analyticsDataService.getAnalytics(
+        forceRefresh,
+        this.analyticsDateFilters()
+      )
+    )
       .pipe(
         tap((analytics) => {
           this.analytics = analytics;
@@ -430,7 +585,12 @@ export class EmailAnalyticsTableComponent implements OnInit {
           );
         }),
         switchMap(() =>
-          from(this.analyticsDataService.getAnalytics(true, this.analyticsDateFilters()))
+          from(
+            this.analyticsDataService.getAnalytics(
+              true,
+              this.analyticsDateFilters()
+            )
+          )
         ),
         tap((analytics) => {
           this.analytics = analytics;
@@ -586,7 +746,12 @@ export class EmailAnalyticsTableComponent implements OnInit {
           );
         }),
         switchMap(() =>
-          from(this.analyticsDataService.getAnalytics(true, this.analyticsDateFilters()))
+          from(
+            this.analyticsDataService.getAnalytics(
+              true,
+              this.analyticsDateFilters()
+            )
+          )
         ),
         tap((analytics) => {
           this.analytics = analytics;
@@ -601,10 +766,7 @@ export class EmailAnalyticsTableComponent implements OnInit {
     this.assignPopoverOpen = this.assignPopoverOpen === logId ? null : logId;
   }
 
-  protected assignToRule(
-    log: EmailAnalyticsLog,
-    ruleId: string
-  ): void {
+  protected assignToRule(log: EmailAnalyticsLog, ruleId: string): void {
     this.isAssigning = log.id;
 
     from(
@@ -622,7 +784,12 @@ export class EmailAnalyticsTableComponent implements OnInit {
           this.assignPopoverOpen = null;
         }),
         switchMap(() =>
-          from(this.analyticsDataService.getAnalytics(true, this.analyticsDateFilters()))
+          from(
+            this.analyticsDataService.getAnalytics(
+              true,
+              this.analyticsDateFilters()
+            )
+          )
         ),
         tap((analytics) => {
           this.analytics = analytics;
