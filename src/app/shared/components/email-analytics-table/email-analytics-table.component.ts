@@ -3,6 +3,7 @@ import {
   Component,
   DestroyRef,
   EventEmitter,
+  HostListener,
   OnInit,
   Output,
   computed,
@@ -185,6 +186,11 @@ export class EmailAnalyticsTableComponent implements OnInit {
   ngOnInit(): void {
     this.loadAnalytics();
     this.loadRules();
+  }
+
+  @HostListener('document:click')
+  protected closeDatePopoverOnOutsideClick(): void {
+    this.datePopoverOpen = false;
   }
 
   visiblePages = computed(() => {
