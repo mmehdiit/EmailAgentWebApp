@@ -10,7 +10,7 @@ COPY . .
 
 RUN npm run build
 
-FROM nginx:1.21.0-alpine
+FROM nginx:1.27-alpine
 
 RUN rm -rf /usr/share/nginx/html/*
 
@@ -20,6 +20,16 @@ COPY --from=build /app/dist/email-agent-web-app/browser /usr/share/nginx/html
 
 COPY ./scripts/replace_api_url.sh /
 
-EXPOSE 80
+RUN chown -R nginx:nginx /usr/share/nginx/html \
+    && chown -R nginx:nginx /var/cache/nginx \
+    && chown -R nginx:nginx /var/log/nginx \
+    && chown -R nginx:nginx /etc/nginx/conf.d \
+    && touch /var/run/nginx.pid \
+    && chown nginx:nginx /var/run/nginx.pid \
+    && chmod +x /replace_api_url.sh
 
-CMD ["sh", "replace_api_url.sh"]
+USER nginx
+
+EXPOSE 8080
+
+CMD ["sh", "/replace_api_url.sh"]
