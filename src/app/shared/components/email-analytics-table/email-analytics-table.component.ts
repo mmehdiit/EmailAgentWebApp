@@ -614,6 +614,7 @@ export class EmailAnalyticsTableComponent implements OnInit {
         ),
         tap((analytics) => {
           this.analytics = analytics;
+          this.refreshFilteredPagination();
         }),
         catchError(() => EMPTY),
         finalize(() => {
