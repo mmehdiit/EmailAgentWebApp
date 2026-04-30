@@ -142,6 +142,7 @@ export class EmailAnalyticsTableComponent implements OnInit {
   @Output() viewEmailRequested = new EventEmitter<EmailAnalyticsLog>();
   pageSize = signal(10);
   currentPage = signal(1);
+  private readonly filterRevision = signal(0);
   pageSizeOptions = [10, 25, 50];
   protected readonly weekDays = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'];
   protected loading = true;
@@ -187,6 +188,7 @@ export class EmailAnalyticsTableComponent implements OnInit {
   }
 
   visiblePages = computed(() => {
+    this.filterRevision();
     const total = this.totalPages();
     const current = this.currentPage();
     const pages: (number | '…')[] = [];
@@ -236,6 +238,7 @@ export class EmailAnalyticsTableComponent implements OnInit {
   }
 
   paginatedLogs = computed(() => {
+    this.filterRevision();
     const all = this.filteredLogs();
     const size = this.pageSize();
     const page = this.currentPage();
@@ -243,9 +246,10 @@ export class EmailAnalyticsTableComponent implements OnInit {
     return all.slice(start, start + size);
   });
 
-  totalPages = computed(() =>
-    Math.max(1, Math.ceil(this.filteredLogs().length / this.pageSize()))
-  );
+  totalPages = computed(() => {
+    this.filterRevision();
+    return Math.max(1, Math.ceil(this.filteredLogs().length / this.pageSize()));
+  });
 
   protected loadAnalytics(forceRefresh = false): void {
     this.loading = true;
@@ -259,6 +263,7 @@ export class EmailAnalyticsTableComponent implements OnInit {
       .pipe(
         tap((analytics) => {
           this.analytics = analytics;
+          this.refreshFilteredPagination();
         }),
         catchError(() => EMPTY),
         finalize(() => {
@@ -365,7 +370,10 @@ export class EmailAnalyticsTableComponent implements OnInit {
     }
   }
 
-  protected applyFilters(): void {}
+  protected applyFilters(): void {
+    this.currentPage.set(1);
+    this.refreshFilteredPagination();
+  }
 
   protected statusOptions(): SelectDropdownOption[] {
     return [
@@ -404,6 +412,8 @@ export class EmailAnalyticsTableComponent implements OnInit {
     this.datePreset = String(days);
     this.dateRange = this.buildPresetRange(days);
     this.calendarMonth = this.startOfMonth(this.dateRange.from);
+    this.currentPage.set(1);
+    this.refreshFilteredPagination();
     this.loadAnalytics(true);
   }
 
@@ -470,12 +480,16 @@ export class EmailAnalyticsTableComponent implements OnInit {
         this.dateRange = { from, to: selected };
       }
       this.datePreset = 'custom';
+      this.currentPage.set(1);
+      this.refreshFilteredPagination();
       this.loadAnalytics(true);
       return;
     }
 
     this.dateRange = { from: selected, to: selected };
     this.datePreset = 'custom';
+    this.currentPage.set(1);
+    this.refreshFilteredPagination();
     this.loadAnalytics(true);
   }
 
@@ -854,5 +868,10 @@ export class EmailAnalyticsTableComponent implements OnInit {
     const day = String(value.getDate()).padStart(2, '0');
 
     return `${year}-${month}-${day}`;
+  }
+
+  private refreshFilteredPagination(): void {
+    this.filterRevision.update((revision) => revision + 1);
+    this.currentPage.set(Math.min(this.currentPage(), this.totalPages()));
   }
 }
