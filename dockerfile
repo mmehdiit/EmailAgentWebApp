@@ -12,7 +12,8 @@ RUN npm run build
 
 FROM nginx:1.28-alpine
 
-RUN apk upgrade --no-cache
+RUN apk upgrade --no-cache \
+    && apk del --no-cache curl
 
 RUN rm -rf /usr/share/nginx/html/*
 
