@@ -75,6 +75,7 @@ export interface EmailAnalyticsLog {
   processedAt?: string | null;
   repliedAt?: string | null;
   receivedAt?: string | null;
+  negativeKeywordOverride?: string | null;
 }
 export interface ReplyAnalyticsStats {
   totalForwarded: number;

@@ -117,6 +117,7 @@ export class AnalyticsDataService {
       processedAt: log.processed_at,
       repliedAt: log.replied_at,
       receivedAt: log.received_at,
+      negativeKeywordOverride: log.negative_keyword_override,
     }));
 
     return {
