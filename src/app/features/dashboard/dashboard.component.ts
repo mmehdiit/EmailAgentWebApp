@@ -17,25 +17,23 @@ import {
   DashboardOverview,
   EmailAnalyticsLog,
   EmailContent,
-} from '../../core/models/dashboard.models';
-import { AnalyticsDataService } from '../../core/services/analytics-data.service';
-import { AuthSessionService } from '../../core/services/auth-session.service';
-import { DashboardDataService } from '../../core/services/dashboard-data.service';
-import { RuleManagementService } from '../../core/services/rule-management.service';
-import { ToastService } from '../../core/services/toast.service';
-import { EmailAnalyticsTableComponent } from '../../shared/components/email-analytics-table/email-analytics-table.component';
-import { KeywordInputComponent } from '../../shared/components/keyword-input/keyword-input.component';
-import { RecipientManagerComponent } from '../../shared/components/recipient-manager/recipient-manager.component';
-import { ReplyAnalyticsComponent } from '../../shared/components/reply-analytics/reply-analytics.component';
-import { RulePerformanceComponent } from '../../shared/components/rule-performance/rule-performance.component';
-import { RuleTesterComponent } from '../../shared/components/rule-tester/rule-tester.component';
-import {
-  SortableDashboardRule,
-  SortableRuleItemComponent,
-} from '../../shared/components/sortable-rule-item/sortable-rule-item.component';
-import { TopNavbarComponent } from '../../shared/components/top-navbar/top-navbar.component';
-import { UnreadEmailsComponent } from '../../shared/components/unread-emails/unread-emails.component';
-import { UserManagementComponent } from '../../shared/components/user-management/user-management.component';
+} from '@core/models/dashboard.models';
+import { SortableDashboardRule } from '@core/models/rule.models';
+import { AnalyticsDataService } from '@core/services/analytics-data.service';
+import { AuthSessionService } from '@core/services/auth-session.service';
+import { DashboardDataService } from '@core/services/dashboard-data.service';
+import { RuleManagementService } from '@core/services/rule-management.service';
+import { ToastService } from '@core/services/toast.service';
+import { KeywordInputComponent } from '@shared/components/keyword-input/keyword-input.component';
+import { RecipientManagerComponent } from '@shared/components/recipient-manager/recipient-manager.component';
+import { TopNavbarComponent } from '@shared/components/top-navbar/top-navbar.component';
+import { EmailAnalyticsTableComponent } from './components/email-analytics-table/email-analytics-table.component';
+import { ReplyAnalyticsComponent } from './components/reply-analytics/reply-analytics.component';
+import { RulePerformanceComponent } from './components/rule-performance/rule-performance.component';
+import { RuleTesterComponent } from './components/rule-tester/rule-tester.component';
+import { SortableRuleItemComponent } from './components/sortable-rule-item/sortable-rule-item.component';
+import { UnreadEmailsComponent } from './components/unread-emails/unread-emails.component';
+import { UserManagementComponent } from './components/user-management/user-management.component';
 
 type DashboardRuleEditor = SortableDashboardRule;
 
@@ -85,19 +83,16 @@ export class DashboardComponent implements OnInit, OnDestroy {
   protected readonly newRule: DashboardRuleEditor = this.createEmptyRule();
   protected draggedRuleId: string | null = null;
 
-  private readonly destroyRef = inject(DestroyRef);
   private countdownInterval?: ReturnType<typeof setInterval>;
-
-  constructor(
-    private readonly authSessionService: AuthSessionService,
-    private readonly analyticsDataService: AnalyticsDataService,
-    private readonly dashboardDataService: DashboardDataService,
-    private readonly ruleManagementService: RuleManagementService,
-    private readonly toastService: ToastService,
-    private readonly route: ActivatedRoute,
-    private readonly router: Router,
-    private readonly sanitizer: DomSanitizer
-  ) {}
+  private readonly authSessionService = inject(AuthSessionService);
+  private readonly analyticsDataService = inject(AnalyticsDataService);
+  private readonly dashboardDataService = inject(DashboardDataService);
+  private readonly ruleManagementService = inject(RuleManagementService);
+  private readonly toastService = inject(ToastService);
+  private readonly destroyRef = inject(DestroyRef);
+  private readonly route = inject(ActivatedRoute);
+  private readonly router = inject(Router);
+  private readonly sanitizer = inject(DomSanitizer);
 
   ngOnInit(): void {
     this.loading = true;
@@ -108,7 +103,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
         switchMap((session) => {
           if (!session.authenticated) {
             return from(this.router.navigate(['/auth'])).pipe(
-              switchMap(() => EMPTY)
+              switchMap(() => EMPTY),
             );
           }
 
@@ -119,17 +114,17 @@ export class DashboardComponent implements OnInit, OnDestroy {
           const completeOutlookCallback$: Observable<unknown> = callbackCode
             ? from(
                 this.dashboardDataService.completeOutlookConnection(
-                  callbackCode
-                )
+                  callbackCode,
+                ),
               ).pipe(
                 tap((callbackResult) => {
                   this.connectionMessage = callbackResult.message;
                   this.toastService.success(
                     callbackResult.message,
-                    'Outlook Connected'
+                    'Outlook Connected',
                   );
                 }),
-                switchMap(() => from(this.router.navigate(['/dashboard'])))
+                switchMap(() => from(this.router.navigate(['/dashboard']))),
               )
             : of(null);
 
@@ -138,8 +133,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
               forkJoin({
                 overview: from(this.dashboardDataService.getOverview()),
                 rules: from(this.ruleManagementService.listRules()),
-              })
-            )
+              }),
+            ),
           );
         }),
         tap(({ overview, rules }) => {
@@ -157,7 +152,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
         finalize(() => {
           this.loading = false;
         }),
-        takeUntilDestroyed(this.destroyRef)
+        takeUntilDestroyed(this.destroyRef),
       )
       .subscribe();
   }
@@ -169,7 +164,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
   }
 
   protected setTab(
-    tab: 'overview' | 'rules' | 'analytics' | 'emails' | 'users'
+    tab: 'overview' | 'rules' | 'analytics' | 'emails' | 'users',
   ): void {
     this.activeTab = tab;
   }
@@ -189,7 +184,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
         finalize(() => {
           this.isRefreshingActivity = false;
         }),
-        takeUntilDestroyed(this.destroyRef)
+        takeUntilDestroyed(this.destroyRef),
       )
       .subscribe();
   }
@@ -216,7 +211,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
         finalize(() => {
           this.loadingEmail = false;
         }),
-        takeUntilDestroyed(this.destroyRef)
+        takeUntilDestroyed(this.destroyRef),
       )
       .subscribe();
   }
@@ -238,7 +233,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
   protected saveRule(): void {
     const hasSingleRecipient = !!this.newRule.recipient;
     const hasRotationRecipients = this.newRule.recipients.some((recipient) =>
-      recipient.email.trim()
+      recipient.email.trim(),
     );
     if (
       !this.newRule.name ||
@@ -260,14 +255,14 @@ export class DashboardComponent implements OnInit, OnDestroy {
             this.editingRuleId
               ? 'Your forwarding rule has been updated.'
               : 'Your forwarding rule has been created.',
-            this.editingRuleId ? 'Rule Updated' : 'Rule Added'
+            this.editingRuleId ? 'Rule Updated' : 'Rule Added',
           );
 
           this.resetRuleForm();
           this.showAddRule = false;
         }),
         catchError(() => EMPTY),
-        takeUntilDestroyed(this.destroyRef)
+        takeUntilDestroyed(this.destroyRef),
       )
       .subscribe();
   }
@@ -295,11 +290,11 @@ export class DashboardComponent implements OnInit, OnDestroy {
           this.rules = rules;
           this.toastService.success(
             'Forwarding rule has been removed.',
-            'Rule Deleted'
+            'Rule Deleted',
           );
         }),
         catchError(() => EMPTY),
-        takeUntilDestroyed(this.destroyRef)
+        takeUntilDestroyed(this.destroyRef),
       )
       .subscribe();
   }
@@ -314,7 +309,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
     }
 
     const oldIndex = this.rules.findIndex(
-      (rule) => rule.id === this.draggedRuleId
+      (rule) => rule.id === this.draggedRuleId,
     );
     const newIndex = this.rules.findIndex((rule) => rule.id === targetId);
     if (oldIndex === -1 || newIndex === -1) {
@@ -331,14 +326,14 @@ export class DashboardComponent implements OnInit, OnDestroy {
           this.rules = rules;
           this.toastService.success(
             'Rule priorities have been updated successfully.',
-            'Rules Reordered'
+            'Rules Reordered',
           );
         }),
         catchError(() => EMPTY),
         finalize(() => {
           this.draggedRuleId = null;
         }),
-        takeUntilDestroyed(this.destroyRef)
+        takeUntilDestroyed(this.destroyRef),
       )
       .subscribe();
   }
@@ -381,7 +376,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
       this.ruleManagementService.saveRule({
         ...targetRule,
         active: !targetRule.active,
-      })
+      }),
     )
       .pipe(
         tap((rules) => {
@@ -390,11 +385,11 @@ export class DashboardComponent implements OnInit, OnDestroy {
             targetRule.active
               ? 'Forwarding rule has been paused.'
               : 'Forwarding rule is now active.',
-            targetRule.active ? 'Rule Disabled' : 'Rule Enabled'
+            targetRule.active ? 'Rule Disabled' : 'Rule Enabled',
           );
         }),
         catchError(() => EMPTY),
-        takeUntilDestroyed(this.destroyRef)
+        takeUntilDestroyed(this.destroyRef),
       )
       .subscribe();
   }
@@ -403,7 +398,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
     this.authSessionService.logout();
     this.toastService.success(
       "You've been successfully logged out.",
-      'Logged Out'
+      'Logged Out',
     );
     from(this.router.navigate(['/auth']))
       .pipe(takeUntilDestroyed(this.destroyRef))
@@ -426,7 +421,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
         finalize(() => {
           this.isConnecting = false;
         }),
-        takeUntilDestroyed(this.destroyRef)
+        takeUntilDestroyed(this.destroyRef),
       )
       .subscribe();
   }
@@ -441,11 +436,11 @@ export class DashboardComponent implements OnInit, OnDestroy {
           this.connectionMessage = result.message;
           this.toastService.success(
             'Your Outlook account has been disconnected.',
-            'Outlook Disconnected'
+            'Outlook Disconnected',
           );
         }),
         catchError(() => EMPTY),
-        takeUntilDestroyed(this.destroyRef)
+        takeUntilDestroyed(this.destroyRef),
       )
       .subscribe();
   }
@@ -464,7 +459,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
         finalize(() => {
           this.isProcessing = false;
         }),
-        takeUntilDestroyed(this.destroyRef)
+        takeUntilDestroyed(this.destroyRef),
       )
       .subscribe();
   }
@@ -500,11 +495,11 @@ export class DashboardComponent implements OnInit, OnDestroy {
           this.rules = nextRules;
           this.toastService.success(
             'Rule priorities have been updated successfully.',
-            'Rules Reordered'
+            'Rules Reordered',
           );
         }),
         catchError(() => EMPTY),
-        takeUntilDestroyed(this.destroyRef)
+        takeUntilDestroyed(this.destroyRef),
       )
       .subscribe();
   }

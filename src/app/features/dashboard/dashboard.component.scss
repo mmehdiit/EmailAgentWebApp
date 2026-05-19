@@ -31,22 +31,6 @@
 }
 
 // ─── Stat number pop ────────────────────────────────────────────────────────
-@keyframes stat-pop {
-  0% {
-    transform: scale(1.15);
-  }
-  60% {
-    transform: scale(0.97);
-  }
-  100% {
-    transform: scale(1);
-  }
-}
-
-.stat-number.stat-pop {
-  animation: stat-pop 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) both;
-}
-
 // ─── Stat card subtle entrance ───────────────────────────────────────────────
 @keyframes card-rise {
   from {
@@ -75,23 +59,7 @@
 }
 
 // ─── Panel cards ─────────────────────────────────────────────────────────────
-.panel {
-  transition: box-shadow 0.2s ease;
-
-  &:hover {
-    box-shadow: 0 6px 28px 0 rgba(0, 0, 0, 0.07);
-  }
-}
-
 // ─── Log / rule list items ───────────────────────────────────────────────────
-.log-item {
-  transition: background-color 0.15s ease, transform 0.15s ease;
-
-  &:hover {
-    transform: translateX(2px);
-  }
-}
-
 // ─── Primary button lift ─────────────────────────────────────────────────────
 .primary-btn {
   &:not(:disabled):hover {
@@ -123,63 +91,9 @@
 }
 
 // ─── Nav action buttons ──────────────────────────────────────────────────────
-.nav-action-btn {
-  position: relative;
-  overflow: hidden;
-
-  &::before {
-    content: "";
-    position: absolute;
-    inset: 0;
-    background: currentColor;
-    opacity: 0;
-    border-radius: inherit;
-    transition: opacity 0.15s ease;
-  }
-
-  &:hover::before {
-    opacity: 0.05;
-  }
-}
-
 // ─── Panel divider gradient ──────────────────────────────────────────────────
-.panel-divider {
-  background: linear-gradient(
-    to right,
-    hsl(var(--border)),
-    hsl(var(--border) / 0.4),
-    transparent
-  );
-}
-
 // ─── Spin ────────────────────────────────────────────────────────────────────
-@keyframes spin {
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-.animate-spin {
-  animation: spin 1s linear infinite;
-}
-
 // ─── Status pulse ────────────────────────────────────────────────────────────
-@keyframes status-pulse {
-  0%,
-  100% {
-    transform: scale(1);
-    opacity: 1;
-  }
-  50% {
-    transform: scale(1.4);
-    opacity: 0.6;
-  }
-}
-
-.animate-pulse {
-  animation: status-pulse 2s ease-in-out infinite;
-}
-
 // ─── Disabled states ─────────────────────────────────────────────────────────
 button[disabled],
 button.disabled {
@@ -213,16 +127,6 @@ button.disabled {
 }
 
 // ─── Form inputs focus ring ───────────────────────────────────────────────────
-input[type="text"],
-input[type="email"],
-input[type="number"],
-textarea {
-  &:focus {
-    outline: none;
-    box-shadow: 0 0 0 2px hsl(var(--primary) / 0.25);
-    border-color: hsl(var(--primary) / 0.5);
-  }
-}
 .loader-card {
   display: flex;
   flex-direction: column;

@@ -21,14 +21,14 @@ import {
   EmailAnalyticsLog,
   EmailContent,
   RuleItem,
-} from '../../../core/models/dashboard.models';
-import { AnalyticsDataService } from '../../../core/services/analytics-data.service';
-import { ToastService } from '../../../core/services/toast.service';
+} from '@core/models/dashboard.models';
+import { AnalyticsDataService } from '@core/services/analytics-data.service';
+import { ToastService } from '@core/services/toast.service';
 import {
   AppSelectDropdownComponent,
   SelectDropdownOption,
-} from '../app-select-dropdown/app-select-dropdown.component';
-import { KeywordInputComponent } from '../keyword-input/keyword-input.component';
+} from '@shared/components/app-select-dropdown/app-select-dropdown.component';
+import { KeywordInputComponent } from '@shared/components/keyword-input/keyword-input.component';
 
 const RULE_COLOR_PALETTE = [
   'bg-blue-100 text-blue-800 border-blue-200',

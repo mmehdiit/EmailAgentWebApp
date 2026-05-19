@@ -2,7 +2,7 @@ import { CommonModule } from '@angular/common';
 import { Component, EventEmitter, Input, OnChanges, Output, SimpleChanges } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 
-import { Recipient } from '../recipient-manager/recipient-manager.component';
+import { Recipient } from '../../../core/models/rule.models';
 
 @Component({
   selector: 'app-vacation-dialog',

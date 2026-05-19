@@ -2,17 +2,8 @@ import { CommonModule } from '@angular/common';
 import { Component, EventEmitter, Input, Output } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 
+import { Recipient } from '../../../core/models/rule.models';
 import { VacationDialogComponent } from '../vacation-dialog/vacation-dialog.component';
-
-export interface Recipient {
-  id: string;
-  email: string;
-  display_name: string;
-  sort_order: number;
-  is_on_vacation: boolean;
-  vacation_start: string | null;
-  vacation_end: string | null;
-}
 
 @Component({
   selector: 'app-recipient-manager',

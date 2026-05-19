@@ -1,8 +1,7 @@
 import { Injectable } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
 
-import { Recipient } from '../../shared/components/recipient-manager/recipient-manager.component';
-import { SortableDashboardRule } from '../../shared/components/sortable-rule-item/sortable-rule-item.component';
+import { Recipient, SortableDashboardRule } from '../models/rule.models';
 import { RuleManagementApiService } from './rule-management-api.service';
 
 @Injectable({

@@ -1,26 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { Component, EventEmitter, Input, Output } from '@angular/core';
 
-import { Recipient } from '../recipient-manager/recipient-manager.component';
-
-export interface SortableDashboardRule {
-  id: string;
-  name: string;
-  keywords: string[];
-  negativeKeywords: string[];
-  recipient: string;
-  recipients: Recipient[];
-  conditions: string;
-  active: boolean;
-  priority: number;
-  senderPattern: string;
-  subjectPattern: string;
-  aiEnabled: boolean;
-  aiContext: string;
-  extractAttachments: boolean;
-  rotationEnabled: boolean;
-  smartThreadEnabled: boolean;
-}
+import { Recipient, SortableDashboardRule } from '@core/models/rule.models';
 
 @Component({
   selector: 'app-sortable-rule-item',

@@ -5,10 +5,10 @@ import { FormsModule } from '@angular/forms';
 import { EMPTY, from } from 'rxjs';
 import { catchError, finalize, tap } from 'rxjs/operators';
 
-import { CreateUserPayload, UserRoleOption } from '../../../core/models/dashboard.models';
-import { UserManagementService } from '../../../core/services/user-management.service';
-import { ToastService } from '../../../core/services/toast.service';
-import { AppSelectDropdownComponent } from '../app-select-dropdown/app-select-dropdown.component';
+import { CreateUserPayload, UserRoleOption } from '@core/models/dashboard.models';
+import { UserManagementService } from '@core/services/user-management.service';
+import { ToastService } from '@core/services/toast.service';
+import { AppSelectDropdownComponent } from '@shared/components/app-select-dropdown/app-select-dropdown.component';
 
 @Component({
   selector: 'app-user-management',

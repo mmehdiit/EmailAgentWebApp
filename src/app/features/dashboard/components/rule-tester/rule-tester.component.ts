@@ -2,7 +2,7 @@ import { CommonModule } from '@angular/common';
 import { Component, Input } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 
-import { Recipient } from '../recipient-manager/recipient-manager.component';
+import { Recipient } from '@core/models/rule.models';
 
 export interface RuleTesterRule {
   id: string;

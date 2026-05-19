@@ -8,13 +8,13 @@ import { catchError, finalize, tap } from 'rxjs/operators';
 import {
   ActiveForwardingRule,
   UnprocessedEmail
-} from '../../../core/models/dashboard.models';
-import { UnreadEmailDataService } from '../../../core/services/unread-email-data.service';
-import { ToastService } from '../../../core/services/toast.service';
+} from '@core/models/dashboard.models';
+import { UnreadEmailDataService } from '@core/services/unread-email-data.service';
+import { ToastService } from '@core/services/toast.service';
 import {
   AppSelectDropdownComponent,
   SelectDropdownOption,
-} from '../app-select-dropdown/app-select-dropdown.component';
+} from '@shared/components/app-select-dropdown/app-select-dropdown.component';
 
 @Component({
   selector: 'app-unread-emails',

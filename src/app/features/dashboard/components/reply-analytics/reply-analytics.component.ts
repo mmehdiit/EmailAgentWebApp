@@ -4,9 +4,9 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { EMPTY, from } from 'rxjs';
 import { catchError, finalize, switchMap, tap } from 'rxjs/operators';
 
-import { ReplyAnalyticsStats } from '../../../core/models/dashboard.models';
-import { AnalyticsDataService } from '../../../core/services/analytics-data.service';
-import { ToastService } from '../../../core/services/toast.service';
+import { ReplyAnalyticsStats } from '@core/models/dashboard.models';
+import { AnalyticsDataService } from '@core/services/analytics-data.service';
+import { ToastService } from '@core/services/toast.service';
 
 @Component({
   selector: 'app-reply-analytics',
