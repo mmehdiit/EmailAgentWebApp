@@ -630,6 +630,11 @@
               AI
             </th>
             <th
+              class="hidden w-[120px] px-2 py-3 text-left text-[10px] font-bold uppercase tracking-widest text-muted-foreground/70 xl:table-cell"
+            >
+              Neg. Keyword
+            </th>
+            <th
               class="hidden w-[156px] px-2 py-3 text-left text-[10px] font-bold uppercase tracking-widest text-muted-foreground/70 md:table-cell"
             >
               Actions
@@ -789,6 +794,27 @@
               <ng-template #noAi
                 ><span class="text-muted-foreground/50">—</span></ng-template
               >
+            </td>
+
+            <td class="hidden px-2 py-3 xl:table-cell">
+              <div class="group/cell relative">
+                <span
+                  *ngIf="log.negativeKeywordOverride; else noNegKw"
+                  class="inline-flex h-5 max-w-full cursor-default items-center truncate rounded-md border border-destructive/30 bg-destructive/10 px-2 text-[10px] font-semibold text-destructive"
+                  [title]="'Blocked by: ' + log.negativeKeywordOverride"
+                >
+                  ⊘ {{ log.negativeKeywordOverride }}
+                </span>
+                <ng-template #noNegKw
+                  ><span class="text-muted-foreground/50">—</span></ng-template
+                >
+                <div
+                  *ngIf="log.negativeKeywordOverride"
+                  class="pointer-events-none absolute bottom-full left-0 z-[9999] mb-1 hidden max-w-[240px] break-all rounded-lg border border-border/60 bg-popover px-3 py-2 text-xs text-popover-foreground shadow-lg group-hover/cell:block"
+                >
+                  Rule was blocked by negative keyword: <strong>{{ log.negativeKeywordOverride }}</strong>
+                </div>
+              </div>
             </td>
 
             <td class="hidden px-2 py-3 md:table-cell">

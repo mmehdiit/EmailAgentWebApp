@@ -22,6 +22,7 @@ type EmailLogDto = {
   tracking_token: string | null;
   reply_source: string | null;
   received_at: string | null;
+  negative_keyword_override: string | null;
 };
 
 @Injectable({
