@@ -89,14 +89,6 @@ export interface RuleItem {
   name: string;
 }
 
-export interface EmailClassificationResult {
-  matched_rule_id: string;
-  matched_rule_name: string;
-  confidence: number;
-  reasoning: string;
-  override_recipient_email: string;
-}
-
 export interface EmailContent {
   subject: string;
   from: string;

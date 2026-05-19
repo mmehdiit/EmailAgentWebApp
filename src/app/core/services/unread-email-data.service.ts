@@ -1,8 +1,8 @@
 import { Injectable } from '@angular/core';
-import { Observable, firstValueFrom, forkJoin, of } from 'rxjs';
-import { catchError, map } from 'rxjs/operators';
+import { Observable, firstValueFrom, forkJoin } from 'rxjs';
+import { map } from 'rxjs/operators';
 
-import { UnprocessedEmail, UnreadEmailOverview } from '../models/dashboard.models';
+import { UnreadEmailOverview } from '../models/dashboard.models';
 import { RuleManagementService } from './rule-management.service';
 import { UnreadEmailApiService } from './unread-email-api.service';
 
@@ -51,35 +51,8 @@ export class UnreadEmailDataService {
     );
   }
 
-  classifyEmail(email: UnprocessedEmail): Observable<UnprocessedEmail> {
-    return this.unreadEmailApiService.classifyEmail({
-      subject: email.subject,
-      body: email.preview,
-      sender: email.from
-    }).pipe(
-      map((classification) => {
-        const hasMatch = !!classification?.matched_rule_id;
-
-        return {
-          ...email,
-          matchesRule: hasMatch,
-          matchedRuleName: hasMatch ? classification?.matched_rule_name ?? null : null,
-          aiClassified: hasMatch && (classification?.confidence ?? 0) > 0,
-          aiConfidence: hasMatch ? classification?.confidence ?? null : null,
-          aiReasoning: classification?.reasoning || null
-        };
-      }),
-      catchError(() => of(email))
-    );
-  }
-
   async getUnreadEmails(): Promise<UnreadEmailOverview> {
-    const overview = await firstValueFrom(this.getUnreadEmailsOverview());
-    const classifiedEmails = await Promise.all(
-      overview.emails.map((email) => firstValueFrom(this.classifyEmail(email)))
-    );
-
-    return { ...overview, emails: classifiedEmails };
+    return firstValueFrom(this.getUnreadEmailsOverview());
   }
 
   async markAsRead(emailId: string): Promise<void> {

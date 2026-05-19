@@ -3,7 +3,7 @@ import { Component, DestroyRef, OnInit, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import { EMPTY, from } from 'rxjs';
-import { catchError, finalize, mergeMap, tap } from 'rxjs/operators';
+import { catchError, finalize, tap } from 'rxjs/operators';
 
 import {
   ActiveForwardingRule,
@@ -58,7 +58,6 @@ export class UnreadEmailsComponent implements OnInit {
 
           this.emails = data.emails;
           this.rules = data.rules.filter((rule) => rule.active);
-          this.classifyEmails(data.emails, loadId);
         }),
         catchError(() => {
           if (loadId !== this.loadSequence) {
@@ -170,23 +169,5 @@ export class UnreadEmailsComponent implements OnInit {
     }
 
     return date.toLocaleDateString();
-  }
-
-  private classifyEmails(emails: UnprocessedEmail[], loadId: number): void {
-    from(emails)
-      .pipe(
-        mergeMap((email) => this.unreadEmailDataService.classifyEmail(email), 4),
-        tap((classifiedEmail) => {
-          if (loadId !== this.loadSequence) {
-            return;
-          }
-
-          this.emails = this.emails.map((email) =>
-            email.id === classifiedEmail.id ? classifiedEmail : email
-          );
-        }),
-        takeUntilDestroyed(this.destroyRef)
-      )
-      .subscribe();
   }
 }

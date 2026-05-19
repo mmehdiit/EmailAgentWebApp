@@ -10,16 +10,37 @@ export const errorInterceptor: HttpInterceptorFn = (req, next) => {
 
   return next(req).pipe(
     catchError((error: HttpErrorResponse) => {
-      const message = resolveErrorMessage(error);
+      const normalizedError = normalizeError(error);
+      const message = resolveErrorMessage(normalizedError);
 
       if (message) {
         toastService.error(message);
       }
 
-      return throwError(() => error);
+      return throwError(() => normalizedError);
     })
   );
 };
+
+function normalizeError(error: HttpErrorResponse): HttpErrorResponse {
+  if (error.status !== 400) {
+    return error;
+  }
+
+  if (!isHtmlErrorBody(error.error)) {
+    return error;
+  }
+
+  return new HttpErrorResponse({
+    error: {
+      message: 'Bad request. Please check your input and try again.',
+    },
+    headers: error.headers,
+    status: error.status,
+    statusText: error.statusText || 'Bad Request',
+    url: error.url ?? undefined,
+  });
+}
 
 function resolveErrorMessage(error: HttpErrorResponse): string {
   if (typeof error.error === 'string' && error.error.trim()) {
@@ -45,4 +66,11 @@ function resolveErrorMessage(error: HttpErrorResponse): string {
   }
 
   return 'An unexpected error occurred.';
+}
+
+function isHtmlErrorBody(value: unknown): boolean {
+  return (
+    typeof value === 'string' &&
+    /<(?:!doctype\s+html|html|body|head|title)\b/i.test(value)
+  );
 }

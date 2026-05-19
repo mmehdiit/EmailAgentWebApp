@@ -1,13 +1,8 @@
 import { CommonModule } from '@angular/common';
-import { Component, DestroyRef, Input, inject } from '@angular/core';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { Component, Input } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { EMPTY } from 'rxjs';
-import { catchError, finalize, tap } from 'rxjs/operators';
 
 import { Recipient } from '../recipient-manager/recipient-manager.component';
-import { EmailClassificationResult } from '../../../core/models/dashboard.models';
-import { UnreadEmailApiService } from '../../../core/services/unread-email-api.service';
 
 export interface RuleTesterRule {
   id: string;
@@ -30,7 +25,7 @@ type TestResult = {
   rule: RuleTesterRule;
   matched: boolean;
   matchedKeywords: string[];
-  matchType: 'exact' | 'ai' | 'none';
+  matchType: 'exact' | 'none';
   excludedByNegative?: boolean;
   skippedByFollowUp?: boolean;
 };
@@ -45,7 +40,6 @@ export class RuleTesterComponent {
   @Input() rules: RuleTesterRule[] = [];
 
   protected isLoading = false;
-  protected aiResult: EmailClassificationResult | null = null;
   protected testResults: TestResult[] | null = null;
   protected testEmail = {
     from: '',
@@ -53,61 +47,15 @@ export class RuleTesterComponent {
     body: ''
   };
 
-  private readonly destroyRef = inject(DestroyRef);
-
-  constructor(private readonly unreadEmailApiService: UnreadEmailApiService) {}
-
   protected runTest(): void {
     this.isLoading = true;
-    this.aiResult = null;
-
-    const exactResults = this.runExactMatch();
-    const hasExactMatch = exactResults.some((result) => result.matched);
-
-    if (!hasExactMatch && (this.testEmail.subject || this.testEmail.body)) {
-      const aiRules = this.rules.filter((rule) => rule.aiEnabled);
-
-      if (aiRules.length > 0) {
-        this.unreadEmailApiService
-          .classifyEmail({
-            subject: this.testEmail.subject,
-            body: this.testEmail.body,
-            sender: this.testEmail.from
-          })
-          .pipe(
-            tap((aiResult) => {
-              this.aiResult = aiResult;
-
-              this.testResults = aiResult.matched_rule_id
-                ? exactResults.map((result) => ({
-                    ...result,
-                    matched: result.rule.id === aiResult.matched_rule_id,
-                    matchType: result.rule.id === aiResult.matched_rule_id ? 'ai' : 'none'
-                  }))
-                : exactResults;
-            }),
-            catchError(() => {
-              this.testResults = exactResults;
-              return EMPTY;
-            }),
-            finalize(() => {
-              this.isLoading = false;
-            }),
-            takeUntilDestroyed(this.destroyRef)
-          )
-          .subscribe();
-        return;
-      }
-    }
-
-    this.testResults = exactResults;
+    this.testResults = this.runExactMatch();
     this.isLoading = false;
   }
 
   protected clearTest(): void {
     this.testEmail = { from: '', subject: '', body: '' };
     this.testResults = null;
-    this.aiResult = null;
   }
 
   protected hasPriorMatch(index: number): boolean {
@@ -116,10 +64,6 @@ export class RuleTesterComponent {
 
   protected isPrimaryMatch(result: TestResult, index: number): boolean {
     return result.matched && !this.hasPriorMatch(index);
-  }
-
-  protected isAiPrimaryMatch(result: TestResult, index: number): boolean {
-    return this.isPrimaryMatch(result, index) && result.matchType === 'ai';
   }
 
   protected isExactPrimaryMatch(result: TestResult, index: number): boolean {
@@ -132,7 +76,6 @@ export class RuleTesterComponent {
 
   protected resultClasses(result: TestResult, index: number): Record<string, boolean> {
     return {
-      'border-accent/50 bg-accent/5': this.isAiPrimaryMatch(result, index),
       'border-success/50 bg-success/5': this.isExactPrimaryMatch(result, index),
       'border-warning/50 bg-warning/5': this.isSkippedMatch(result, index),
       'border-muted bg-muted/30': !result.matched

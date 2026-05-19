@@ -3,7 +3,6 @@ import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 
 import { environment } from '../../../environments/environment';
-import { EmailClassificationResult } from '../models/dashboard.models';
 
 type UnreadEmailResponse = Array<{
   id: string;
@@ -25,19 +24,6 @@ export class UnreadEmailApiService {
 
   getUnreadEmails(): Observable<UnreadEmailResponse> {
     return this.http.get<UnreadEmailResponse>(`${this.baseUrl}/emails/unread`);
-  }
-
-  classifyEmail(email: {
-    subject: string;
-    body: string;
-    sender: string;
-  }): Observable<EmailClassificationResult> {
-    return this.http.post<EmailClassificationResult>(
-      `${this.baseUrl}/emails/classify`,
-      {
-        email,
-      }
-    );
   }
 
   markAsRead(emailId: string): Observable<{ success: boolean }> {
