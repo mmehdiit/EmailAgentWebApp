@@ -211,7 +211,7 @@
                 <div
                   class="stat-number mb-1 text-3xl font-extrabold tracking-tight text-foreground transition-transform duration-300 group-hover:scale-105 sm:text-4xl"
                 >
-                  {{ rules.length }}
+                  {{ overview.rules.length }}
                 </div>
                 <p
                   class="text-[11px] font-medium text-muted-foreground sm:text-xs"
@@ -724,9 +724,12 @@
               class="panel-divider mb-4 h-px bg-gradient-to-r from-border via-border/50 to-transparent"
             ></div>
 
-            <div *ngIf="rules.length > 0; else noRules" class="space-y-1.5">
+            <div
+              *ngIf="overview.rules.length > 0; else noRules"
+              class="space-y-1.5"
+            >
               <div
-                *ngFor="let rule of rules | slice: 0 : 5"
+                *ngFor="let rule of overview.rules | slice: 0 : 5"
                 class="log-item flex items-center justify-between rounded-xl bg-muted/40 px-3 py-2.5 transition-all duration-200 hover:bg-muted/70"
               >
                 <div class="flex min-w-0 flex-1 items-center gap-3">
@@ -1293,10 +1296,13 @@
         *ngIf="activeTab === 'analytics'"
         class="dashboard-tab-enter space-y-4 sm:space-y-6"
       >
-        <app-email-analytics-table (viewEmailRequested)="viewEmail($event)" />
+        <app-email-analytics-table
+          [refreshToken]="analyticsRefreshToken"
+          (viewEmailRequested)="viewEmail($event)"
+        />
         <div class="grid gap-4 sm:gap-6 lg:grid-cols-2">
-          <app-reply-analytics />
-          <app-rule-performance />
+          <app-reply-analytics [refreshToken]="analyticsRefreshToken" />
+          <app-rule-performance [refreshToken]="analyticsRefreshToken" />
         </div>
       </section>
 
@@ -1304,14 +1310,17 @@
         *ngIf="activeTab === 'emails'"
         class="dashboard-tab-enter space-y-4 sm:space-y-6"
       >
-        <app-unread-emails />
+        <app-unread-emails [refreshToken]="emailsRefreshToken" />
       </section>
 
       <section
         *ngIf="activeTab === 'users' && isAdmin"
         class="dashboard-tab-enter space-y-4 sm:space-y-6"
       >
-        <app-user-management [isAdmin]="isAdmin" />
+        <app-user-management
+          [isAdmin]="isAdmin"
+          [refreshToken]="userManagementRefreshToken"
+        />
       </section>
     </div>
   </div>

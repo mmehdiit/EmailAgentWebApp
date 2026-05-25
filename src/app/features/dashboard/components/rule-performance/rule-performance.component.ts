@@ -1,5 +1,13 @@
 import { CommonModule } from '@angular/common';
-import { Component, DestroyRef, OnInit, inject } from '@angular/core';
+import {
+  Component,
+  DestroyRef,
+  Input,
+  OnChanges,
+  OnInit,
+  SimpleChanges,
+  inject,
+} from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { EMPTY, from } from 'rxjs';
 import { catchError, finalize, tap } from 'rxjs/operators';
@@ -13,7 +21,8 @@ import { AnalyticsDataService } from '@core/services/analytics-data.service';
   imports: [CommonModule],
   templateUrl: './rule-performance.component.html'
 })
-export class RulePerformanceComponent implements OnInit {
+export class RulePerformanceComponent implements OnInit, OnChanges {
+  @Input() refreshToken = 0;
   protected loading = true;
   protected stats: RulePerformanceStat[] = [];
 
@@ -22,6 +31,18 @@ export class RulePerformanceComponent implements OnInit {
   constructor(private readonly analyticsDataService: AnalyticsDataService) {}
 
   ngOnInit(): void {
+    this.loadStats();
+  }
+
+  ngOnChanges(changes: SimpleChanges): void {
+    if (changes['refreshToken'] && !changes['refreshToken'].firstChange) {
+      this.loadStats();
+    }
+  }
+
+  private loadStats(): void {
+    this.loading = true;
+
     from(this.analyticsDataService.getAnalytics())
       .pipe(
         tap((analytics) => {

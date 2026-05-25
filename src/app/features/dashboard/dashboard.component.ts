@@ -58,27 +58,30 @@ type DashboardRuleEditor = SortableDashboardRule;
   styleUrl: './dashboard.component.scss',
 })
 export class DashboardComponent implements OnInit, OnDestroy {
-  protected loading = true;
-  protected loadingError = '';
+  protected loading: boolean = true;
+  protected loadingError: string = '';
   protected activeTab: 'overview' | 'rules' | 'analytics' | 'emails' | 'users' =
     'overview';
-  protected countdown = 300;
+  protected countdown: number = 300;
   protected overview: DashboardOverview | null = null;
-  protected userEmail = 'frontend@test.local';
-  protected isAdmin = false;
-  protected connectionMessage = '';
-  protected outlookConnected = false;
+  protected userEmail: string = 'frontend@test.local';
+  protected isAdmin: boolean = false;
+  protected connectionMessage: string = '';
+  protected outlookConnected: boolean = false;
   protected outlookEmail: string | null = null;
-  protected isConnecting = false;
-  protected isProcessing = false;
-  protected isRefreshingActivity = false;
-  protected emailDialogOpen = false;
-  protected loadingEmail = false;
+  protected isConnecting: boolean = false;
+  protected isProcessing: boolean = false;
+  protected isRefreshingActivity: boolean = false;
+  protected emailDialogOpen: boolean = false;
+  protected loadingEmail: boolean = false;
   protected emailContent: EmailContent | null = null;
   protected trustedEmailBody: SafeHtml | null = null;
-  protected ruleTesterDialogOpen = false;
+  protected ruleTesterDialogOpen: boolean = false;
   protected rules: DashboardRuleEditor[] = [];
-  protected showAddRule = false;
+  protected analyticsRefreshToken: number = 0;
+  protected emailsRefreshToken: number = 0;
+  protected userManagementRefreshToken: number = 0;
+  protected showAddRule: boolean = false;
   protected editingRuleId: string | null = null;
   protected readonly newRule: DashboardRuleEditor = this.createEmptyRule();
   protected draggedRuleId: string | null = null;
@@ -174,6 +177,30 @@ export class DashboardComponent implements OnInit, OnDestroy {
     }
 
     this.activeTab = tab;
+
+    if (tab === 'overview') {
+      this.refreshOverview();
+      return;
+    }
+
+    if (tab === 'rules') {
+      this.reloadRules();
+      return;
+    }
+
+    if (tab === 'analytics') {
+      this.analyticsRefreshToken += 1;
+      return;
+    }
+
+    if (tab === 'emails') {
+      this.emailsRefreshToken += 1;
+      return;
+    }
+
+    if (tab === 'users') {
+      this.userManagementRefreshToken += 1;
+    }
   }
 
   protected refreshOverview(): void {
@@ -504,6 +531,18 @@ export class DashboardComponent implements OnInit, OnDestroy {
             'Rule priorities have been updated successfully.',
             'Rules Reordered',
           );
+        }),
+        catchError(() => EMPTY),
+        takeUntilDestroyed(this.destroyRef),
+      )
+      .subscribe();
+  }
+
+  private reloadRules(): void {
+    from(this.ruleManagementService.listRules(true))
+      .pipe(
+        tap((rules) => {
+          this.rules = rules;
         }),
         catchError(() => EMPTY),
         takeUntilDestroyed(this.destroyRef),

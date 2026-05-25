@@ -1,5 +1,13 @@
 import { CommonModule } from '@angular/common';
-import { Component, DestroyRef, OnInit, inject } from '@angular/core';
+import {
+  Component,
+  DestroyRef,
+  Input,
+  OnChanges,
+  OnInit,
+  SimpleChanges,
+  inject,
+} from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import { EMPTY, from } from 'rxjs';
@@ -22,7 +30,8 @@ import {
   imports: [CommonModule, FormsModule, AppSelectDropdownComponent],
   templateUrl: './unread-emails.component.html'
 })
-export class UnreadEmailsComponent implements OnInit {
+export class UnreadEmailsComponent implements OnInit, OnChanges {
+  @Input() refreshToken = 0;
   protected emails: UnprocessedEmail[] = [];
   protected rules: ActiveForwardingRule[] = [];
   protected loading = true;
@@ -42,6 +51,12 @@ export class UnreadEmailsComponent implements OnInit {
 
   ngOnInit(): void {
     this.loadUnreadEmails();
+  }
+
+  ngOnChanges(changes: SimpleChanges): void {
+    if (changes['refreshToken'] && !changes['refreshToken'].firstChange) {
+      this.refresh();
+    }
   }
 
   protected loadUnreadEmails(): void {

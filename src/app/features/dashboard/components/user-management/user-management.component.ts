@@ -1,5 +1,12 @@
 import { CommonModule } from '@angular/common';
-import { Component, DestroyRef, Input, inject } from '@angular/core';
+import {
+  Component,
+  DestroyRef,
+  Input,
+  OnChanges,
+  SimpleChanges,
+  inject,
+} from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import { EMPTY, from } from 'rxjs';
@@ -20,8 +27,9 @@ import { AppSelectDropdownComponent } from '@shared/components/app-select-dropdo
   imports: [CommonModule, FormsModule, AppSelectDropdownComponent],
   templateUrl: './user-management.component.html',
 })
-export class UserManagementComponent {
+export class UserManagementComponent implements OnChanges {
   @Input() isAdmin = false;
+  @Input() refreshToken = 0;
   protected activeTab: 'create-user' | 'department' = 'create-user';
   protected departmentId = '';
   protected departmentOptions: { value: string; label: string }[] = [];
@@ -46,6 +54,12 @@ export class UserManagementComponent {
 
   ngOnInit(): void {
     this.loadDepartments();
+  }
+
+  ngOnChanges(changes: SimpleChanges): void {
+    if (changes['refreshToken'] && !changes['refreshToken'].firstChange) {
+      this.loadDepartments();
+    }
   }
 
   protected setActiveTab(tab: 'create-user' | 'department'): void {

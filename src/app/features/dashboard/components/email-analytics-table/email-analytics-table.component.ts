@@ -4,8 +4,11 @@ import {
   DestroyRef,
   EventEmitter,
   HostListener,
+  Input,
+  OnChanges,
   OnInit,
   Output,
+  SimpleChanges,
   computed,
   inject,
   signal,
@@ -139,7 +142,8 @@ const RULE_COLOR_PALETTE = [
     `,
   ],
 })
-export class EmailAnalyticsTableComponent implements OnInit {
+export class EmailAnalyticsTableComponent implements OnInit, OnChanges {
+  @Input() refreshToken = 0;
   @Output() viewEmailRequested = new EventEmitter<EmailAnalyticsLog>();
   pageSize = signal(10);
   currentPage = signal(1);
@@ -186,6 +190,13 @@ export class EmailAnalyticsTableComponent implements OnInit {
   ngOnInit(): void {
     this.loadAnalytics();
     this.loadRules();
+  }
+
+  ngOnChanges(changes: SimpleChanges): void {
+    if (changes['refreshToken'] && !changes['refreshToken'].firstChange) {
+      this.loadAnalytics(true);
+      this.loadRules();
+    }
   }
 
   @HostListener('document:click')

@@ -24,7 +24,7 @@ export class DashboardDataService {
     async getOverview(forceRefresh = false): Promise<DashboardOverview> {
         const [analytics, rules, connection] = await Promise.all([
             this.analyticsDataService.getAnalytics(forceRefresh),
-            this.ruleManagementService.listRules(),
+            this.ruleManagementService.listRules(forceRefresh),
             this.getConnectionStatus()
         ]);
 

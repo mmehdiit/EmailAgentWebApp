@@ -1,5 +1,13 @@
 import { CommonModule } from '@angular/common';
-import { Component, DestroyRef, OnInit, inject } from '@angular/core';
+import {
+  Component,
+  DestroyRef,
+  Input,
+  OnChanges,
+  OnInit,
+  SimpleChanges,
+  inject,
+} from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { EMPTY, from } from 'rxjs';
 import { catchError, finalize, switchMap, tap } from 'rxjs/operators';
@@ -14,7 +22,8 @@ import { ToastService } from '@core/services/toast.service';
   imports: [CommonModule],
   templateUrl: './reply-analytics.component.html'
 })
-export class ReplyAnalyticsComponent implements OnInit {
+export class ReplyAnalyticsComponent implements OnInit, OnChanges {
+  @Input() refreshToken = 0;
   protected loading = true;
   protected checking = false;
   protected stats: ReplyAnalyticsStats | null = null;
@@ -28,6 +37,12 @@ export class ReplyAnalyticsComponent implements OnInit {
 
   ngOnInit(): void {
     this.loadStats();
+  }
+
+  ngOnChanges(changes: SimpleChanges): void {
+    if (changes['refreshToken'] && !changes['refreshToken'].firstChange) {
+      this.loadStats();
+    }
   }
 
   protected loadStats(): void {
