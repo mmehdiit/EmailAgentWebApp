@@ -132,7 +132,9 @@ export class DashboardComponent implements OnInit, OnDestroy {
             switchMap(() =>
               forkJoin({
                 overview: from(this.dashboardDataService.getOverview()),
-                rules: from(this.ruleManagementService.listRules()),
+                rules: this.isAdmin
+                  ? from(this.ruleManagementService.listRules())
+                  : of([]),
               }),
             ),
           );
@@ -166,6 +168,11 @@ export class DashboardComponent implements OnInit, OnDestroy {
   protected setTab(
     tab: 'overview' | 'rules' | 'analytics' | 'emails' | 'users',
   ): void {
+    if ((tab === 'rules' || tab === 'users') && !this.isAdmin) {
+      this.activeTab = 'overview';
+      return;
+    }
+
     this.activeTab = tab;
   }
 

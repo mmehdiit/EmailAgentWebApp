@@ -5,37 +5,68 @@ import { FormsModule } from '@angular/forms';
 import { EMPTY, from } from 'rxjs';
 import { catchError, finalize, tap } from 'rxjs/operators';
 
-import { CreateUserPayload, UserRoleOption } from '@core/models/dashboard.models';
-import { UserManagementService } from '@core/services/user-management.service';
+import {
+  DepartmentResponse,
+  CreateUserPayload,
+  UserRoleOption,
+} from '@core/models/dashboard.models';
 import { ToastService } from '@core/services/toast.service';
+import { UserManagementService } from '@core/services/user-management.service';
 import { AppSelectDropdownComponent } from '@shared/components/app-select-dropdown/app-select-dropdown.component';
 
 @Component({
   selector: 'app-user-management',
   standalone: true,
   imports: [CommonModule, FormsModule, AppSelectDropdownComponent],
-  templateUrl: './user-management.component.html'
+  templateUrl: './user-management.component.html',
 })
 export class UserManagementComponent {
   @Input() isAdmin = false;
-
+  protected activeTab: 'create-user' | 'department' = 'create-user';
+  protected departmentId = '';
+  protected departmentOptions: { value: string; label: string }[] = [];
+  protected departments: DepartmentResponse[] = [];
+  protected departmentName = '';
   protected email = '';
   protected password = '';
   protected role = 'user';
   protected loading = false;
+  protected departmentLoading = false;
+  protected creatingDepartment = false;
   protected message = '';
   protected errorMessage = '';
   protected readonly roleOptions: UserRoleOption[] = [
     { value: 'user', label: 'User' },
-    { value: 'admin', label: 'Admin' }
+    { value: 'admin', label: 'Admin' },
   ];
 
   private readonly destroyRef = inject(DestroyRef);
+  private readonly userManagementService = inject(UserManagementService);
+  private readonly toastService = inject(ToastService);
 
-  constructor(
-    private readonly userManagementService: UserManagementService,
-    private readonly toastService: ToastService
-  ) {}
+  ngOnInit(): void {
+    this.loadDepartments();
+  }
+
+  protected setActiveTab(tab: 'create-user' | 'department'): void {
+    this.activeTab = tab;
+  }
+
+  private async loadDepartments(): Promise<void> {
+    this.departmentLoading = true;
+    try {
+      const departments = await this.userManagementService.getDepartments();
+      this.departments = departments;
+      this.departmentOptions = departments.map((dept) => ({
+        value: dept.id,
+        label: dept.name,
+      }));
+    } catch (error) {
+      this.toastService.error('Failed to load departments');
+    } finally {
+      this.departmentLoading = false;
+    }
+  }
 
   protected createUser(): void {
     this.message = '';
@@ -44,7 +75,8 @@ export class UserManagementComponent {
     const payload: CreateUserPayload = {
       email: this.email.trim(),
       password: this.password,
-      role: this.role as 'user' | 'admin'
+      role: this.role as 'user' | 'admin',
+      departmentId: this.departmentId || undefined,
     };
 
     const validationError = this.validate(payload);
@@ -62,11 +94,12 @@ export class UserManagementComponent {
           this.message = response.message;
           this.toastService.success(
             `Successfully created user ${payload.email} with ${payload.role} role.`,
-            'User Created'
+            'User Created',
           );
           this.email = '';
           this.password = '';
           this.role = 'user';
+          this.departmentId = '';
         }),
         catchError(() => {
           this.errorMessage = 'Failed to create user.';
@@ -75,7 +108,7 @@ export class UserManagementComponent {
         finalize(() => {
           this.loading = false;
         }),
-        takeUntilDestroyed(this.destroyRef)
+        takeUntilDestroyed(this.destroyRef),
       )
       .subscribe();
   }
@@ -90,6 +123,45 @@ export class UserManagementComponent {
       return 'Password must be at least 6 characters';
     }
 
+    if (!payload.departmentId) {
+      return 'Department is required';
+    }
+
     return null;
+  }
+
+  protected createDepartment(): void {
+    const name = this.departmentName.trim();
+    if (!name) {
+      this.toastService.error('Department name is required', 'Validation Error');
+      return;
+    }
+
+    this.creatingDepartment = true;
+
+    from(this.userManagementService.createDepartment({ name }))
+      .pipe(
+        tap((department) => {
+          this.departments = [...this.departments, department];
+          this.departmentOptions = [
+            ...this.departmentOptions,
+            { value: department.id, label: department.name },
+          ];
+          this.departmentName = '';
+          this.toastService.success(
+            `${department.name} has been created.`,
+            'Department Created',
+          );
+        }),
+        catchError(() => {
+          this.toastService.error('Failed to create department');
+          return EMPTY;
+        }),
+        finalize(() => {
+          this.creatingDepartment = false;
+        }),
+        takeUntilDestroyed(this.destroyRef),
+      )
+      .subscribe();
   }
 }

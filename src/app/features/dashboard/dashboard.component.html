@@ -8,7 +8,7 @@
     [outlookConnected]="outlookConnected"
     [outlookEmail]="outlookEmail"
     [showHomeLink]="true"
-    [showOutlookStatus]="true"
+    [showOutlookStatus]="isAdmin"
     [showLogout]="true"
     (signOutRequested)="signOut()"
   />
@@ -23,7 +23,7 @@
         ></div>
         <nav
           class="mx-auto grid w-full max-w-7xl gap-1 rounded-2xl border border-border/50 bg-card/80 p-1.5 shadow-[0_4px_24px_0_rgba(0,0,0,0.07)] backdrop-blur-sm"
-          [ngClass]="isAdmin ? 'grid-cols-5' : 'grid-cols-4'"
+          [ngClass]="isAdmin ? 'grid-cols-5' : 'grid-cols-3'"
         >
           <button
             type="button"
@@ -51,6 +51,7 @@
           </button>
 
           <button
+            *ngIf="isAdmin"
             type="button"
             (click)="setTab('rules')"
             class="tab-btn flex flex-col items-center justify-center gap-1.5 rounded-xl px-2 py-2.5 text-xs font-semibold tracking-wide transition-all duration-200 hover:bg-muted/60 sm:flex-row sm:gap-2 sm:px-4 sm:py-3 sm:text-sm"
@@ -157,7 +158,7 @@
               <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
               <path d="M16 3.13a4 4 0 0 1 0 7.75" />
             </svg>
-            <span>Users</span>
+            <span>User management</span>
           </button>
         </nav>
       </div>
@@ -170,54 +171,56 @@
         <!-- STAT CARDS -->
         <div class="grid grid-cols-2 gap-4 sm:gap-5 lg:grid-cols-4">
           <!-- Total Rules -->
-          <article
-            class="stat-card group relative overflow-hidden rounded-2xl border border-primary/25 bg-gradient-to-br from-card via-card to-primary/10 p-5 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl sm:p-6"
-          >
-            <div
-              class="absolute inset-0 bg-gradient-to-br from-primary/0 to-primary/8 opacity-0 transition-opacity duration-300 group-hover:opacity-100"
-            ></div>
-            <div
-              class="absolute top-0 right-0 h-20 w-20 -translate-y-6 translate-x-6 rounded-full bg-primary/5 blur-xl"
-            ></div>
-            <div class="relative">
-              <div class="mb-4 flex items-center justify-between">
-                <div
-                  class="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/70 sm:text-xs"
-                >
-                  Total Rules
-                </div>
-                <div
-                  class="rounded-xl bg-primary/10 p-2.5 ring-1 ring-primary/20 transition-all duration-300 group-hover:bg-primary/20 group-hover:ring-primary/30"
-                >
-                  <svg
-                    class="h-4 w-4 text-primary"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    aria-hidden="true"
-                  >
-                    <path
-                      d="M12.22 2h-.44a2 2 0 0 0-1.98 1.57l-.24 1.32a8 8 0 0 0-1.3.75l-1.26-.42a2 2 0 0 0-2.36.84l-.22.38a2 2 0 0 0 .36 2.48l1.02.9a8 8 0 0 0 0 1.5l-1.02.9a2 2 0 0 0-.36 2.48l.22.38a2 2 0 0 0 2.36.84l1.26-.42c.4.3.84.55 1.3.75l.24 1.32A2 2 0 0 0 11.78 22h.44a2 2 0 0 0 1.98-1.57l.24-1.32c.46-.2.9-.45 1.3-.75l1.26.42a2 2 0 0 0 2.36-.84l.22-.38a2 2 0 0 0-.36-2.48l-1.02-.9a8 8 0 0 0 0-1.5l1.02-.9a2 2 0 0 0 .36-2.48l-.22-.38a2 2 0 0 0-2.36-.84l-1.26.42a8 8 0 0 0-1.3-.75l-.24-1.32A2 2 0 0 0 12.22 2z"
-                    />
-                    <circle cx="12" cy="12" r="3" />
-                  </svg>
-                </div>
-              </div>
+          @if (isAdmin) {
+            <article
+              class="stat-card group relative overflow-hidden rounded-2xl border border-primary/25 bg-gradient-to-br from-card via-card to-primary/10 p-5 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl sm:p-6"
+            >
               <div
-                class="stat-number mb-1 text-3xl font-extrabold tracking-tight text-foreground transition-transform duration-300 group-hover:scale-105 sm:text-4xl"
-              >
-                {{ rules.length }}
+                class="absolute inset-0 bg-gradient-to-br from-primary/0 to-primary/8 opacity-0 transition-opacity duration-300 group-hover:opacity-100"
+              ></div>
+              <div
+                class="absolute top-0 right-0 h-20 w-20 -translate-y-6 translate-x-6 rounded-full bg-primary/5 blur-xl"
+              ></div>
+              <div class="relative">
+                <div class="mb-4 flex items-center justify-between">
+                  <div
+                    class="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/70 sm:text-xs"
+                  >
+                    Total Rules
+                  </div>
+                  <div
+                    class="rounded-xl bg-primary/10 p-2.5 ring-1 ring-primary/20 transition-all duration-300 group-hover:bg-primary/20 group-hover:ring-primary/30"
+                  >
+                    <svg
+                      class="h-4 w-4 text-primary"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      aria-hidden="true"
+                    >
+                      <path
+                        d="M12.22 2h-.44a2 2 0 0 0-1.98 1.57l-.24 1.32a8 8 0 0 0-1.3.75l-1.26-.42a2 2 0 0 0-2.36.84l-.22.38a2 2 0 0 0 .36 2.48l1.02.9a8 8 0 0 0 0 1.5l-1.02.9a2 2 0 0 0-.36 2.48l.22.38a2 2 0 0 0 2.36.84l1.26-.42c.4.3.84.55 1.3.75l.24 1.32A2 2 0 0 0 11.78 22h.44a2 2 0 0 0 1.98-1.57l.24-1.32c.46-.2.9-.45 1.3-.75l1.26.42a2 2 0 0 0 2.36-.84l.22-.38a2 2 0 0 0-.36-2.48l-1.02-.9a8 8 0 0 0 0-1.5l1.02-.9a2 2 0 0 0 .36-2.48l-.22-.38a2 2 0 0 0-2.36-.84l-1.26.42a8 8 0 0 0-1.3-.75l-.24-1.32A2 2 0 0 0 12.22 2z"
+                      />
+                      <circle cx="12" cy="12" r="3" />
+                    </svg>
+                  </div>
+                </div>
+                <div
+                  class="stat-number mb-1 text-3xl font-extrabold tracking-tight text-foreground transition-transform duration-300 group-hover:scale-105 sm:text-4xl"
+                >
+                  {{ rules.length }}
+                </div>
+                <p
+                  class="text-[11px] font-medium text-muted-foreground sm:text-xs"
+                >
+                  Active forwarding rules
+                </p>
               </div>
-              <p
-                class="text-[11px] font-medium text-muted-foreground sm:text-xs"
-              >
-                Active forwarding rules
-              </p>
-            </div>
-          </article>
+            </article>
+          }
 
           <!-- Processed -->
           <article
@@ -367,7 +370,7 @@
 
         <!-- OUTLOOK CONNECTED CARD -->
         <article
-          *ngIf="outlookConnected; else connectOutlookCard"
+          *ngIf="isAdmin && outlookConnected; else connectOutlookCard"
           class="outlook-card rounded-2xl border-2 border-success/35 bg-gradient-to-br from-success/10 via-card to-success/5 p-6 shadow-[0_8px_32px_0_rgba(0,0,0,0.06)] backdrop-blur-sm sm:p-7"
         >
           <div
@@ -471,20 +474,54 @@
 
         <!-- CONNECT OUTLOOK CARD -->
         <ng-template #connectOutlookCard>
-          <article
-            class="outlook-card rounded-2xl border-2 border-warning/35 bg-gradient-to-br from-warning/10 via-card to-warning/5 p-6 shadow-[0_8px_32px_0_rgba(0,0,0,0.06)] backdrop-blur-sm sm:p-8"
-          >
-            <div
-              class="flex flex-col items-center justify-between gap-5 md:flex-row sm:gap-8"
+          <ng-container *ngIf="isAdmin">
+            <article
+              class="outlook-card rounded-2xl border-2 border-warning/35 bg-gradient-to-br from-warning/10 via-card to-warning/5 p-6 shadow-[0_8px_32px_0_rgba(0,0,0,0.06)] backdrop-blur-sm sm:p-8"
             >
               <div
-                class="flex items-center gap-4 text-center sm:gap-5 md:text-left"
+                class="flex flex-col items-center justify-between gap-5 md:flex-row sm:gap-8"
               >
                 <div
-                  class="shrink-0 rounded-2xl bg-warning/15 p-4 shadow-[0_4px_16px_0_rgba(0,0,0,0.06)] ring-1 ring-warning/20 sm:p-5"
+                  class="flex items-center gap-4 text-center sm:gap-5 md:text-left"
+                >
+                  <div
+                    class="shrink-0 rounded-2xl bg-warning/15 p-4 shadow-[0_4px_16px_0_rgba(0,0,0,0.06)] ring-1 ring-warning/20 sm:p-5"
+                  >
+                    <svg
+                      class="h-7 w-7 text-warning sm:h-8 sm:w-8"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      aria-hidden="true"
+                    >
+                      <path d="M22 12h-4l-3 9L9 3l-3 9H2" />
+                    </svg>
+                  </div>
+                  <div>
+                    <h3
+                      class="mb-2 text-lg font-bold text-foreground sm:text-xl"
+                    >
+                      Connect Your Outlook
+                    </h3>
+                    <p
+                      class="max-w-md text-sm text-muted-foreground sm:text-base"
+                    >
+                      Authenticate with Microsoft to start processing and
+                      forwarding emails automatically
+                    </p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  (click)="connectOutlook()"
+                  [disabled]="isConnecting"
+                  class="primary-btn inline-flex h-12 w-full items-center justify-center gap-2.5 rounded-xl bg-primary px-8 font-bold text-primary-foreground shadow-[0_4px_20px_0_rgba(var(--primary-rgb),0.35)] transition-all hover:shadow-[0_8px_28px_0_rgba(var(--primary-rgb),0.45)] hover:-translate-y-px active:translate-y-0 md:w-auto disabled:opacity-60 disabled:pointer-events-none"
                 >
                   <svg
-                    class="h-7 w-7 text-warning sm:h-8 sm:w-8"
+                    class="h-5 w-5"
                     viewBox="0 0 24 24"
                     fill="none"
                     stroke="currentColor"
@@ -495,48 +532,18 @@
                   >
                     <path d="M22 12h-4l-3 9L9 3l-3 9H2" />
                   </svg>
-                </div>
-                <div>
-                  <h3 class="mb-2 text-lg font-bold text-foreground sm:text-xl">
-                    Connect Your Outlook
-                  </h3>
-                  <p
-                    class="max-w-md text-sm text-muted-foreground sm:text-base"
-                  >
-                    Authenticate with Microsoft to start processing and
-                    forwarding emails automatically
-                  </p>
-                </div>
+                  <span>{{
+                    isConnecting ? "Connecting..." : "Connect Outlook"
+                  }}</span>
+                </button>
               </div>
-              <button
-                type="button"
-                (click)="connectOutlook()"
-                [disabled]="isConnecting"
-                class="primary-btn inline-flex h-12 w-full items-center justify-center gap-2.5 rounded-xl bg-primary px-8 font-bold text-primary-foreground shadow-[0_4px_20px_0_rgba(var(--primary-rgb),0.35)] transition-all hover:shadow-[0_8px_28px_0_rgba(var(--primary-rgb),0.45)] hover:-translate-y-px active:translate-y-0 md:w-auto disabled:opacity-60 disabled:pointer-events-none"
-              >
-                <svg
-                  class="h-5 w-5"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  aria-hidden="true"
-                >
-                  <path d="M22 12h-4l-3 9L9 3l-3 9H2" />
-                </svg>
-                <span>{{
-                  isConnecting ? "Connecting..." : "Connect Outlook"
-                }}</span>
-              </button>
-            </div>
-          </article>
+            </article>
+          </ng-container>
         </ng-template>
 
         <!-- STATUS MESSAGE -->
         <article
-          *ngIf="connectionMessage"
+          *ngIf="isAdmin && connectionMessage"
           class="rounded-2xl border border-border/60 bg-card p-4 text-card-foreground shadow-sm sm:p-5"
         >
           <h3 class="mb-2 text-sm font-semibold text-foreground sm:text-base">
@@ -546,7 +553,10 @@
         </article>
 
         <!-- RECENT ACTIVITY + TOP RULES -->
-        <div class="grid gap-4 sm:gap-6 md:grid-cols-2">
+        <div
+          class="grid gap-4 sm:gap-6"
+          [ngClass]="isAdmin ? 'md:grid-cols-2' : ''"
+        >
           <!-- Recent Activity -->
           <article
             class="panel rounded-2xl border border-border/60 bg-card p-5 text-card-foreground shadow-sm sm:p-6"
@@ -608,7 +618,7 @@
               class="max-h-[250px] space-y-1.5 overflow-y-auto pr-1 sm:max-h-[300px]"
             >
               <div
-                *ngFor="let log of overview.recentLogs | slice : 0 : 5"
+                *ngFor="let log of overview.recentLogs | slice: 0 : 5"
                 class="log-item flex items-start gap-3 rounded-xl bg-muted/40 px-3 py-2.5 transition-all duration-200 hover:bg-muted/70"
               >
                 <div
@@ -619,7 +629,7 @@
                     'bg-muted-foreground ring-muted-foreground/20':
                       log.status === 'no_match',
                     'bg-destructive ring-destructive/30':
-                      log.status === 'failed'
+                      log.status === 'failed',
                   }"
                 ></div>
                 <div class="min-w-0 flex-1">
@@ -646,8 +656,8 @@
                       log.status === 'forwarded'
                         ? 'bg-primary text-primary-foreground'
                         : log.status === 'replied'
-                        ? 'border border-success/30 bg-success/10 text-success'
-                        : 'bg-muted text-muted-foreground'
+                          ? 'border border-success/30 bg-success/10 text-success'
+                          : 'bg-muted text-muted-foreground'
                     "
                     >{{ log.status }}</span
                   >
@@ -685,6 +695,7 @@
 
           <!-- Top Rules -->
           <article
+            *ngIf="isAdmin"
             class="panel rounded-2xl border border-border/60 bg-card p-5 text-card-foreground shadow-sm sm:p-6"
           >
             <h3
@@ -715,7 +726,7 @@
 
             <div *ngIf="rules.length > 0; else noRules" class="space-y-1.5">
               <div
-                *ngFor="let rule of rules | slice : 0 : 5"
+                *ngFor="let rule of rules | slice: 0 : 5"
                 class="log-item flex items-center justify-between rounded-xl bg-muted/40 px-3 py-2.5 transition-all duration-200 hover:bg-muted/70"
               >
                 <div class="flex min-w-0 flex-1 items-center gap-3">
@@ -795,7 +806,7 @@
 
       <!-- ══════════════════ RULES TAB ══════════════════ -->
       <section
-        *ngIf="activeTab === 'rules'"
+        *ngIf="activeTab === 'rules' && isAdmin"
         class="dashboard-tab-enter space-y-4 sm:space-y-6"
       >
         <div
@@ -1297,7 +1308,7 @@
       </section>
 
       <section
-        *ngIf="activeTab === 'users'"
+        *ngIf="activeTab === 'users' && isAdmin"
         class="dashboard-tab-enter space-y-4 sm:space-y-6"
       >
         <app-user-management [isAdmin]="isAdmin" />
@@ -1453,7 +1464,7 @@
           <div>
             <span class="font-semibold">Date : </span>
             <span class="text-muted-foreground">{{
-              emailContent.receivedAt | date : "medium"
+              emailContent.receivedAt | date: "medium"
             }}</span>
           </div>
           <div>

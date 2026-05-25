@@ -324,20 +324,6 @@ export class EmailAnalyticsTableComponent implements OnInit {
 
   protected filteredLogs(): EmailAnalyticsLog[] {
     let rows = this.logs();
-    const minDate = this.startOfDay(this.dateRange.from);
-    const maxDate = this.endOfDay(this.dateRange.to);
-
-    rows = rows.filter((log) => {
-      const value = log.receivedAt || log.processedAt || log.date;
-      if (!value) {
-        return false;
-      }
-
-      const date = new Date(value);
-      return (
-        !Number.isNaN(date.getTime()) && date >= minDate && date <= maxDate
-      );
-    });
 
     if (this.statusFilter !== 'all') {
       if (this.statusFilter === 'replied') {
@@ -419,7 +405,6 @@ export class EmailAnalyticsTableComponent implements OnInit {
     this.dateRange = this.buildPresetRange(days);
     this.calendarMonth = this.startOfMonth(this.dateRange.from);
     this.currentPage.set(1);
-    this.refreshFilteredPagination();
     this.loadAnalytics(true);
   }
 
@@ -487,7 +472,6 @@ export class EmailAnalyticsTableComponent implements OnInit {
       }
       this.datePreset = 'custom';
       this.currentPage.set(1);
-      this.refreshFilteredPagination();
       this.loadAnalytics(true);
       return;
     }
@@ -495,7 +479,6 @@ export class EmailAnalyticsTableComponent implements OnInit {
     this.dateRange = { from: selected, to: selected };
     this.datePreset = 'custom';
     this.currentPage.set(1);
-    this.refreshFilteredPagination();
     this.loadAnalytics(true);
   }
 
@@ -776,6 +759,7 @@ export class EmailAnalyticsTableComponent implements OnInit {
         ),
         tap((analytics) => {
           this.analytics = analytics;
+          this.refreshFilteredPagination();
         }),
         catchError(() => EMPTY),
         takeUntilDestroyed(this.destroyRef)
@@ -814,6 +798,7 @@ export class EmailAnalyticsTableComponent implements OnInit {
         ),
         tap((analytics) => {
           this.analytics = analytics;
+          this.refreshFilteredPagination();
         }),
         catchError(() => EMPTY),
         finalize(() => {

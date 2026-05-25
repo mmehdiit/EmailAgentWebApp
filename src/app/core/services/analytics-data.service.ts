@@ -23,16 +23,20 @@ export class AnalyticsDataService {
   constructor(
     private readonly analyticsApiService: AnalyticsApiService,
     private readonly ruleManagementService: RuleManagementService,
-    private readonly unreadEmailApiService: UnreadEmailApiService
+    private readonly unreadEmailApiService: UnreadEmailApiService,
   ) {}
 
   async getAnalytics(
     forceRefresh = false,
-    filters: { fromDate?: string; toDate?: string } = {}
+    filters: { fromDate?: string; toDate?: string } = {},
   ): Promise<DashboardAnalytics> {
     const cacheKey = this.buildAnalyticsCacheKey(filters);
 
-    if (!forceRefresh && this.analyticsPromise && this.analyticsCacheKey === cacheKey) {
+    if (
+      !forceRefresh &&
+      this.analyticsPromise &&
+      this.analyticsCacheKey === cacheKey
+    ) {
       return this.analyticsPromise;
     }
 
@@ -58,7 +62,7 @@ export class AnalyticsDataService {
     stillFailed: number;
   }> {
     const result = await firstValueFrom(
-      this.unreadEmailApiService.retryFailedEmails()
+      this.unreadEmailApiService.retryFailedEmails(),
     );
     this.invalidateCache();
     return {
@@ -69,7 +73,7 @@ export class AnalyticsDataService {
 
   async getEmailContent(messageId: string): Promise<EmailContent> {
     const content = await firstValueFrom(
-      this.unreadEmailApiService.getEmailContent(messageId)
+      this.unreadEmailApiService.getEmailContent(messageId),
     );
 
     return {
@@ -86,39 +90,48 @@ export class AnalyticsDataService {
     this.invalidateCache();
   }
 
-  async assignToRule(
-    emailId: string,
-    ruleId: string
-  ): Promise<void> {
-    await firstValueFrom(this.unreadEmailApiService.manualAssign(emailId, ruleId));
+  async assignToRule(emailId: string, ruleId: string): Promise<void> {
+    await firstValueFrom(
+      this.unreadEmailApiService.manualAssign(emailId, ruleId),
+    );
     this.invalidateCache();
   }
 
-  private async fetchAnalytics(filters: { fromDate?: string; toDate?: string }): Promise<DashboardAnalytics> {
+  private async fetchAnalytics(filters: {
+    fromDate?: string;
+    toDate?: string;
+  }): Promise<DashboardAnalytics> {
     const [logs, rules] = await Promise.all([
       firstValueFrom(this.analyticsApiService.getLogs(filters)),
       this.ruleManagementService.listRules(),
     ]);
 
     const ruleMap = new Map(rules.map((rule) => [rule.id, rule.name]));
-    const mappedLogs = logs.map<EmailAnalyticsLog>((log) => ({
-      id: log.id,
-      date: this.formatDisplayDate(log.received_at ?? log.processed_at),
-      from: log.email_from ?? '',
-      subject: log.email_subject ?? '',
-      status: log.status,
-      ruleName: log.rule_matched ? ruleMap.get(log.rule_matched) ?? null : null,
-      forwardedTo: log.forwarded_to,
-      replyDetected: log.reply_detected,
-      aiClassified: log.ai_classified,
-      aiConfidence: log.ai_confidence,
-      outlookMessageId: log.outlook_message_id,
-      replySource: log.reply_source,
-      processedAt: log.processed_at,
-      repliedAt: log.replied_at,
-      receivedAt: log.received_at,
-      negativeKeywordOverride: log.negative_keyword_override,
-    }));
+    const mappedLogs = logs.map<EmailAnalyticsLog>((log) => {
+      const ruleMatched = log.rule_matched ?? log.ruleMatched ?? null;
+      const processedAt = log.processed_at ?? log.processedAt ?? null;
+      const receivedAt = log.received_at ?? log.receivedAt ?? null;
+
+      return {
+        id: log.id,
+        date: this.formatDisplayDate(receivedAt ?? processedAt),
+        from: log.email_from ?? log.emailFrom ?? '',
+        subject: log.email_subject ?? log.emailSubject ?? '',
+        status: log.status,
+        ruleName: ruleMatched ? ruleMap.get(ruleMatched) ?? null : null,
+        forwardedTo: log.forwarded_to ?? log.forwardedTo ?? null,
+        replyDetected: log.reply_detected ?? log.replyDetected ?? false,
+        aiClassified: log.ai_classified ?? log.aiClassified ?? false,
+        aiConfidence: log.ai_confidence ?? log.aiConfidence ?? null,
+        outlookMessageId: log.outlook_message_id ?? log.outlookMessageId ?? null,
+        replySource: log.reply_source ?? log.replySource ?? null,
+        processedAt,
+        repliedAt: log.replied_at ?? log.repliedAt ?? null,
+        receivedAt,
+        negativeKeywordOverride:
+          log.negative_keyword_override ?? log.negativeKeywordOverride ?? null,
+      };
+    });
 
     return {
       summary: this.buildSummary(mappedLogs),
@@ -129,10 +142,10 @@ export class AnalyticsDataService {
   }
 
   private buildSummary(
-    logs: EmailAnalyticsLog[]
+    logs: EmailAnalyticsLog[],
   ): DashboardAnalytics['summary'] {
     const repliedLogs = logs.filter(
-      (log) => log.replyDetected && log.repliedAt && log.processedAt
+      (log) => log.replyDetected && log.repliedAt && log.processedAt,
     );
     const avgResponseMinutes =
       repliedLogs.length > 0
@@ -143,7 +156,7 @@ export class AnalyticsDataService {
               return Number.isNaN(start) || Number.isNaN(end) || end < start
                 ? total
                 : total + Math.floor((end - start) / 60000);
-            }, 0) / repliedLogs.length
+            }, 0) / repliedLogs.length,
           )
         : null;
 
@@ -152,7 +165,7 @@ export class AnalyticsDataService {
       forwarded: logs.filter((log) => log.status === 'forwarded').length,
       replied: logs.filter((log) => log.replyDetected).length,
       pending: logs.filter(
-        (log) => log.status === 'forwarded' && !log.replyDetected
+        (log) => log.status === 'forwarded' && !log.replyDetected,
       ).length,
       noMatch: logs.filter((log) => log.status === 'no_match').length,
       failed: logs.filter((log) => log.status === 'failed').length,
@@ -166,10 +179,10 @@ export class AnalyticsDataService {
 
   private buildReplyStats(logs: EmailAnalyticsLog[]): ReplyAnalyticsStats {
     const totalForwarded = logs.filter(
-      (log) => log.status === 'forwarded'
+      (log) => log.status === 'forwarded',
     ).length;
     const repliedLogs = logs.filter(
-      (log) => log.replyDetected && log.repliedAt && log.processedAt
+      (log) => log.replyDetected && log.repliedAt && log.processedAt,
     );
     const replied = logs.filter((log) => log.replyDetected).length;
     const pending = Math.max(totalForwarded - replied, 0);
@@ -184,7 +197,7 @@ export class AnalyticsDataService {
                   ? total
                   : total + (end - start) / 3600000;
               }, 0) / repliedLogs.length
-            ).toFixed(1)
+            ).toFixed(1),
           )
         : null;
 
@@ -199,7 +212,7 @@ export class AnalyticsDataService {
   }
 
   private buildRulePerformance(
-    logs: EmailAnalyticsLog[]
+    logs: EmailAnalyticsLog[],
   ): RulePerformanceStat[] {
     const grouped = new Map<string, EmailAnalyticsLog[]>();
 
@@ -216,7 +229,7 @@ export class AnalyticsDataService {
     return Array.from(grouped.entries())
       .map(([ruleName, ruleLogs]) => {
         const successful = ruleLogs.filter(
-          (log) => log.status === 'forwarded'
+          (log) => log.status === 'forwarded',
         ).length;
         const failed = ruleLogs.filter((log) => log.status === 'failed').length;
         const lastMatched =
@@ -273,7 +286,10 @@ export class AnalyticsDataService {
     this.analyticsCacheKey = '';
   }
 
-  private buildAnalyticsCacheKey(filters: { fromDate?: string; toDate?: string }): string {
+  private buildAnalyticsCacheKey(filters: {
+    fromDate?: string;
+    toDate?: string;
+  }): string {
     return `${filters.fromDate ?? ''}:${filters.toDate ?? ''}`;
   }
 }

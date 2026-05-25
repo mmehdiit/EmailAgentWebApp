@@ -146,7 +146,7 @@
               </h4>
 
               <!-- matched badge -->
-              <span
+              <!-- <span
                 *ngIf="email.matchesRule; else noMatchBadge"
                 class="inline-flex h-5 shrink-0 items-center gap-1 rounded-md px-2 text-[10px] font-semibold sm:text-xs"
                 [ngClass]="
@@ -176,10 +176,10 @@
                 <span *ngIf="email.aiConfidence" class="opacity-70">
                   ({{ email.aiConfidence * 100 | number : "1.0-0" }}%)
                 </span>
-              </span>
+              </span> -->
 
               <!-- no match badge -->
-              <ng-template #noMatchBadge>
+              <!-- <ng-template #noMatchBadge>
                 <span
                   class="inline-flex h-5 shrink-0 items-center gap-1 rounded-md bg-muted px-2 text-[10px] font-medium text-muted-foreground sm:text-xs"
                 >
@@ -199,7 +199,7 @@
                   </svg>
                   No match
                 </span>
-              </ng-template>
+              </ng-template> -->
             </div>
 
             <!-- sender -->

@@ -153,6 +153,7 @@ export interface CreateUserPayload {
   email: string;
   password: string;
   role: 'user' | 'admin';
+  departmentId?: string;
 }
 
 export interface CreateUserResponse {
@@ -160,4 +161,14 @@ export interface CreateUserResponse {
   message: string;
   email?: string;
   role?: string;
+}
+
+export interface DepartmentResponse {
+  id: string;
+  name: string;
+  createdAt: string;
+}
+
+export interface CreateDepartmentPayload {
+  name: string;
 }

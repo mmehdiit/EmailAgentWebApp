@@ -5,7 +5,7 @@
   <div class="border-b border-border/50 bg-muted/30 px-6 py-5 rounded-t-xl">
     <h3 class="flex items-center gap-2.5 text-[15px] font-medium">
       <span
-        class="flex items-center justify-center w-[30px] h-[30px] rounded-lg bg-background border border-border/60"
+        class="flex h-[30px] w-[30px] items-center justify-center rounded-lg border border-border/60 bg-background"
       >
         <svg
           class="h-[15px] w-[15px] text-muted-foreground"
@@ -19,25 +19,53 @@
         >
           <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
           <circle cx="9" cy="7" r="4" />
-          <path d="M19 8v6" />
-          <path d="M22 11h-6" />
+          <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
+          <path d="M16 3.13a4 4 0 0 1 0 7.75" />
         </svg>
       </span>
-      Create new user
+      User management
     </h3>
-    <p
-      class="mt-1.5 ml-[39px] text-[12.5px] text-muted-foreground leading-relaxed"
-    >
-      Add new users to the system. Only administrators can create users.
-    </p>
+  </div>
+
+  <div class="border-b border-border/50 px-6 pt-4">
+    <div class="flex gap-2">
+      <button
+        type="button"
+        (click)="setActiveTab('create-user')"
+        class="rounded-t-lg border border-b-0 px-4 py-2 text-[13px] font-medium transition-all"
+        [ngClass]="
+          activeTab === 'create-user'
+            ? 'border-border bg-background text-foreground'
+            : 'border-transparent text-muted-foreground hover:bg-muted/50 hover:text-foreground'
+        "
+      >
+        Create User
+      </button>
+      <button
+        type="button"
+        (click)="setActiveTab('department')"
+        class="rounded-t-lg border border-b-0 px-4 py-2 text-[13px] font-medium transition-all"
+        [ngClass]="
+          activeTab === 'department'
+            ? 'border-border bg-background text-foreground'
+            : 'border-transparent text-muted-foreground hover:bg-muted/50 hover:text-foreground'
+        "
+      >
+        Department
+      </button>
+    </div>
   </div>
 
   <div class="px-6 py-5">
-    <form class="space-y-4" (ngSubmit)="createUser()">
+    <form
+      *ngIf="activeTab === 'create-user'"
+      class="space-y-4"
+      (ngSubmit)="createUser()"
+    >
       <div class="space-y-1.5">
         <label
           class="text-[12.5px] font-medium text-muted-foreground tracking-wide"
-          >Email</label
+          >Email <span class="text-destructive">*</span></label
         >
         <input
           [(ngModel)]="email"
@@ -51,7 +79,7 @@
       <div class="space-y-1.5">
         <label
           class="text-[12.5px] font-medium text-muted-foreground tracking-wide"
-          >Password</label
+          >Password <span class="text-destructive">*</span></label
         >
         <input
           [(ngModel)]="password"
@@ -62,22 +90,38 @@
         />
       </div>
 
-      <div class="space-y-1.5">
-        <label
-          class="text-[12.5px] font-medium text-muted-foreground tracking-wide"
-          >Role</label
-        >
-        <app-select-dropdown
-          [(value)]="role"
-          [options]="roleOptions"
-          placeholder="Select role"
-        />
+      <div class="grid gap-4 sm:grid-cols-2">
+        <div class="space-y-1.5">
+          <label
+            class="text-[12.5px] font-medium text-muted-foreground tracking-wide"
+            >Role <span class="text-destructive">*</span></label
+          >
+          <app-select-dropdown
+            [(value)]="role"
+            [options]="roleOptions"
+            placeholder="Select role"
+          />
+        </div>
+
+        <div class="space-y-1.5">
+          <label
+            class="text-[12.5px] font-medium text-muted-foreground tracking-wide"
+            >Department <span class="text-destructive">*</span></label
+          >
+          <app-select-dropdown
+            [(value)]="departmentId"
+            [options]="departmentOptions"
+            [placeholder]="
+              departmentLoading ? 'Loading departments...' : 'Select department'
+            "
+          />
+        </div>
       </div>
 
       <button
         type="submit"
         class="mt-1 flex w-full items-center justify-center gap-2 rounded-lg border border-border/60 bg-background px-4 py-2 text-[13.5px] font-medium text-foreground transition-all duration-150 hover:bg-muted/50 active:scale-[0.99] disabled:opacity-50 disabled:cursor-not-allowed"
-        [disabled]="loading"
+        [disabled]="loading || departmentLoading"
       >
         <svg
           *ngIf="!loading"
@@ -106,8 +150,77 @@
         >
           <path d="M21 12a9 9 0 1 1-6.219-8.56" />
         </svg>
-        {{ loading ? "Creating..." : "Create user" }}
+        {{ loading ? "Creating..." : "Create User" }}
       </button>
     </form>
+
+    <div *ngIf="activeTab === 'department'" class="space-y-5">
+      <form
+        class="flex flex-col gap-3 sm:flex-row"
+        (ngSubmit)="createDepartment()"
+      >
+        <input
+          [(ngModel)]="departmentName"
+          name="departmentName"
+          type="text"
+          placeholder="Department name"
+          class="h-[38px] min-w-0 flex-1 rounded-lg border border-input/70 bg-muted/40 px-3 text-[13.5px] placeholder:text-muted-foreground/50 transition-all duration-150 focus:outline-none focus:border-ring focus:ring-2 focus:ring-ring/10 hover:border-input"
+        />
+        <button
+          type="submit"
+          class="inline-flex h-[38px] items-center justify-center gap-2 rounded-lg border border-border/60 bg-background px-4 text-[13.5px] font-medium text-foreground transition-all duration-150 hover:bg-muted/50 active:scale-[0.99] disabled:opacity-50"
+          [disabled]="creatingDepartment"
+        >
+          <svg
+            *ngIf="creatingDepartment"
+            class="h-3.5 w-3.5 animate-spin text-muted-foreground"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <path d="M21 12a9 9 0 1 1-6.219-8.56" />
+          </svg>
+          {{ creatingDepartment ? "Creating..." : "Create Department" }}
+        </button>
+      </form>
+
+      <div class="overflow-hidden rounded-lg border border-border/60">
+        <div
+          class="grid grid-cols-[1fr_auto] gap-4 border-b border-border/50 bg-muted/30 px-4 py-2 text-[12px] font-medium uppercase tracking-wide text-muted-foreground"
+        >
+          <span>Department</span>
+          <span>Created</span>
+        </div>
+
+        <div
+          *ngIf="departmentLoading"
+          class="px-4 py-6 text-center text-sm text-muted-foreground"
+        >
+          Loading departments...
+        </div>
+
+        <div
+          *ngIf="!departmentLoading && departments.length === 0"
+          class="px-4 py-6 text-center text-sm text-muted-foreground"
+        >
+          No departments created yet.
+        </div>
+
+        <div
+          *ngFor="let department of departments"
+          class="grid grid-cols-[1fr_auto] gap-4 border-t border-border/40 px-4 py-3 text-[13.5px] first:border-t-0"
+        >
+          <span class="min-w-0 truncate font-medium text-foreground">
+            {{ department.name }}
+          </span>
+          <span class="text-muted-foreground">
+            {{ department.createdAt | date: "mediumDate" }}
+          </span>
+        </div>
+      </div>
+    </div>
   </div>
 </div>

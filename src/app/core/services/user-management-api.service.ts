@@ -3,7 +3,11 @@ import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 
 import { environment } from '../../../environments/environment.development';
-import { CreateUserPayload } from '../models/dashboard.models';
+import {
+  CreateDepartmentPayload,
+  CreateUserPayload,
+  DepartmentResponse,
+} from '../models/dashboard.models';
 
 type CreateUserApiResponse = {
   token: string;
@@ -22,7 +26,22 @@ export class UserManagementApiService {
   createUser(payload: CreateUserPayload): Observable<CreateUserApiResponse> {
     return this.http.post<CreateUserApiResponse>(
       `${this.baseUrl}/admin/users`,
-      payload
+      payload,
+    );
+  }
+
+  getDepartments(): Observable<DepartmentResponse[]> {
+    return this.http.get<DepartmentResponse[]>(
+      `${this.baseUrl}/admin/departments`,
+    );
+  }
+
+  createDepartment(
+    payload: CreateDepartmentPayload,
+  ): Observable<DepartmentResponse> {
+    return this.http.post<DepartmentResponse>(
+      `${this.baseUrl}/admin/departments`,
+      payload,
     );
   }
 }
