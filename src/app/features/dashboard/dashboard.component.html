@@ -878,7 +878,8 @@
 
         <!-- ADD / EDIT RULE FORM -->
         <div
-          *ngIf="showAddRule"
+          #ruleEditorPanel
+          *ngIf="showAddRule && ruleEditorVisible"
           class="rounded-2xl border-2 border-primary/25 bg-card p-5 shadow-[0_8px_32px_0_rgba(0,0,0,0.06)] sm:p-6"
         >
           <h3 class="mb-4 text-base font-semibold text-foreground sm:text-lg">
@@ -1280,6 +1281,7 @@
             [rule]="rule"
             [index]="i"
             [total]="rules.length"
+            [isEditing]="editingRuleId === rule.id"
             (edit)="editRule($event)"
             (toggleActive)="toggleRuleActive($event)"
             (delete)="deleteRule($event)"

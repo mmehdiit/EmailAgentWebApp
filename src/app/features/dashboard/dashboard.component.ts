@@ -2,8 +2,10 @@ import { CommonModule } from '@angular/common';
 import {
   Component,
   DestroyRef,
+  ElementRef,
   OnDestroy,
   OnInit,
+  ViewChild,
   inject,
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
@@ -58,6 +60,8 @@ type DashboardRuleEditor = SortableDashboardRule;
   styleUrl: './dashboard.component.scss',
 })
 export class DashboardComponent implements OnInit, OnDestroy {
+  @ViewChild('ruleEditorPanel') private ruleEditorPanel?: ElementRef<HTMLElement>;
+
   protected loading: boolean = true;
   protected loadingError: string = '';
   protected activeTab: 'overview' | 'rules' | 'analytics' | 'emails' | 'users' =
@@ -82,6 +86,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
   protected emailsRefreshToken: number = 0;
   protected userManagementRefreshToken: number = 0;
   protected showAddRule: boolean = false;
+  protected ruleEditorVisible: boolean = false;
   protected editingRuleId: string | null = null;
   protected readonly newRule: DashboardRuleEditor = this.createEmptyRule();
   protected draggedRuleId: string | null = null;
@@ -96,6 +101,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly sanitizer = inject(DomSanitizer);
+  private ruleEditorSession = 0;
 
   ngOnInit(): void {
     this.loading = true;
@@ -251,10 +257,12 @@ export class DashboardComponent implements OnInit, OnDestroy {
   }
 
   protected toggleRuleForm(): void {
-    this.showAddRule = !this.showAddRule;
-    if (!this.showAddRule) {
-      this.resetRuleForm();
+    if (this.showAddRule) {
+      this.closeRuleEditor();
+      return;
     }
+
+    this.openRuleEditor();
   }
 
   protected parseSubjectPatternKeywords(value: string): string[] {
@@ -281,19 +289,20 @@ export class DashboardComponent implements OnInit, OnDestroy {
       ? { ...this.newRule, id: this.editingRuleId }
       : { ...this.newRule };
 
+    const wasEditing = !!this.editingRuleId;
+
     from(this.ruleManagementService.saveRule(ruleToSave))
       .pipe(
         tap((rules) => {
           this.rules = rules;
           this.toastService.success(
-            this.editingRuleId
+            wasEditing
               ? 'Your forwarding rule has been updated.'
               : 'Your forwarding rule has been created.',
-            this.editingRuleId ? 'Rule Updated' : 'Rule Added',
+            wasEditing ? 'Rule Updated' : 'Rule Added',
           );
 
-          this.resetRuleForm();
-          this.showAddRule = false;
+          this.closeRuleEditor();
         }),
         catchError(() => EMPTY),
         takeUntilDestroyed(this.destroyRef),
@@ -302,19 +311,11 @@ export class DashboardComponent implements OnInit, OnDestroy {
   }
 
   protected editRule(rule: DashboardRuleEditor): void {
-    this.editingRuleId = rule.id;
-    Object.assign(this.newRule, {
-      ...rule,
-      keywords: [...rule.keywords],
-      negativeKeywords: [...rule.negativeKeywords],
-      recipients: rule.recipients.map((recipient) => ({ ...recipient })),
-    });
-    this.showAddRule = true;
+    this.openRuleEditor(rule);
   }
 
   protected cancelEdit(): void {
-    this.resetRuleForm();
-    this.showAddRule = false;
+    this.closeRuleEditor();
   }
 
   protected deleteRule(id: string): void {
@@ -520,6 +521,49 @@ export class DashboardComponent implements OnInit, OnDestroy {
   private resetRuleForm(): void {
     this.editingRuleId = null;
     Object.assign(this.newRule, this.createEmptyRule());
+  }
+
+  private openRuleEditor(rule?: DashboardRuleEditor): void {
+    const session = ++this.ruleEditorSession;
+
+    this.ruleEditorVisible = false;
+    this.resetRuleForm();
+
+    if (rule) {
+      this.editingRuleId = rule.id;
+      Object.assign(this.newRule, {
+        ...rule,
+        keywords: [...rule.keywords],
+        negativeKeywords: [...rule.negativeKeywords],
+        recipients: rule.recipients.map((recipient) => ({ ...recipient })),
+      });
+    }
+
+    this.showAddRule = true;
+
+    setTimeout(() => {
+      if (session === this.ruleEditorSession && this.showAddRule) {
+        this.ruleEditorVisible = true;
+
+        if (rule) {
+          setTimeout(() => this.scrollRuleEditorToTop());
+        }
+      }
+    });
+  }
+
+  private closeRuleEditor(): void {
+    this.ruleEditorSession++;
+    this.ruleEditorVisible = false;
+    this.showAddRule = false;
+    this.resetRuleForm();
+  }
+
+  private scrollRuleEditorToTop(): void {
+    this.ruleEditorPanel?.nativeElement.scrollIntoView({
+      behavior: 'smooth',
+      block: 'start',
+    });
   }
 
   private updateRuleOrder(rules: DashboardRuleEditor[]): void {

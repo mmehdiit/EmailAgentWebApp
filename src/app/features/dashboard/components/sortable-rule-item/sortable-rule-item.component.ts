@@ -13,6 +13,7 @@ export class SortableRuleItemComponent {
   @Input({ required: true }) rule!: SortableDashboardRule;
   @Input() index = 0;
   @Input() total = 0;
+  @Input() isEditing = false;
 
   @Output() edit = new EventEmitter<SortableDashboardRule>();
   @Output() toggleActive = new EventEmitter<string>();
