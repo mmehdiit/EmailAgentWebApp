@@ -1,4 +1,4 @@
-import { CommonModule } from '@angular/common';
+import { CommonModule, NgOptimizedImage } from '@angular/common';
 import { Component, DestroyRef, OnInit, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute } from '@angular/router';
@@ -11,7 +11,7 @@ import { MarkReplyService } from '../../core/services/mark-reply.service';
 @Component({
   selector: 'app-mark-replied',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, NgOptimizedImage],
   templateUrl: './mark-replied.component.html',
   styleUrl: './mark-replied.component.scss'
 })
