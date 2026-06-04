@@ -13,8 +13,8 @@ import { EMPTY, from } from 'rxjs';
 import { catchError, finalize, tap } from 'rxjs/operators';
 
 import {
-  DepartmentResponse,
   CreateUserPayload,
+  DepartmentResponse,
   UserRoleOption,
 } from '@core/models/dashboard.models';
 import { ToastService } from '@core/services/toast.service';
@@ -41,6 +41,7 @@ export class UserManagementComponent implements OnChanges {
   protected loading = false;
   protected departmentLoading = false;
   protected creatingDepartment = false;
+  protected showPassword = false;
   protected message = '';
   protected errorMessage = '';
   protected readonly roleOptions: UserRoleOption[] = [
@@ -61,7 +62,9 @@ export class UserManagementComponent implements OnChanges {
       this.loadDepartments();
     }
   }
-
+  protected togglePasswordVisibility(): void {
+    this.showPassword = !this.showPassword;
+  }
   protected setActiveTab(tab: 'create-user' | 'department'): void {
     this.activeTab = tab;
   }
@@ -147,7 +150,10 @@ export class UserManagementComponent implements OnChanges {
   protected createDepartment(): void {
     const name = this.departmentName.trim();
     if (!name) {
-      this.toastService.error('Department name is required', 'Validation Error');
+      this.toastService.error(
+        'Department name is required',
+        'Validation Error',
+      );
       return;
     }
 

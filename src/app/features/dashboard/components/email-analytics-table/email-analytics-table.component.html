@@ -1,5 +1,5 @@
 <div
-  class="rounded-2xl border border-border/60 bg-card p-5 text-card-foreground shadow-[0_4px_24px_0_rgba(0,0,0,0.06)] sm:p-6"
+  class="rounded-xl border border-border/60 bg-card p-3 text-card-foreground shadow-[0_4px_24px_0_rgba(0,0,0,0.06)] sm:rounded-2xl sm:p-6"
 >
   <div
     class="mb-5 flex flex-col items-start justify-between gap-3 sm:flex-row sm:items-center"
@@ -26,12 +26,12 @@
       </h3>
     </div>
 
-    <div class="flex flex-wrap items-center gap-2">
+    <div class="flex w-full flex-wrap items-center gap-2 sm:w-auto sm:justify-end">
       <button
         type="button"
         (click)="loadLogs()"
         [disabled]="loading"
-        class="action-btn inline-flex h-8 items-center gap-1.5 rounded-lg border border-border/70 bg-background px-3 text-xs font-medium text-foreground/80 shadow-sm transition-all hover:border-primary/30 hover:bg-primary/5 hover:text-primary disabled:pointer-events-none disabled:opacity-50 sm:text-sm"
+        class="action-btn inline-flex h-8 flex-1 items-center justify-center gap-1.5 rounded-lg border border-border/70 bg-background px-3 text-xs font-medium text-foreground/80 shadow-sm transition-all hover:border-primary/30 hover:bg-primary/5 hover:text-primary disabled:pointer-events-none disabled:opacity-50 sm:flex-none sm:text-sm"
       >
         <svg
           class="h-3.5 w-3.5"
@@ -57,7 +57,7 @@
         type="button"
         (click)="backfillReceivedDates()"
         [disabled]="isBackfilling"
-        class="action-btn inline-flex h-8 items-center gap-1.5 rounded-lg border border-border/70 bg-background px-3 text-xs font-medium text-foreground/80 shadow-sm transition-all hover:border-primary/30 hover:bg-primary/5 hover:text-primary disabled:pointer-events-none disabled:opacity-50 sm:text-sm"
+        class="action-btn inline-flex h-8 flex-1 items-center justify-center gap-1.5 rounded-lg border border-border/70 bg-background px-3 text-xs font-medium text-foreground/80 shadow-sm transition-all hover:border-primary/30 hover:bg-primary/5 hover:text-primary disabled:pointer-events-none disabled:opacity-50 sm:flex-none sm:text-sm"
       >
         <svg
           *ngIf="!isBackfilling"
@@ -97,7 +97,7 @@
         type="button"
         (click)="retryFailedEmails()"
         [disabled]="isRetrying"
-        class="action-btn inline-flex h-8 items-center gap-1.5 rounded-lg border border-destructive/40 bg-destructive/5 px-3 text-xs font-medium text-destructive shadow-sm transition-all hover:border-destructive/60 hover:bg-destructive/10 disabled:pointer-events-none disabled:opacity-50 sm:text-sm"
+        class="action-btn inline-flex h-8 flex-1 items-center justify-center gap-1.5 rounded-lg border border-destructive/40 bg-destructive/5 px-3 text-xs font-medium text-destructive shadow-sm transition-all hover:border-destructive/60 hover:bg-destructive/10 disabled:pointer-events-none disabled:opacity-50 sm:flex-none sm:text-sm"
       >
         <svg
           *ngIf="!isRetrying"
@@ -139,7 +139,7 @@
         type="button"
         (click)="openClearDialog = true"
         [disabled]="isClearing || logs().length === 0"
-        class="action-btn inline-flex h-8 items-center gap-1.5 rounded-lg bg-destructive/10 px-3 text-xs font-semibold text-destructive shadow-sm transition-all hover:bg-destructive hover:text-destructive-foreground disabled:pointer-events-none disabled:opacity-50 sm:text-sm"
+        class="action-btn inline-flex h-8 flex-1 items-center justify-center gap-1.5 rounded-lg bg-destructive/10 px-3 text-xs font-semibold text-destructive shadow-sm transition-all hover:bg-destructive hover:text-destructive-foreground disabled:pointer-events-none disabled:opacity-50 sm:flex-none sm:text-sm"
       >
         <svg
           class="h-3.5 w-3.5"
@@ -165,7 +165,7 @@
         type="button"
         (click)="exportCsv()"
         [disabled]="isExporting || filteredLogs().length === 0"
-        class="primary-btn inline-flex h-8 items-center gap-1.5 rounded-lg bg-primary px-3 text-xs font-semibold text-primary-foreground shadow-[0_2px_8px_0_rgba(var(--primary-rgb),0.3)] transition-all hover:shadow-[0_4px_14px_0_rgba(var(--primary-rgb),0.4)] hover:-translate-y-px active:translate-y-0 disabled:pointer-events-none disabled:opacity-50 sm:text-sm"
+        class="primary-btn inline-flex h-8 flex-1 items-center justify-center gap-1.5 rounded-lg bg-primary px-3 text-xs font-semibold text-primary-foreground shadow-[0_2px_8px_0_rgba(var(--primary-rgb),0.3)] transition-all hover:shadow-[0_4px_14px_0_rgba(var(--primary-rgb),0.4)] hover:-translate-y-px active:translate-y-0 disabled:pointer-events-none disabled:opacity-50 sm:flex-none sm:text-sm"
       >
         <svg
           class="h-3.5 w-3.5"
@@ -187,11 +187,11 @@
   </div>
 
   <div class="mb-5 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-start">
-    <div class="relative" (click)="$event.stopPropagation()">
+    <div class="relative w-full sm:w-auto" (click)="$event.stopPropagation()">
       <button
         type="button"
         (click)="datePopoverOpen = !datePopoverOpen"
-        class="inline-flex h-10 min-w-[240px] items-center justify-between gap-3 rounded-xl border border-border/70 bg-background px-3.5 text-sm shadow-sm transition-all hover:border-primary/30 hover:bg-primary/5"
+        class="inline-flex h-10 w-full min-w-0 items-center justify-between gap-3 rounded-xl border border-border/70 bg-background px-3.5 text-sm shadow-sm transition-all hover:border-primary/30 hover:bg-primary/5 sm:min-w-[240px]"
       >
         <svg
           class="h-4 w-4 text-primary"
@@ -228,7 +228,7 @@
 
       <div
         *ngIf="datePopoverOpen"
-        class="app-dropdown-panel absolute left-0 top-full z-50 mt-2 w-[min(680px,calc(100vw-2rem))] overflow-hidden rounded-2xl border border-border/60 bg-background p-0 shadow-[0_16px_48px_0_rgba(0,0,0,0.12)]"
+        class="app-dropdown-panel absolute left-0 top-full z-50 mt-2 w-[min(680px,calc(100vw-1.5rem))] overflow-hidden rounded-2xl border border-border/60 bg-background p-0 shadow-[0_16px_48px_0_rgba(0,0,0,0.12)]"
       >
         <div class="border-b border-border/50 bg-muted/30 px-5 py-3.5">
           <div class="text-sm font-semibold text-foreground">
@@ -570,8 +570,157 @@
     *ngIf="!loading && filteredLogs().length > 0"
     class="flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl border border-border/50"
   >
-    <div class="overflow-x-auto overflow-y-auto max-h-[600px]">
-      <table class="w-full min-w-[900px] table-fixed text-xs sm:text-sm">
+    <div class="divide-y divide-border/40 md:hidden">
+      <div
+        *ngFor="let log of paginatedLogs(); let i = index"
+        class="space-y-3 p-3"
+      >
+        <div class="flex items-start justify-between gap-3">
+          <div class="min-w-0">
+            <div class="flex items-center gap-2 text-[11px] text-muted-foreground">
+              <span class="font-semibold">
+                #{{ (currentPage() - 1) * pageSize() + i + 1 }}
+              </span>
+              <span>{{ log.date }}</span>
+            </div>
+            <div class="mt-1 truncate text-sm font-semibold text-foreground" [title]="log.from">
+              {{ log.from || "-" }}
+            </div>
+          </div>
+          <span
+            class="inline-flex h-6 flex-none items-center rounded-md border px-2 text-[10px] font-semibold"
+            [ngClass]="statusClasses(log)"
+          >
+            {{ log.replyDetected ? "Replied" : log.status }}
+          </span>
+        </div>
+
+        <div class="text-sm text-foreground/80">
+          <div class="line-clamp-2 break-words" [title]="log.subject">
+            {{ log.subject || "-" }}
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-2 text-xs">
+          <div class="min-w-0 rounded-lg bg-muted/35 p-2">
+            <div class="text-[10px] font-bold uppercase text-muted-foreground/70">Rule</div>
+            <div class="mt-1 truncate text-foreground/80" [title]="log.ruleName || ''">
+              {{ log.ruleName || "-" }}
+            </div>
+          </div>
+          <div class="min-w-0 rounded-lg bg-muted/35 p-2">
+            <div class="text-[10px] font-bold uppercase text-muted-foreground/70">Reply</div>
+            <div class="mt-1 font-medium" [ngClass]="log.replyDetected ? 'text-success' : 'text-muted-foreground'">
+              {{ log.replyDetected ? "Yes" : "No" }}
+            </div>
+          </div>
+          <div class="min-w-0 rounded-lg bg-muted/35 p-2">
+            <div class="text-[10px] font-bold uppercase text-muted-foreground/70">Source</div>
+            <div class="mt-1 truncate text-foreground/80">
+              {{
+                log.replyDetected && log.replySource
+                  ? getReplySourceLabel(log.replySource)
+                  : "-"
+              }}
+            </div>
+          </div>
+          <div class="min-w-0 rounded-lg bg-muted/35 p-2">
+            <div class="text-[10px] font-bold uppercase text-muted-foreground/70">Response</div>
+            <div class="mt-1 truncate font-medium" [ngClass]="log.replyDetected && log.repliedAt ? 'text-success' : 'text-muted-foreground'">
+              {{
+                log.replyDetected && log.repliedAt
+                  ? calculateResponseTime(log.processedAt, log.repliedAt)
+                  : "-"
+              }}
+            </div>
+          </div>
+        </div>
+
+        <div *ngIf="log.forwardedTo || log.negativeKeywordOverride || log.aiClassified" class="space-y-1.5 text-xs">
+          <div *ngIf="log.forwardedTo" class="break-all text-muted-foreground">
+            <span class="font-semibold text-foreground/70">Forwarded:</span>
+            {{ log.forwardedTo }}
+          </div>
+          <div *ngIf="log.negativeKeywordOverride" class="break-words text-destructive">
+            <span class="font-semibold">Blocked:</span>
+            {{ log.negativeKeywordOverride }}
+          </div>
+          <div *ngIf="log.aiClassified" class="text-purple-600">
+            <span class="font-semibold">AI:</span>
+            {{
+              log.aiConfidence
+                ? (log.aiConfidence * 100 | number : "1.0-0") + "%"
+                : "Classified"
+            }}
+          </div>
+        </div>
+
+        <div class="flex flex-wrap items-center gap-2 pt-1">
+          <button
+            *ngIf="log.outlookMessageId"
+            type="button"
+            (click)="viewEmail(log)"
+            class="table-action-btn inline-flex h-8 flex-1 items-center justify-center gap-1 whitespace-nowrap rounded-lg border border-border/50 bg-background px-2 text-[11px] font-medium text-foreground/70 transition-all hover:border-primary/30 hover:bg-primary/8 hover:text-primary"
+          >
+            View
+          </button>
+
+          <button
+            *ngIf="log.status === 'forwarded' && !log.replyDetected"
+            type="button"
+            (click)="markAsReplied(log.id)"
+            class="table-action-btn inline-flex h-8 flex-1 items-center justify-center gap-1 whitespace-nowrap rounded-lg border border-success/30 bg-success/5 px-2 text-[11px] font-medium leading-none text-success transition-all hover:border-success/50 hover:bg-success/15"
+          >
+            Mark Replied
+          </button>
+
+          <div
+            *ngIf="
+              (log.status === 'no_match' || log.status === 'failed') &&
+              log.outlookMessageId
+            "
+            class="relative flex-1"
+          >
+            <button
+              type="button"
+              (click)="toggleAssignPopover(log.id)"
+              [disabled]="isAssigning === log.id"
+              class="table-action-btn inline-flex h-8 w-full items-center justify-center gap-1.5 whitespace-nowrap rounded-lg border border-primary/30 bg-primary/5 px-2 text-[11px] font-medium text-primary transition-all hover:border-primary/50 hover:bg-primary/12 disabled:pointer-events-none disabled:opacity-50"
+            >
+              {{ isAssigning === log.id ? "Assigning" : "Assign" }}
+            </button>
+
+            <div
+              *ngIf="assignPopoverOpen === log.id"
+              class="app-dropdown-panel absolute right-0 top-full z-50 mt-1.5 w-52 overflow-hidden rounded-xl border border-border/60 bg-background p-1 shadow-[0_8px_32px_0_rgba(0,0,0,0.12)]"
+            >
+              <div
+                class="px-3 py-2 text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60"
+              >
+                Assign to rule
+              </div>
+              <button
+                *ngFor="let rule of rules()"
+                type="button"
+                (click)="assignToRule(log, rule.id)"
+                class="app-dropdown-item flex w-full items-center rounded-lg px-3 py-2 text-xs font-medium text-foreground transition-colors hover:bg-primary/8 hover:text-primary"
+              >
+                {{ rule.name }}
+              </button>
+              <div
+                *ngIf="rules().length === 0"
+                class="px-3 py-2 text-xs text-muted-foreground"
+              >
+                No active rules
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="hidden max-h-[600px] overflow-x-auto overflow-y-auto md:block">
+      <table class="w-full min-w-[1020px] table-fixed text-xs sm:text-sm">
         <thead>
           <tr class="border-b border-border/60 bg-muted/30">
             <th
@@ -630,7 +779,7 @@
               AI
             </th>
             <th
-              class="hidden w-[120px] px-2 py-3 text-left text-[10px] font-bold uppercase tracking-widest text-muted-foreground/70 xl:table-cell"
+              class="hidden w-[120px] px-2 py-3 text-left text-[10px] font-bold uppercase tracking-widest text-muted-foreground/70 md:table-cell"
             >
               Neg. Keyword
             </th>
@@ -796,7 +945,7 @@
               >
             </td>
 
-            <td class="hidden px-2 py-3 xl:table-cell">
+            <td class="hidden px-2 py-3 md:table-cell">
               <div class="group/cell relative">
                 <span
                   *ngIf="log.negativeKeywordOverride; else noNegKw"

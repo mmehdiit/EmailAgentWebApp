@@ -41,7 +41,11 @@ All colors MUST be HSL.
     --success: 145 70% 45%;
     --warning: 38 92% 50%;
 
-    --gradient-primary: linear-gradient(135deg, hsl(220 70% 40%), hsl(185 60% 45%));
+    --gradient-primary: linear-gradient(
+      135deg,
+      hsl(220 70% 40%),
+      hsl(185 60% 45%)
+    );
     --shadow-soft: 0 2px 8px -2px hsl(220 60% 20% / 0.1);
     --shadow-medium: 0 4px 16px -4px hsl(220 60% 20% / 0.15);
 
@@ -96,7 +100,11 @@ All colors MUST be HSL.
     --success: 145 70% 45%;
     --warning: 38 92% 50%;
 
-    --gradient-primary: linear-gradient(135deg, hsl(220 70% 50%), hsl(185 60% 50%));
+    --gradient-primary: linear-gradient(
+      135deg,
+      hsl(220 70% 50%),
+      hsl(185 60% 50%)
+    );
     --shadow-soft: 0 2px 8px -2px hsl(0 0% 0% / 0.3);
     --shadow-medium: 0 4px 16px -4px hsl(0 0% 0% / 0.4);
     --sidebar-background: 240 5.9% 10%;
@@ -126,7 +134,9 @@ All colors MUST be HSL.
     margin: 0;
     font-size: 14px;
     line-height: 1.45;
-    font-feature-settings: 'rlig' 1, 'calt' 1;
+    font-feature-settings:
+      "rlig" 1,
+      "calt" 1;
   }
 
   a,
@@ -153,7 +163,41 @@ All colors MUST be HSL.
     @apply bg-muted-foreground/50;
   }
 }
+.password-toggle {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: #74839b;
+  transform: translateY(-50%);
+  cursor: pointer;
+}
 
+.password-toggle svg {
+  width: 18px;
+  height: 18px;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.8;
+}
+
+.password-toggle:focus-visible {
+  outline: none;
+  color: hsl(var(--primary));
+}
+
+.input-shell {
+  position: relative;
+}
 @layer components {
   .app-select {
     @apply h-10 w-full appearance-none rounded-lg border border-input bg-card px-3 pr-9 text-sm text-foreground shadow-sm outline-none transition-all;
