@@ -63,6 +63,7 @@ export interface EmailAnalyticsLog {
   from: string;
   subject: string;
   status: 'forwarded' | 'failed' | 'no_match' | 'success' | 'skipped' | string;
+  ruleId?: string | null;
   ruleName?: string | null;
   forwardedTo?: string | null;
   replyDetected: boolean;

@@ -118,6 +118,7 @@ export class AnalyticsDataService {
         from: log.email_from ?? log.emailFrom ?? '',
         subject: log.email_subject ?? log.emailSubject ?? '',
         status: log.status,
+        ruleId: ruleMatched,
         ruleName: ruleMatched ? ruleMap.get(ruleMatched) ?? null : null,
         forwardedTo: log.forwarded_to ?? log.forwardedTo ?? null,
         replyDetected: log.reply_detected ?? log.replyDetected ?? false,

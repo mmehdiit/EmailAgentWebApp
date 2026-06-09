@@ -26,6 +26,7 @@ import {
   RuleItem,
 } from '@core/models/dashboard.models';
 import { AnalyticsDataService } from '@core/services/analytics-data.service';
+import { RuleManagementService } from '@core/services/rule-management.service';
 import { ToastService } from '@core/services/toast.service';
 import {
   AppSelectDropdownComponent,
@@ -179,11 +180,13 @@ export class EmailAnalyticsTableComponent implements OnInit, OnChanges {
   protected trustedEmailBody: SafeHtml | null = null;
 
   protected availableRules: RuleItem[] = [];
+  private readonly ruleNameById = new Map<string, string>();
 
   private readonly destroyRef = inject(DestroyRef);
 
   constructor(
     private readonly analyticsDataService: AnalyticsDataService,
+    private readonly ruleManagementService: RuleManagementService,
     private readonly toastService: ToastService
   ) {}
 
@@ -280,6 +283,7 @@ export class EmailAnalyticsTableComponent implements OnInit, OnChanges {
       .pipe(
         tap((analytics) => {
           this.analytics = analytics;
+          this.applyRuleNamesToAnalytics();
           this.refreshFilteredPagination();
         }),
         catchError(() => EMPTY),
@@ -296,10 +300,21 @@ export class EmailAnalyticsTableComponent implements OnInit, OnChanges {
   }
 
   protected loadRules(): void {
-    from(this.analyticsDataService.listAvailableRules())
+    from(this.ruleManagementService.listRules(true))
       .pipe(
         tap((rules) => {
-          this.availableRules = rules;
+          this.ruleNameById.clear();
+          for (const rule of rules) {
+            if (rule.id) {
+              this.ruleNameById.set(rule.id, rule.name);
+            }
+          }
+
+          this.availableRules = rules
+            .filter((rule) => rule.active)
+            .map((rule) => ({ id: rule.id, name: rule.name }));
+          this.applyRuleNamesToAnalytics();
+          this.refreshFilteredPagination();
         }),
         catchError(() => EMPTY),
         takeUntilDestroyed(this.destroyRef)
@@ -608,6 +623,7 @@ export class EmailAnalyticsTableComponent implements OnInit, OnChanges {
         ),
         tap((analytics) => {
           this.analytics = analytics;
+          this.applyRuleNamesToAnalytics();
           this.refreshFilteredPagination();
         }),
         catchError(() => EMPTY),
@@ -770,6 +786,7 @@ export class EmailAnalyticsTableComponent implements OnInit, OnChanges {
         ),
         tap((analytics) => {
           this.analytics = analytics;
+          this.applyRuleNamesToAnalytics();
           this.refreshFilteredPagination();
         }),
         catchError(() => EMPTY),
@@ -876,5 +893,21 @@ export class EmailAnalyticsTableComponent implements OnInit, OnChanges {
   private refreshFilteredPagination(): void {
     this.filterRevision.update((revision) => revision + 1);
     this.currentPage.set(Math.min(this.currentPage(), this.totalPages()));
+  }
+
+  private applyRuleNamesToAnalytics(): void {
+    if (!this.analytics || this.ruleNameById.size === 0) {
+      return;
+    }
+
+    this.analytics = {
+      ...this.analytics,
+      logs: this.analytics.logs.map((log) => ({
+        ...log,
+        ruleName:
+          log.ruleName ??
+          (log.ruleId ? this.ruleNameById.get(log.ruleId) ?? null : null),
+      })),
+    };
   }
 }
