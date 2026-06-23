@@ -1,18 +1,22 @@
 import { Injectable } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
 
-import { AuthSessionResponse, SignInPayload, AuthLoginResult } from '../models/auth.models';
+import { AuthSessionResponse, AuthLoginResult } from '../models/auth.models';
 import { AuthApiService } from './auth-api.service';
+import { MicrosoftAuthService } from './microsoft-auth.service';
 
 const TOKEN_KEY = 'email-ai-agent-auth-token';
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class AuthSessionService {
   private sessionPromise: Promise<AuthSessionResponse> | null = null;
 
-  constructor(private readonly authApiService: AuthApiService) {}
+  constructor(
+    private readonly authApiService: AuthApiService,
+    private readonly microsoftAuthService: MicrosoftAuthService,
+  ) {}
 
   async getSession(): Promise<AuthSessionResponse> {
     if (this.sessionPromise) {
@@ -23,24 +27,29 @@ export class AuthSessionService {
     return this.sessionPromise;
   }
 
-  async signIn(payload: SignInPayload): Promise<AuthLoginResult> {
-    const response = await firstValueFrom(this.authApiService.signIn(payload));
+  async signInWithMicrosoft(): Promise<AuthLoginResult> {
+    const msalResult = await this.microsoftAuthService.loginPopup();
+
+    const response = await firstValueFrom(
+      this.authApiService.microsoftLogin(msalResult.idToken),
+    );
+
     const authenticatedUser = {
       id: response.user_id,
       email: response.email,
-      role: response.role
+      role: response.role,
     };
 
     localStorage.setItem(TOKEN_KEY, response.token);
     this.sessionPromise = Promise.resolve({
       authenticated: true,
-      user: authenticatedUser
+      user: authenticatedUser,
     });
 
     return {
       authenticated: true,
       user: authenticatedUser,
-      message: 'You have successfully logged in.'
+      message: 'You have successfully logged in.',
     };
   }
 
@@ -59,19 +68,12 @@ export class AuthSessionService {
       const data = await firstValueFrom(this.authApiService.getSession());
       return {
         authenticated: true,
-        user: {
-          id: data.id,
-          email: data.email,
-          role: data.role
-        }
+        user: { id: data.id, email: data.email, role: data.role },
       };
     } catch {
       localStorage.removeItem(TOKEN_KEY);
       this.sessionPromise = null;
-      return {
-        authenticated: false,
-        user: null
-      };
+      return { authenticated: false, user: null };
     }
   }
 }

@@ -10,7 +10,7 @@ import {
 } from '../models/dashboard.models';
 
 type CreateUserApiResponse = {
-  token: string;
+  token: string | null;
   user_id: string;
   email: string;
   role: string;

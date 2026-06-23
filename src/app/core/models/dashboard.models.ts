@@ -152,7 +152,6 @@ export interface UserRoleOption {
 
 export interface CreateUserPayload {
   email: string;
-  password: string;
   role: 'user' | 'admin';
   departmentId?: string;
 }

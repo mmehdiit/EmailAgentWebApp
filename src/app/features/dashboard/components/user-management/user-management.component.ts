@@ -36,12 +36,10 @@ export class UserManagementComponent implements OnChanges {
   protected departments: DepartmentResponse[] = [];
   protected departmentName = '';
   protected email = '';
-  protected password = '';
   protected role = 'user';
   protected loading = false;
   protected departmentLoading = false;
   protected creatingDepartment = false;
-  protected showPassword = false;
   protected message = '';
   protected errorMessage = '';
   protected readonly roleOptions: UserRoleOption[] = [
@@ -62,9 +60,7 @@ export class UserManagementComponent implements OnChanges {
       this.loadDepartments();
     }
   }
-  protected togglePasswordVisibility(): void {
-    this.showPassword = !this.showPassword;
-  }
+
   protected setActiveTab(tab: 'create-user' | 'department'): void {
     this.activeTab = tab;
   }
@@ -78,7 +74,7 @@ export class UserManagementComponent implements OnChanges {
         value: dept.id,
         label: dept.name,
       }));
-    } catch (error) {
+    } catch {
       this.toastService.error('Failed to load departments');
     } finally {
       this.departmentLoading = false;
@@ -91,7 +87,6 @@ export class UserManagementComponent implements OnChanges {
 
     const payload: CreateUserPayload = {
       email: this.email.trim(),
-      password: this.password,
       role: this.role as 'user' | 'admin',
       departmentId: this.departmentId || undefined,
     };
@@ -110,11 +105,10 @@ export class UserManagementComponent implements OnChanges {
         tap((response) => {
           this.message = response.message;
           this.toastService.success(
-            `Successfully created user ${payload.email} with ${payload.role} role.`,
+            `Successfully provisioned ${payload.email} with ${payload.role} role.`,
             'User Created',
           );
           this.email = '';
-          this.password = '';
           this.role = 'user';
           this.departmentId = '';
         }),
@@ -136,10 +130,6 @@ export class UserManagementComponent implements OnChanges {
       return 'Invalid email address';
     }
 
-    if (payload.password.length < 6) {
-      return 'Password must be at least 6 characters';
-    }
-
     if (!payload.departmentId) {
       return 'Department is required';
     }
@@ -150,10 +140,7 @@ export class UserManagementComponent implements OnChanges {
   protected createDepartment(): void {
     const name = this.departmentName.trim();
     if (!name) {
-      this.toastService.error(
-        'Department name is required',
-        'Validation Error',
-      );
+      this.toastService.error('Department name is required', 'Validation Error');
       return;
     }
 
