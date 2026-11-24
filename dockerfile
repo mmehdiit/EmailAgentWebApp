@@ -10,7 +10,7 @@ COPY . .
 
 RUN npm run build
 
-FROM nginx:1.28-alpine
+FROM nginx:1.31.10-alpine
 
 RUN apk upgrade --no-cache \
     && apk del --no-cache curl
