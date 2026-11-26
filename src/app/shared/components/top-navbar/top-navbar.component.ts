@@ -1,5 +1,5 @@
 import { CommonModule, NgOptimizedImage } from '@angular/common';
-import { Component, EventEmitter, Input, Output } from '@angular/core';
+import { ChangeDetectionStrategy, Component, EventEmitter, Input, Output } from '@angular/core';
 import { RouterLink } from '@angular/router';
 
 @Component({
@@ -7,6 +7,7 @@ import { RouterLink } from '@angular/router';
   standalone: true,
   imports: [CommonModule, NgOptimizedImage, RouterLink],
   templateUrl: './top-navbar.component.html',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class TopNavbarComponent {
   @Input() authenticated = false;

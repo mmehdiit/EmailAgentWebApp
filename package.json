@@ -1,9 +1,11 @@
 {
   "name": "email-agent-web-app",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "scripts": {
     "ng": "ng",
-    "start": "ng serve",
+    "start": "npm run build && node scripts/serve-production.mjs",
+    "start:dev": "ng serve",
+    "start:production": "npm start",
     "build": "ng build",
     "watch": "ng build --watch --configuration development",
     "test": "ng test"

@@ -287,6 +287,7 @@
       <button
         type="button"
         (click)="moveUp.emit(rule.id)"
+        [attr.aria-label]="'Move ' + rule.name + ' up'"
         [disabled]="index === 0"
         class="flex h-7 w-7 items-center justify-center rounded-md hover:bg-muted disabled:opacity-40 sm:h-8 sm:w-8"
         title="Move up"
@@ -307,6 +308,7 @@
       <button
         type="button"
         (click)="moveDown.emit(rule.id)"
+        [attr.aria-label]="'Move ' + rule.name + ' down'"
         [disabled]="index === total - 1"
         class="flex h-7 w-7 items-center justify-center rounded-md hover:bg-muted disabled:opacity-40 sm:h-8 sm:w-8"
         title="Move down"
@@ -327,6 +329,7 @@
       <button
         type="button"
         (click)="edit.emit(rule)"
+        [attr.aria-label]="'Edit ' + rule.name"
         class="flex h-7 w-7 items-center justify-center rounded-md hover:bg-muted sm:h-8 sm:w-8"
         title="Edit rule"
       >
@@ -347,6 +350,7 @@
       <button
         type="button"
         (click)="delete.emit(rule.id)"
+        [attr.aria-label]="'Delete ' + rule.name"
         class="flex h-7 w-7 items-center justify-center rounded-md text-destructive hover:bg-destructive/10 sm:h-8 sm:w-8"
         title="Delete rule"
       >

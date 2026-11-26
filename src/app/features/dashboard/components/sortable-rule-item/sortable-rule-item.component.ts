@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, EventEmitter, Input, Output } from '@angular/core';
+import { ChangeDetectionStrategy, Component, EventEmitter, Input, Output } from '@angular/core';
 
 import { Recipient, SortableDashboardRule } from '@core/models/rule.models';
 
@@ -7,7 +7,8 @@ import { Recipient, SortableDashboardRule } from '@core/models/rule.models';
   selector: 'app-sortable-rule-item',
   standalone: true,
   imports: [CommonModule],
-  templateUrl: './sortable-rule-item.component.html'
+  templateUrl: './sortable-rule-item.component.html',
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class SortableRuleItemComponent {
   @Input({ required: true }) rule!: SortableDashboardRule;

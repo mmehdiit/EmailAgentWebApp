@@ -505,6 +505,14 @@ export class DashboardComponent implements OnInit, OnDestroy {
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   }
 
+  protected trackByRuleId(_index: number, rule: DashboardRuleEditor): string {
+    return rule.id;
+  }
+
+  protected trackByItemId(_index: number, item: { id: string }): string {
+    return item.id;
+  }
+
   private startCountdown(): void {
     if (this.countdownInterval) {
       clearInterval(this.countdownInterval);

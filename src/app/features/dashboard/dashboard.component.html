@@ -1,5 +1,4 @@
 <section
-  *ngIf="!loading && overview; else dashboardFallback"
   class="min-h-screen bg-gradient-to-br from-background via-background/95 to-primary/5"
 >
   <!-- ── TOP NAV ─────────────────────────────────────────────────────────── -->
@@ -14,6 +13,7 @@
   />
 
   <!-- ── MAIN CONTENT ───────────────────────────────────────────────────── -->
+  <ng-container *ngIf="!loading && overview; else dashboardFallback">
   <div class="container mx-auto px-4 py-5 sm:px-6 sm:py-7 lg:py-9">
     <div class="space-y-6 sm:space-y-8">
       <!-- ── TAB NAV ──────────────────────────────────────────────────────── -->
@@ -618,7 +618,7 @@
               class="max-h-[320px] space-y-2 overflow-y-auto pr-1 sm:max-h-[300px]"
             >
               <div
-                *ngFor="let log of overview.recentLogs | slice: 0 : 5"
+                *ngFor="let log of overview.recentLogs | slice: 0 : 5; trackBy: trackByItemId"
                 class="log-item flex flex-col gap-3 rounded-xl bg-muted/40 px-3 py-3 transition-all duration-200 hover:bg-muted/70 sm:flex-row sm:items-start sm:gap-3 sm:py-2.5"
               >
                 <div class="flex min-w-0 items-start gap-3">
@@ -733,7 +733,7 @@
               class="space-y-2"
             >
               <div
-                *ngFor="let rule of overview.rules | slice: 0 : 5"
+                *ngFor="let rule of overview.rules | slice: 0 : 5; trackBy: trackByItemId"
                 class="log-item flex flex-col gap-3 rounded-xl bg-muted/40 px-3 py-3 transition-all duration-200 hover:bg-muted/70 sm:flex-row sm:items-center sm:justify-between sm:py-2.5"
               >
                 <div class="flex min-w-0 flex-1 items-center gap-3">
@@ -1283,7 +1283,7 @@
           </div>
 
           <app-sortable-rule-item
-            *ngFor="let rule of rules; let i = index"
+            *ngFor="let rule of rules; let i = index; trackBy: trackByRuleId"
             [rule]="rule"
             [index]="i"
             [total]="rules.length"
@@ -1302,36 +1302,49 @@
       <!-- ══════════════════ OTHER TABS ══════════════════ -->
       <section
         *ngIf="activeTab === 'analytics'"
-        class="dashboard-tab-enter space-y-4 sm:space-y-6"
+        class="dashboard-tab-enter dashboard-deferred-section space-y-4 sm:space-y-6"
       >
-        <app-email-analytics-table
-          [refreshToken]="analyticsRefreshToken"
-          (viewEmailRequested)="viewEmail($event)"
-        />
-        <div class="grid gap-4 sm:gap-6 lg:grid-cols-2">
-          <app-reply-analytics [refreshToken]="analyticsRefreshToken" />
-          <app-rule-performance [refreshToken]="analyticsRefreshToken" />
-        </div>
+        @defer {
+          <app-email-analytics-table
+            [refreshToken]="analyticsRefreshToken"
+            (viewEmailRequested)="viewEmail($event)"
+          />
+          <div class="grid gap-4 sm:gap-6 lg:grid-cols-2">
+            <app-reply-analytics [refreshToken]="analyticsRefreshToken" />
+            <app-rule-performance [refreshToken]="analyticsRefreshToken" />
+          </div>
+        } @placeholder {
+          <div class="dashboard-section-placeholder" aria-hidden="true"></div>
+        }
       </section>
 
       <section
         *ngIf="activeTab === 'emails'"
-        class="dashboard-tab-enter space-y-4 sm:space-y-6"
+        class="dashboard-tab-enter dashboard-deferred-section space-y-4 sm:space-y-6"
       >
-        <app-unread-emails [refreshToken]="emailsRefreshToken" />
+        @defer {
+          <app-unread-emails [refreshToken]="emailsRefreshToken" />
+        } @placeholder {
+          <div class="dashboard-section-placeholder" aria-hidden="true"></div>
+        }
       </section>
 
       <section
         *ngIf="activeTab === 'users' && isAdmin"
-        class="dashboard-tab-enter space-y-4 sm:space-y-6"
+        class="dashboard-tab-enter dashboard-deferred-section space-y-4 sm:space-y-6"
       >
-        <app-user-management
-          [isAdmin]="isAdmin"
-          [refreshToken]="userManagementRefreshToken"
-        />
+        @defer {
+          <app-user-management
+            [isAdmin]="isAdmin"
+            [refreshToken]="userManagementRefreshToken"
+          />
+        } @placeholder {
+          <div class="dashboard-section-placeholder" aria-hidden="true"></div>
+        }
       </section>
     </div>
   </div>
+  </ng-container>
 </section>
 
 <!-- ══════════════════ RULE TESTER DIALOG ══════════════════ -->
@@ -1397,7 +1410,11 @@
       </button>
     </div>
     <div class="max-h-[calc(88vh-76px)] overflow-y-auto p-4 sm:p-5">
-      <app-rule-tester [rules]="rules" />
+      @defer {
+        <app-rule-tester [rules]="rules" />
+      } @placeholder {
+        <div class="dashboard-section-placeholder" aria-hidden="true"></div>
+      }
     </div>
   </div>
 </div>
@@ -1517,15 +1534,15 @@
 </div>
 
 <ng-template #dashboardFallback>
-  <ng-container *ngIf="loading; else dashboardUnavailable">
-    <ng-container *ngTemplateOutlet="loadingState"></ng-container>
-  </ng-container>
+  <div class="container mx-auto px-4 py-5 sm:px-6 sm:py-7 lg:py-9">
+    <ng-container *ngIf="loading; else dashboardUnavailable">
+      <ng-container *ngTemplateOutlet="loadingState"></ng-container>
+    </ng-container>
+  </div>
 </ng-template>
 
 <ng-template #dashboardUnavailable>
-  <section
-    class="grid min-h-screen place-items-center bg-gradient-to-br from-background via-background/95 to-primary/5 p-6"
-  >
+  <section class="grid min-h-[60vh] place-items-center p-6">
     <div
       class="flex max-w-md flex-col items-center gap-4 rounded-2xl border border-border/60 bg-card p-8 text-center shadow-sm"
     >
@@ -1570,29 +1587,18 @@
 
 <!-- ══════════════════ LOADING STATE ══════════════════ -->
 <ng-template #loadingState>
-  <section
-    class="grid min-h-screen place-items-center bg-gradient-to-br from-background via-background/95 to-primary/5 p-6"
-  >
-    <div class="loader-card">
-      <div class="pulse-rings">
-        <span class="ring ring-1"></span>
-        <span class="ring ring-2"></span>
-        <span class="ring ring-3"></span>
-        <span class="dot"></span>
-      </div>
-
-      <div class="loader-text">
-        <h1 class="text-base font-semibold text-foreground">
-          Loading dashboard
-        </h1>
-        <p class="loader-dots text-sm text-muted-foreground">
-          <span>.</span><span>.</span><span>.</span>
-        </p>
-      </div>
-
-      <div class="progress-bar-track">
-        <div class="progress-bar-fill"></div>
-      </div>
+  <section class="space-y-6 sm:space-y-8" aria-label="Loading dashboard">
+    <div class="dashboard-skeleton h-[68px] rounded-2xl sm:h-[62px]"></div>
+    <div class="grid grid-cols-2 gap-4 sm:gap-5 lg:grid-cols-4">
+      <div class="dashboard-skeleton h-[168px] rounded-2xl"></div>
+      <div class="dashboard-skeleton h-[168px] rounded-2xl"></div>
+      <div class="dashboard-skeleton h-[168px] rounded-2xl"></div>
+      <div class="dashboard-skeleton h-[168px] rounded-2xl"></div>
     </div>
+    <div class="grid gap-5 lg:grid-cols-2">
+      <div class="dashboard-skeleton h-[300px] rounded-2xl"></div>
+      <div class="dashboard-skeleton h-[300px] rounded-2xl"></div>
+    </div>
+    <span class="sr-only">Loading dashboard data</span>
   </section>
 </ng-template>

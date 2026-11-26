@@ -74,7 +74,9 @@
           "builder": "@angular/build:dev-server",
           "configurations": {
             "production": {
-              "buildTarget": "emailAgentWebApp:build:production"
+              "buildTarget": "emailAgentWebApp:build:production",
+              "liveReload": false,
+              "hmr": false
             },
             "development": {
               "buildTarget": "emailAgentWebApp:build:development"

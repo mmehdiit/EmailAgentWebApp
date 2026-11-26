@@ -12,6 +12,7 @@
     <button
       type="button"
       (click)="removeKeyword(i)"
+      [attr.aria-label]="'Remove keyword ' + keyword"
       class="ml-0.5 rounded-full p-0.5 hover:bg-muted"
     >
       <svg class="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" aria-hidden="true">

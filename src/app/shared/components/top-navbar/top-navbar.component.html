@@ -6,9 +6,9 @@
       <a routerLink="/dashboard" class="group flex items-center gap-3 sm:gap-4">
         <div class="relative">
           <img
-            ngSrc="assets/logo.jpeg"
-            width="530"
-            height="274"
+            ngSrc="assets/logo-170-v1.jpeg"
+            width="170"
+            height="88"
             alt="Al-Ittihad Al-Watani"
             priority
             class="h-11 w-auto rounded-lg object-cover shadow-sm ring-1 ring-border/40 transition-shadow group-hover:shadow-md sm:h-13"
@@ -54,6 +54,7 @@
         <a
           *ngIf="showAuthLink"
           [routerLink]="authLink()"
+          [attr.aria-label]="authLabel()"
           class="nav-action-btn inline-flex h-9 items-center gap-2 rounded-lg px-3 text-sm font-medium text-foreground/80 transition-all hover:bg-muted/80 hover:text-foreground sm:px-4"
         >
           <svg
@@ -89,6 +90,7 @@
           *ngIf="showLogout"
           type="button"
           (click)="signOutRequested.emit()"
+          aria-label="Log out"
           class="nav-action-btn inline-flex h-9 items-center gap-2 rounded-lg px-3 text-sm font-medium text-foreground/80 transition-all hover:bg-destructive/10 hover:text-destructive sm:px-4"
         >
           <svg

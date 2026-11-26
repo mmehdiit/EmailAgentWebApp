@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, Input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, Input } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 
 import { Recipient } from '@core/models/rule.models';
@@ -34,7 +34,8 @@ type TestResult = {
   selector: 'app-rule-tester',
   standalone: true,
   imports: [CommonModule, FormsModule],
-  templateUrl: './rule-tester.component.html'
+  templateUrl: './rule-tester.component.html',
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class RuleTesterComponent {
   @Input() rules: RuleTesterRule[] = [];
